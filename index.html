@@ -550,7 +550,7 @@
         let imoveisDB = []; let empresaDB = { nome: "", cnpj: "", zap: "", email: "", creci: "", logo: "", endereco: {}, politicaCancelamento: "", infoGerais: "" }; let orcamentosDB = []; let categoriasDB = ["Faxina", "Lavanderia", "Manutenção", "Luz", "Condomínio", "Outros"];
         let currentUserUid = null; let isPublicVitrine = false;
         let calendarioEmCriacao = []; let fotosEmCriacao = []; let abaAtivaCadastro = 'proprietario'; let imovelEditandoId = null; let imovelExcluirId = null;
-        let mapaMes = 6; let mapaAno = 2026; let acompanhantesTemp = []; let financeiroImovelSelectId = null; let financeiroMesStr = ""; let categoriaEditandoIndex = null;
+        let mapaMes = new Date().getMonth() + 1; let mapaAno = new Date().getFullYear(); let acompanhantesTemp = []; let financeiroImovelSelectId = null; let financeiroMesStr = ""; let categoriaEditandoIndex = null;
         let despesaMes = new Date().getMonth() + 1; let despesaAno = new Date().getFullYear(); let reservasAtuaisExportacao = []; 
         const mesesCompletos = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const diasSemanaNomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -735,451 +735,575 @@
             if(res.acompanhantes) { res.acompanhantes.forEach(a => { let doc = a.cpf || '-'; let nasc = a.dataNasc ? parseInputDateSafe(a.dataNasc).split('-').reverse().join('/') + calcIdade(a.dataNasc) : '-'; lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${a.nome}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${nasc}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${doc}</td></tr>`; }); }
             
             const html = `<html><head><style>body{font-family:Arial,sans-serif;color:#333;margin:0;padding:20px;font-size:14px;}.c{max-width:800px;margin:0 auto;}.rb{background-color:#fbd38d;color:#9a3412;padding:10px 20px;border-radius:8px;font-weight:bold;font-size:16px;text-transform:uppercase;}.b{border:2px solid #fbd38d;border-radius:8px;padding:20px;margin-bottom:20px;}.in{font-size:22px;font-weight:bold;color:#1e293b;margin:0 0 5px 0;}.ie{color:#64748b;margin-bottom:20px;font-size:13px;}.ig{display:flex;justify-content:space-between;margin-bottom:20px;}.ic{width:48%;}.il{font-size:11px;text-transform:uppercase;color:#94a3b8;font-weight:bold;display:block;margin-bottom:3px;}.iv{font-size:14px;font-weight:bold;}.tb{background-color:#fbd38d;padding:6px 12px;border-radius:4px;font-weight:bold;display:inline-block;margin-bottom:10px;color:#9a3412;width:100%;box-sizing:border-box;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th{text-align:left;padding:8px;border-bottom:2px solid #333;font-size:12px;text-transform:uppercase;color:#64748b;}.ft{font-size:12px;color:#475569;line-height:1.5;white-space:pre-line;}</style></head><body><div class="c"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px;"><div style="display:flex; gap:15px; align-items:center;">${lgHtml}<div style="font-size:12px; color:#64748b; line-height:1.4;"><div style="font-size:16px; font-weight:bold; color:#64748b; margin-bottom:2px;">${nEmp}</div><div>${docEmp}</div><div>${endEmp}</div><div>${cidEmp}</div></div></div><div style="text-align:center; min-width:150px;"><div class="rb" style="margin-bottom:8px; display:inline-block; width:100%; box-sizing:border-box;">Reserva: ${res.numeroReserva||'S/N'}</div><div style="font-size:18px; font-weight:bold; letter-spacing:2px; color:#333;">VOUCHER</div></div></div><div class="b"><div class="ig" style="margin-bottom:10px;"><div class="ic" style="width:60%;"><h2 class="in">${im.nome} ${im.numeroApto?`- Apto ${im.numeroApto}`:''}</h2><div class="ie">📍 ${endIm}</div></div><div class="ic" style="width:35%;text-align:right;"><div style="font-size:12px;color:#64748b;"><strong>Loc:</strong> RES${res.numeroReserva||'S/N'}-${imovelId}</div></div></div><div class="ig" style="background:#f8fafc;padding:15px;border-radius:6px;"><div class="ic"><span class="il">Check-in</span><span class="iv">📅 ${dIn} as ${im.checkin||'14:00'}</span></div><div class="ic"><span class="il">Check-out</span><span class="iv">📅 ${dOut} as ${im.checkout||'11:00'}</span></div><div class="ic text-right"><span class="il">Duração</span><span class="iv">🌙 ${noites} Noites</span></div></div></div><div class="b" style="padding-top:10px;"><div class="tb">Hóspedes</div><table><thead><tr><th>Nome</th><th style="text-align:center;">Data Nasc.</th><th style="text-align:center;">Documento</th></tr></thead><tbody>${lh}</tbody></table></div><div class="b"><h3 style="margin:0 0 10px 0;font-size:16px;border-bottom:1px solid #eee;padding-bottom:10px;">Políticas e Estrutura</h3><div style="margin-bottom:15px;"><strong style="font-size:13px;">Cancelamento:</strong><br><span style="font-size:13px;color:#b91c1c;font-weight:bold;">${empresaDB.politicaCancelamento||'Consulte a central.'}</span></div><div><strong style="font-size:13px;">Acomodação:</strong><br><span class="ft">${im.estrutura||`Capacidade máx: ${im.capacidadeTotal} pessoas.`}</span></div></div><div class="b"><h3 style="margin:0 0 10px 0;font-size:16px;border-bottom:1px solid #eee;padding-bottom:10px;">Informações Gerais</h3><div class="ft">${empresaDB.infoGerais||'Apresente documento original no check-in.'}</div><div style="margin-top:40px;font-size:13px;">Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap?`WhatsApp: ${empresaDB.zap}<br>`:''}${empresaDB.email?`E-mail: ${empresaDB.email}`:''}</div></div></div><script>window.onload=function(){window.print();}<\/script></body></html>`;
-        const w = window.open('', '_blank'); w.document.write(html); w.document.close();
-    }
-
-    function renderizarAdmin() {
-        const d = el('lista-imoveis-admin'); if(!d) return; d.innerHTML = '';
-        if (imoveisDB.length === 0) { d.innerHTML = '<p class="text-center text-slate-500 py-4 font-bold">Nenhum imóvel cadastrado.</p>'; return; }
-        imoveisDB.forEach(im => {
-            let dQtd = im.calendario ? im.calendario.length : 0;
-            let bgSt = dQtd > 0 ? `<span class="text-green-600 bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-check-circle mr-1"></i>${dQtd} Dias Tarifados</span>` : `<span class="text-red-600 bg-red-50 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>S/ Tarifa</span>`;
-            let tb = (im.fotos && im.fotos.length > 0) ? im.fotos[0] : 'https://placehold.co/100x100/eeeeee/999999';
-            let nm = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
-            d.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between hover:border-orange-200 transition-colors"><div class="flex items-center gap-4 w-full sm:w-auto"><img src="${tb}" class="w-16 h-16 rounded-lg object-cover bg-slate-100 shadow-sm"><div><h4 class="font-bold text-slate-800 text-lg">${nm}</h4><div class="flex flex-wrap items-center text-xs font-bold text-slate-500 mt-1 gap-3"><span><i class="fas fa-building mr-1 text-slate-400"></i>${im.tipo}</span><span><i class="fas fa-user-friends mr-1 text-slate-400"></i>Até ${im.capacidadeTotal}</span>${bgSt}</div></div></div><div class="flex gap-2 w-full sm:w-auto mt-3 sm:mt-0"><button onclick="editarImovel(${im.id})" title="Editar Imóvel" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-edit mr-1"></i> Editar</button><button onclick="abrirModalExclusao(${im.id})" title="Excluir Imóvel" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-trash-alt"></i></button></div></div>`);
-        });
-    }
-
-    function abrirModalExclusao(id) { imovelExcluirId = id; show('modal-exclusao'); }
-    function fecharModalExclusao() { imovelExcluirId = null; hide('modal-exclusao'); }
-    function confirmarExclusao() { if (imovelExcluirId) { imoveisDB = imoveisDB.filter(i => i.id !== imovelExcluirId); salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); fecharModalExclusao(); mostrarNotificacao('Imóvel excluído com sucesso.'); } }
-
-    function abrirModalCadastro() { 
-        imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
-        ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
-        sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5');
-        fotosEmCriacao = []; renderizarPreviewFotos(); 
-        calendarioEmCriacao = []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
-        mudarAbaCadastro('proprietario'); show('modal-cadastro'); 
-    }
-
-    function editarImovel(id) {
-        const imovel = imoveisDB.find(i => i.id === id); if(!imovel) return; imovelEditandoId = id;
-        sv('cad-prop-nome', imovel.proprietario?.nome || ''); sv('cad-prop-cpf', imovel.proprietario?.cpf || ''); sv('cad-prop-zap', imovel.proprietario?.zap || ''); sv('cad-prop-email', imovel.proprietario?.email || ''); sv('cad-prop-comissao', imovel.proprietario?.comissao !== undefined ? imovel.proprietario.comissao : 20);
-        sv('cad-nome', imovel.nome || ''); sv('cad-num-apto', imovel.numeroApto || ''); sv('cad-tipo', imovel.tipo || 'Apartamento'); sv('cad-checkin', imovel.checkin || '14:00'); sv('cad-checkout', imovel.checkout || '11:00'); sv('cad-capacidade', imovel.capacidadeTotal || 5); sv('cad-estrutura', imovel.estrutura || ''); sv('cad-pagamento', imovel.pagamento || '');
-        sv('cad-cep', imovel.endereco?.cep || ''); sv('cad-cidade', imovel.endereco?.cidade || (imovel.cidade ? imovel.cidade.split(' - ')[0] : '')); sv('cad-uf', imovel.endereco?.uf || (imovel.cidade ? imovel.cidade.split(' - ')[1] : '')); sv('cad-rua', imovel.endereco?.rua || ''); sv('cad-bairro', imovel.endereco?.bairro || ''); sv('cad-numero', imovel.endereco?.numero || ''); sv('cad-complemento', imovel.endereco?.complemento || '');
-        fotosEmCriacao = [...(imovel.fotos || [])]; renderizarPreviewFotos(); 
-        calendarioEmCriacao = imovel.calendario ? JSON.parse(JSON.stringify(imovel.calendario)) : []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
-        if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Editar Imóvel"; mudarAbaCadastro('proprietario'); show('modal-cadastro');
-    }
-
-    function fecharModalCadastro() { hide('modal-cadastro'); }
-    
-    function mudarAbaCadastro(a) { 
-        ['proprietario','imovel','fotos','tarifas'].forEach(id => { 
-            let dContent = el('tab-content-'+id); let dBtn = el('tab-btn-'+id);
-            if(dContent && dBtn) { if(id === a) { dContent.classList.remove('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] transition-colors border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none"; } else { dContent.classList.add('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap outline-none"; } }
-        }); abaAtivaCadastro = a;
-    }
-
-    function aplicarAjusteSazonalMassa() {
-        const dtIn = parseInputDateSafe(val('ajuste-lote-in')); const dtOut = parseInputDateSafe(val('ajuste-lote-out')); const tipo = val('ajuste-lote-tipo'); const perc = parseFloat(val('ajuste-lote-valor'));
-        if (!dtIn || !dtOut || isNaN(perc) || perc <= 0) { mostrarAlerta("Preencha as datas e informe uma porcentagem válida maior que zero."); return; }
-        let dI = new Date(dtIn + 'T12:00:00'); let dO = new Date(dtOut + 'T12:00:00');
-        if (dO < dI) { mostrarAlerta("A Data Fim deve ser maior ou igual a Data Início."); return; }
-        let diasAlterados = 0;
-        for (let d = new Date(dI); d <= dO; d.setDate(d.getDate() + 1)) { let dtStr = formatarDataLocalISO(d); let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dtStr); if (diaIdx > -1) { let valorAntigo = calendarioEmCriacao[diaIdx].valor; let modificador = perc / 100; let novoValor = tipo === 'aumento' ? valorAntigo * (1 + modificador) : valorAntigo * (1 - modificador); calendarioEmCriacao[diaIdx].valor = Math.round(novoValor); diasAlterados++; } }
-        if (diasAlterados === 0) { mostrarAlerta("Nenhuma tarifa encontrada no período selecionado. Você precisa cadastrar tarifas antes de ajustá-las."); return; }
-        sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); renderizarFiltrosCalendarioGestao(); mostrarNotificacao(`Ajuste de ${perc}% aplicado com sucesso em ${diasAlterados} diárias!`);
-    }
-
-    function aplicarTarifasEmLote() {
-        const nome = val('lote-tarifa-nome').trim(); const dtIn = parseInputDateSafe(val('lote-tarifa-in')); const dtOut = parseInputDateSafe(val('lote-tarifa-out')); const valor = parseFloat(val('lote-tarifa-valor')); const minNoites = parseInt(val('lote-tarifa-min')) || 1;
-        if (!nome || !dtIn || !dtOut || isNaN(valor)) { mostrarAlerta("Preencha todos os campos: Nome, Datas e Valor para aplicar a tarifa."); return; }
-        let dI = new Date(dtIn + 'T12:00:00'); let dO = new Date(dtOut + 'T12:00:00');
-        if (dO < dI) { mostrarAlerta("A Data Fim deve ser maior ou igual a Data Início."); return; }
-        let diasAtivos = []; document.querySelectorAll('.btn-dia-semana.ativo').forEach(btn => { diasAtivos.push(parseInt(btn.getAttribute('data-dia'))); });
-        if (diasAtivos.length === 0) { mostrarAlerta("Selecione pelo menos um dia da semana para aplicar."); return; }
-        let diasGerados = 0;
-        for (let d = new Date(dI); d <= dO; d.setDate(d.getDate() + 1)) { if (diasAtivos.includes(d.getDay())) { let dtStr = formatarDataLocalISO(d); let diaExistenteIndex = calendarioEmCriacao.findIndex(x => x.data === dtStr); let objDia = { data: dtStr, nome: nome, valor: valor, minNoites: minNoites }; if (diaExistenteIndex > -1) { calendarioEmCriacao[diaExistenteIndex] = objDia; } else { calendarioEmCriacao.push(objDia); } diasGerados++; } }
-        calendarioEmCriacao.sort((a, b) => new Date(a.data) - new Date(b.data));
-        sv('lote-tarifa-nome', ''); sv('lote-tarifa-valor', ''); renderizarFiltrosCalendarioGestao(); mostrarNotificacao(`${diasGerados} diárias aplicadas/atualizadas com sucesso!`);
-    }
-
-    function apagarDiaCalendario(dataStr) { calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); renderizarFiltrosCalendarioGestao(); }
-
-    function editarPrecoDiaCalendario(dataStr) {
-        let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dataStr);
-        if (diaIdx > -1) {
-            let precoAtual = calendarioEmCriacao[diaIdx].valor; let dataFormatada = dataStr.split('-').reverse().join('/'); let novoPreco = prompt(`Editar preço para o dia ${dataFormatada}:\n\nDigite apenas números (ex: 150):`, precoAtual);
-            if (novoPreco !== null && novoPreco.trim() !== "") { let v = parseFloat(novoPreco); if (!isNaN(v) && v > 0) { calendarioEmCriacao[diaIdx].valor = v; renderizarFiltrosCalendarioGestao(); } else { alert("Valor inválido. Digite apenas números."); } }
+            const w = window.open('', '_blank'); w.document.write(html); w.document.close();
         }
-    }
 
-    function limparFiltrosCalendario() { sv('filtro-mes-calendario', 'todos'); sv('filtro-nome-calendario', 'todas'); renderizarCalendarioGestao(); }
-
-    function renderizarFiltrosCalendarioGestao() {
-        const selMes = el('filtro-mes-calendario'); const selNome = el('filtro-nome-calendario'); let valMesAtual = selMes ? selMes.value : 'todos'; let valNomeAtual = selNome ? selNome.value : 'todas';
-        if(selMes) selMes.innerHTML = '<option value="todos">Todos os meses</option>'; if(selNome) selNome.innerHTML = '<option value="todas">Todas as tarifas</option>';
-        let mesesUnicos = new Set(); let nomesUnicos = new Set();
-        calendarioEmCriacao.forEach(d => { let dt = new Date(d.data + 'T12:00:00'); let mesAno = `${String(dt.getMonth() + 1).padStart(2,'0')}/${dt.getFullYear()}`; mesesUnicos.add(mesAno); nomesUnicos.add(d.nome); });
-        Array.from(mesesUnicos).sort().forEach(m => { let txt = `${mesesCompletos[parseInt(m.split('/')[0]) - 1]} ${m.split('/')[1]}`; if(selMes) selMes.insertAdjacentHTML('beforeend', `<option value="${m}">${txt}</option>`); });
-        Array.from(nomesUnicos).sort().forEach(n => { if(selNome) selNome.insertAdjacentHTML('beforeend', `<option value="${n}">${n}</option>`); });
-        if(selMes && Array.from(selMes.options).some(o => o.value === valMesAtual)) selMes.value = valMesAtual; if(selNome && Array.from(selNome.options).some(o => o.value === valNomeAtual)) selNome.value = valNomeAtual;
-        renderizarCalendarioGestao();
-    }
-
-    function renderizarCalendarioGestao() {
-        const tb = el('lista-calendario-tbody'); const badge = el('qtd-tarifas-badge'); if(!tb) return; tb.innerHTML = '';
-        let fMes = val('filtro-mes-calendario'); let fNome = val('filtro-nome-calendario');
-        let listaFiltrada = calendarioEmCriacao.filter(d => { let dt = new Date(d.data + 'T12:00:00'); let mesAno = `${String(dt.getMonth() + 1).padStart(2,'0')}/${dt.getFullYear()}`; if (fMes !== 'todos' && mesAno !== fMes) return false; if (fNome !== 'todas' && d.nome !== fNome) return false; return true; });
-        if (badge) badge.innerText = `${listaFiltrada.length} resultados`;
-        if(listaFiltrada.length === 0) { tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">Nenhuma tarifa encontrada para os filtros.</td></tr>'; return; }
-        let maxMostrar = Math.min(listaFiltrada.length, 50);
-        for(let i=0; i < maxMostrar; i++) { let diaObj = listaFiltrada[i]; let dt = new Date(diaObj.data + 'T12:00:00'); let strData = diaObj.data.split('-').reverse().join('/'); let strDiaSemana = diasSemanaNomes[dt.getDay()]; tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-700">${strData}</td><td class="p-3 text-xs text-slate-500">${strDiaSemana}</td><td class="p-3"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">${diaObj.nome}</span></td><td class="p-3 text-sm font-bold text-slate-800">R$ ${diaObj.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-xs font-medium text-slate-600 text-center">${diaObj.minNoites}</td><td class="p-3 text-center"><button type="button" onclick="editarPrecoDiaCalendario('${diaObj.data}')" class="text-slate-400 hover:text-blue-500 p-1 mr-1 transition-colors" title="Editar Preço"><i class="fas fa-pencil-alt"></i></button><button type="button" onclick="apagarDiaCalendario('${diaObj.data}')" class="text-red-400 hover:text-red-600 p-1 transition-colors" title="Apagar Dia"><i class="fas fa-trash"></i></button></td></tr>`); }
-        if (listaFiltrada.length > 50) { tb.insertAdjacentHTML('beforeend', `<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400 font-bold bg-slate-50">Mostrando os primeiros 50 resultados. Use os filtros para refinar a busca.</td></tr>`); }
-    }
-
-    function adicionarFotoPorLink() { const u = val('input-foto-url').trim(); if(!u) return; if(fotosEmCriacao.length >= 10) { mostrarAlerta("Limite máximo de 10 fotos."); return; } fotosEmCriacao.push(u); renderizarPreviewFotos(); sv('input-foto-url', ''); }
-
-    function processarFotos(e) { 
-        const f=e.target.files; if(!f||!f.length) return; const limite = Math.min(f.length, 10 - fotosEmCriacao.length); if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; } 
-        for(let i=0; i<limite; i++) { const r=new FileReader(); r.onload=(ev)=>{ const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=500; c.height=333; c.getContext('2d').drawImage(img,0,0,500,333); fotosEmCriacao.push(c.toDataURL('image/jpeg',0.5)); renderizarPreviewFotos(); }; img.src=ev.target.result; }; r.readAsDataURL(f[i]); } sv('input-fotos',''); 
-    }
-
-    function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
-    function renderizarPreviewFotos() { const d=el('preview-fotos'); if(!d) return; d.innerHTML=''; fotosEmCriacao.forEach((f,i)=>d.insertAdjacentHTML('beforeend', `<div class="relative w-full h-24 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden"><img src="${f}" class="w-full h-full object-cover"><button type="button" onclick="removerFoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]"><i class="fas fa-times"></i></button></div>`)); }
-
-    function validarESalvarImovel() {
-        const n = val('cad-nome'); if(!n) { mudarAbaCadastro('imovel'); mostrarAlerta("Preencha o Nome do Imóvel."); return; } if(!calendarioEmCriacao || !calendarioEmCriacao.length) { mudarAbaCadastro('tarifas'); mostrarAlerta("Você precisa gerar as tarifas diárias no Calendário antes de salvar."); return; }
-        const obj = { id: imovelEditandoId || Date.now(), proprietario: { nome: val('cad-prop-nome'), cpf: val('cad-prop-cpf'), zap: val('cad-prop-zap'), email: val('cad-prop-email'), comissao: parseFloat(val('cad-prop-comissao'))||0 }, nome: n, numeroApto: val('cad-num-apto'), cidade: val('cad-cidade') + (val('cad-uf') ? ' - '+val('cad-uf') : ''), endereco: { cep: val('cad-cep'), cidade: val('cad-cidade'), uf: val('cad-uf'), rua: val('cad-rua'), numero: val('cad-numero'), bairro: val('cad-bairro'), complemento: val('cad-complemento') }, tipo: val('cad-tipo'), checkin: val('cad-checkin'), checkout: val('cad-checkout'), capacidadeTotal: parseInt(val('cad-capacidade'))||1, estrutura: val('cad-estrutura'), pagamento: val('cad-pagamento'), fotos: [...fotosEmCriacao], calendario: JSON.parse(JSON.stringify(calendarioEmCriacao)), reservas: imovelEditandoId ? imoveisDB.find(i=>i.id==imovelEditandoId).reservas : [], despesas: imovelEditandoId ? (imoveisDB.find(i=>i.id==imovelEditandoId).despesas || []) : [] };
-        if(imovelEditandoId) { let idx = imoveisDB.findIndex(x=>x.id===imovelEditandoId); if(idx>-1) imoveisDB[idx]=obj; } else { imoveisDB.push(obj); }
-        salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); fecharModalCadastro(); mostrarNotificacao("Imóvel salvo com sucesso!");
-    }
-
-    function abrirMenuDestinos() { show('dropdown-destinos'); filtrarDestinos(); }
-    function filtrarDestinos() { const txt = val('busca-cidade').toLowerCase().trim(); const ul = el('lista-custom-cidades'); ul.innerHTML = ''; const cids = [...new Set(imoveisDB.map(i => i.cidade).filter(c => c && c.trim() !== ''))].filter(c => c.toLowerCase().includes(txt)); if(!cids.length) { ul.innerHTML = '<li class="px-4 py-3 text-sm font-bold text-slate-500">Nenhum destino...</li>'; return; } cids.forEach(c => { const li = document.createElement('li'); li.className="px-4 py-3 text-sm font-bold cursor-pointer hover:bg-orange-50"; li.innerHTML=`<i class="fas fa-map-marker-alt text-slate-400 mr-2"></i> ${c}`; li.onclick=()=> { sv('busca-cidade', c); hide('dropdown-destinos'); }; ul.appendChild(li); }); }
-
-    function montarDropdownHospedes() { const ul = el('lista-custom-hospedes'); ul.innerHTML = ''; for(let i=1;i<=20;i++){ const li = document.createElement('li'); li.className="px-4 py-3 text-sm font-medium cursor-pointer hover:bg-orange-50 text-center"; li.innerText = i === 1 ? '1 Hóspede' : `${i} Hóspedes`; li.onclick=()=>{ sv('busca-pessoas', i); sv('busca-pessoas-display', li.innerText); hide('dropdown-hospedes'); }; ul.appendChild(li); } }
-
-    function calcularPrecoDinamico(im, checkin, checkout, resIgnorar=null) {
-        if(!im.calendario || !im.calendario.length) return { disponivel:false, msg:"Sem tarifas configuradas no calendário" };
-        if(checkin && checkout && im.reservas) { let dInB = new Date(parseInputDateSafe(checkin)+'T12:00:00'); let dOutB = new Date(parseInputDateSafe(checkout)+'T12:00:00'); for(let r of im.reservas) { if(resIgnorar && r.id==resIgnorar) continue; if(r.statusPagamento==='cancelada') continue; let dInR = new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let dOutR = new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dInB < dOutR && dOutB > dInR) return {disponivel:false}; } }
-        if(!checkin || !checkout) { let menorPreco = Infinity; im.calendario.forEach(d => { if(d.valor < menorPreco) menorPreco = d.valor; }); return { disponivel:true, precoCalculado:menorPreco, isAPartirDe:true, minNoites:1 }; }
-        let dI = new Date(parseInputDateSafe(checkin)+'T12:00:00'); let dO = new Date(parseInputDateSafe(checkout)+'T12:00:00'); if(dO <= dI) return {disponivel:false};
-        let noites = Math.round((dO-dI)/86400000); let total = 0; let indisp = false; let maiorRegraMinNoites = 1;
-        for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { let dtStr = formatarDataLocalISO(d); let diaTarifado = im.calendario.find(x => x.data === dtStr); if(!diaTarifado) { indisp = true; break; } if(diaTarifado.minNoites > maiorRegraMinNoites) { maiorRegraMinNoites = diaTarifado.minNoites; } total += diaTarifado.valor; }
-        if(indisp) return {disponivel:false};
-        let quebrouMinNoites = noites < maiorRegraMinNoites; return { disponivel: true, precoCalculado: Math.round(total/noites), isAPartirDe: false, minNoites: maiorRegraMinNoites, precoTotal: total, noites: noites, bloqueioMinNoites: quebrouMinNoites };
-    }
-
-    function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
-
-    function realizarBusca() {
-        const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
-        if(dr.includes(" a ")){ cIn=dr.split(" a ")[0]; cOut=dr.split(" a ")[1]; } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0]; cOut=dr.split(" até ")[1]; } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0]; cOut=dr.split(" to ")[1]; } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0]; cOut=dr.split(" - ")[1]; }
-        let bk=false; let minNoitesSugestao = 0;
-        let flt = imoveisDB.filter(im => { if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; if(im.capacidadeTotal < pes) return false; if(cIn && cOut) { let i = calcularPrecoDinamico(im, cIn, cOut); if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } if(!i.disponivel) return false; } return true; });
-        if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
-        renderizarVitrine(flt, cIn, cOut, pes);
-    }
-
-    function renderizarVitrine(lista, ci, co, pes) {
-        const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
-        if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum disponível para esses critérios. (Pode faltar tarifa neste período).</div>'; return; }
-        lista.forEach(im => {
-            let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
-            let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
-            let setasHtml = fts.length > 1 ? `<button onclick="mudarFoto(event, ${im.id}, -1, ${fts.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-left text-xs"></i></button><button onclick="mudarFoto(event, ${im.id}, 1, ${fts.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-right text-xs"></i></button>` : '';
-            let carHtml = `<div class="relative w-full h-56 bg-slate-100 overflow-hidden rounded-xl" id="carousel-${im.id}" data-current="0" data-total="${fts.length}">${imagensHtml}${setasHtml}</div>`;
-            let numP = formatarNumero(pes); let numN = formatarNumero(info.noites || 0); let minNStr = formatarNumero(info.minNoites || 1);
-            let precoCalcFormatado = (info.precoCalculado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}); let precoTotalFormatado = (info.precoTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-            let prcHtml = !info.disponivel ? `<div class="text-red-500 font-bold text-lg mb-2">Indisponível</div><button disabled class="w-full bg-slate-200 text-slate-400 px-4 py-2.5 rounded-xl font-bold text-sm">Sem datas</button>` : (info.isAPartirDe ? `<div class="text-[11px] text-slate-400 font-bold tracking-wider mb-1 uppercase">Diárias A partir de</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoCalcFormatado}</div>` : (info.bloqueioMinNoites ? `<button disabled class="w-full bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold text-sm">Mínimo ${minNStr} noites</button>` : `<div class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">Valor do pacote</div><div class="bg-orange-50 border border-orange-100 text-orange-600 font-bold text-xs px-2 py-0.5 rounded inline-block mb-2">${numN} noites</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoTotalFormatado}</div>`));
-            let zapProp = im.proprietario?.zap?.replace(/\D/g,'') || empresaDB.zap?.replace(/\D/g,''); let dIn = ci ? parseInputDateSafe(ci).split('-').reverse().join('/') : ''; let dOut = co ? parseInputDateSafe(co).split('-').reverse().join('/') : '';
-            let msgZ = encodeURIComponent(`Olá! Tenho interesse no imóvel *${im.nome}*.\n\n${ci ? `Período: ${dIn} a ${dOut} (${info.noites || 0} noites).\n${numP} hóspedes\nValor do pacote: R$ ${precoTotalFormatado}` : `Diárias a partir de: R$ ${precoCalcFormatado}`}\n\n*Orçamento sujeito a disponibilidade.\n\nUm instante que já já iremos te atender.`);
-            let btnZ = (info.isAPartirDe || (!info.isAPartirDe && !info.bloqueioMinNoites)) && info.disponivel ? `<a href="https://wa.me/55${zapProp}?text=${msgZ}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2.5 rounded-xl flex items-center justify-center font-bold shadow transition-colors active:scale-95"><i class="fab fa-whatsapp text-lg mr-2"></i> Reservar com Agência</a>` : '';
-            div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${im.nome}</h3> <p class="text-xs text-[#0071c2] underline cursor-pointer mb-3">${im.cidade}</p> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <p class="text-[11px] text-slate-600 mt-1 leading-relaxed">${im.estrutura||''}</p> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-[11px] text-slate-500 mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
-        });
-    }
-
-    function renderizarMapaDisponibilidade() {
-        if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
-        let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
-        if(!imoveisDB.length) { h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; } else {
+        function renderizarAdmin() {
+            const d = el('lista-imoveis-admin'); if(!d) return; d.innerHTML = '';
+            if (imoveisDB.length === 0) { d.innerHTML = '<p class="text-center text-slate-500 py-4 font-bold">Nenhum imóvel cadastrado.</p>'; return; }
             imoveisDB.forEach(im => {
-                let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome; h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
-                for (let dia=1; dia<=dias; dia++) {
-                    let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; let dObj = new Date(dt+'T12:00:00'); let cls = 'status-livre'; let txt = '1'; let rF = null;
-                    if(im.reservas) { for(let r of im.reservas) { if(r.statusPagamento==='cancelada') continue; let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dObj>=di && dObj<do_) { cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; txt='0'; rF=r; if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); break; } } }
-                    let evt = rF ? `abrirEdicaoReservaMapa(${im.id}, ${rF.id})` : `abrirNovaReservaMapa(${im.id}, '${dt}')`; let tooltip = rF ? (rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`) : `Nova Reserva: ${dt.split('-').reverse().join('/')}`; h += `<div onclick="${evt}" class="mapa-celula ${cls} truncate px-1 text-[10px]" title="${tooltip}">${txt}</div>`;
-                } h += `</div>`;
+                let dQtd = im.calendario ? im.calendario.length : 0;
+                let bgSt = dQtd > 0 ? `<span class="text-green-600 bg-green-50 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-check-circle mr-1"></i>${dQtd} Dias Tarifados</span>` : `<span class="text-red-600 bg-red-50 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>S/ Tarifa</span>`;
+                let tb = (im.fotos && im.fotos.length > 0) ? im.fotos[0] : 'https://placehold.co/100x100/eeeeee/999999';
+                let nm = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
+                d.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between hover:border-orange-200 transition-colors"><div class="flex items-center gap-4 w-full sm:w-auto"><img src="${tb}" class="w-16 h-16 rounded-lg object-cover bg-slate-100 shadow-sm"><div><h4 class="font-bold text-slate-800 text-lg">${nm}</h4><div class="flex flex-wrap items-center text-xs font-bold text-slate-500 mt-1 gap-3"><span><i class="fas fa-building mr-1 text-slate-400"></i>${im.tipo}</span><span><i class="fas fa-user-friends mr-1 text-slate-400"></i>Até ${im.capacidadeTotal}</span>${bgSt}</div></div></div><div class="flex gap-2 w-full sm:w-auto mt-3 sm:mt-0"><button onclick="editarImovel(${im.id})" title="Editar Imóvel" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-edit mr-1"></i> Editar</button><button onclick="abrirModalExclusao(${im.id})" title="Excluir Imóvel" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-trash-alt"></i></button></div></div>`);
             });
-        } cont.innerHTML = h;
-    }
-
-    function mudarMesMapa(dir) { mapaMes += dir; if(mapaMes>12){mapaMes=1;mapaAno++;} if(mapaMes<1){mapaMes=12;mapaAno--;} renderizarMapaDisponibilidade(); }
-    function povoarSelectImoveis() { const s = el('reserva-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i => { let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome; s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); }); } }
-    
-    function verificarChoqueDatas(imId, ci, co, resId) { 
-        if(!imId||!ci||!co) return false; const im = imoveisDB.find(i=>i.id==imId); if(!im||!im.reservas) return false; 
-        let dI = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dO = new Date(parseInputDateSafe(co)+'T12:00:00'); 
-        for(let r of im.reservas){ if(resId && r.id==resId) continue; if(r.statusPagamento==='cancelada') continue; if(dI < new Date(parseInputDateSafe(r.checkout)+'T12:00:00') && dO > new Date(parseInputDateSafe(r.checkin)+'T12:00:00')) return true; } 
-        return false; 
-    }
-
-    function checarDisponibilidadeAoDigitar() { 
-        const imId=val('reserva-imovel-select'); const ci=val('reserva-checkin'); const co=val('reserva-checkout'); const resId=val('reserva-id'); 
-        if(!imId || !ci || !co) { mostrarAlerta("Por favor, selecione o imóvel e as datas de check-in e check-out antes de verificar."); return; }
-        if(imId&&ci&&co){ 
-            if(verificarChoqueDatas(imId, ci, co, resId)) { mostrarAlerta("Data ocupada por outra reserva ou bloqueio."); setVal('reserva-checkin',''); setVal('reserva-checkout',''); return; } 
-            const im = imoveisDB.find(i=>i.id==imId); let inf = calcularPrecoDinamico(im, ci, co, resId);
-            if (inf.bloqueioMinNoites) { let min = inf.minNoites; let dIn = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + min); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(co)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${min} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); setVal('reserva-checkout',''); setVal('reserva-valor', 0); return; }
-            calcularValorReservaAdmin(); mostrarNotificacao("Disponível! Valor calculado.");
-        } 
-    }
-    
-    function abrirNovaReservaManualLista() { povoarSelectImoveis(); resetarModalReserva(); if(el('titulo-modal-reserva')) el('titulo-modal-reserva').innerText="Nova Reserva"; hide('btn-excluir-reserva'); hide('btn-cancelar-reserva'); show('modal-reserva-manual'); }
-    
-    function abrirNovaReservaMapa(imId, dt) { 
-        abrirNovaReservaManualLista(); setVal('reserva-imovel-select', imId); 
-        let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
-        if(fpIn) { fpIn.setDate(dt, true); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); let dtOut = formatarDataLocalISO(do_); if(fpOut) fpOut.setDate(dtOut, true); } 
-        else { setVal('reserva-checkin', dt); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); setVal('reserva-checkout', formatarDataLocalISO(do_)); }
-    }
-    
-    function abrirEdicaoReservaMapa(imId, resId) {
-        povoarSelectImoveis(); const im = imoveisDB.find(i=>i.id==imId); const res = im?.reservas.find(r=>r.id==resId); if(!res) return;
-        if(el('titulo-modal-reserva')) el('titulo-modal-reserva').innerText="Editar Reserva"; setVal('reserva-id', res.id); setVal('reserva-imovel-select', imId); 
-        let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
-        if(fpIn && fpOut) { fpIn.setDate(res.checkin, true); fpOut.setDate(res.checkout, true); } else { setVal('reserva-checkin', res.checkin); setVal('reserva-checkout', res.checkout); }
-        let pg = res.statusPagamento==='pago' ? (res.valorPago!==undefined?res.valorPago:res.valorTotal) : (res.valorPago||0); setVal('reserva-valor-pago', pg);
-        if(res.statusPagamento==='pago') show('opt-status-pago'); if(res.statusPagamento==='cancelada') show('opt-status-cancelada');
-        setVal('reserva-status', res.statusPagamento); hide('opt-status-devolucao');
-        let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada') setVal('reserva-valor', 0);
-        if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
-        acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva();
-        show('btn-excluir-reserva'); if(res.statusPagamento!=='cancelada') show('btn-cancelar-reserva'); else hide('btn-cancelar-reserva'); verificarDiferencaPagamento(); show('modal-reserva-manual');
-    }
-
-    function fecharModalReserva() { hide('modal-reserva-manual'); }
-    function resetarModalReserva() {
-        setVal('reserva-imovel-select', ''); let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
-        if(fpIn) { fpIn.clear(); } else setVal('reserva-checkin', ''); 
-        if(fpOut) { fpOut.clear(); fpOut.set("minDate", null); } else setVal('reserva-checkout', ''); 
-        
-        setVal('reserva-valor-pago', '0'); hide('aviso-diferenca');
-        hide('opt-status-pago'); hide('opt-status-devolucao'); hide('opt-status-cancelada'); setVal('reserva-status', 'pendente');
-        hide('bloco-multa-devolucao'); setVal('reserva-multa-perc', '0'); setVal('reserva-valor-multa-calculada', '0'); setVal('reserva-valor', '');
-        setVal('reserva-titular-nome', ''); setVal('reserva-titular-cpf', ''); setVal('reserva-titular-nasc', ''); setVal('reserva-titular-zap', ''); setVal('reserva-titular-email', '');
-        acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
-    }
-
-    function toggleCamposReserva() { const s = val('reserva-status'); const b = el('bloco-acompanhantes'); if(b) { if(s==='bloqueio'){ b.classList.add('opacity-50','pointer-events-none'); } else { b.classList.remove('opacity-50','pointer-events-none'); } } }
-    function iniciarCancelamentoTotal() { const pg = parseFloat(val('reserva-valor-pago'))||0; show('opt-status-cancelada'); setVal('reserva-status', 'cancelada'); setVal('reserva-valor', 0); verificarDiferencaPagamento(); hide('btn-cancelar-reserva'); mostrarNotificacao(pg>0?"Reserva Cancelada! Ajuste a multa.":"Ficha Cancelada. Datas livres!"); }
-    
-    function verificarDiferencaPagamento() {
-        const vT = parseFloat(val('reserva-valor'))||0; const pg = parseFloat(val('reserva-valor-pago'))||0;
-        const aviso = el('aviso-diferenca'); const st = val('reserva-status'); const blocoDev = el('bloco-multa-devolucao');
-        const lblDev = el('label-valor-devolver'); const inMulta = el('reserva-valor-multa-calculada'); const pMulta = el('reserva-multa-perc');
-        if(aviso) aviso.classList.add('hidden-view'); if(blocoDev) blocoDev.classList.add('hidden-view'); if(inMulta) inMulta.value=0; 
-        let p = parseFloat(pMulta?.value)||0; if(p>100)p=100; if(p<0)p=0;
-        if(st==='cancelada') { if(pg>0 && blocoDev) { blocoDev.classList.remove('hidden-view'); let vM=pg*(p/100); let vD=pg-vM; inMulta.value=vM; lblDev.innerText=`R$ ${vD.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; } } 
-        else if(pg>0) {
-            if(vT>pg && aviso) { aviso.innerHTML=`Já pago: R$ ${pg.toLocaleString('pt-BR',{minimumFractionDigits:2})} | <b class="text-orange-800">Falta: R$ ${(vT-pg).toLocaleString('pt-BR',{minimumFractionDigits:2})}</b>`; aviso.classList.remove('hidden-view'); setVal('reserva-status','pendente'); }
-            else if(pg>vT && blocoDev) { blocoDev.classList.remove('hidden-view'); let d=pg-vT; let vM=d*(p/100); let vD=d-vM; inMulta.value=vM; lblDev.innerText=`R$ ${vD.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(vD>0){ setVal('reserva-status','devolucao'); show('opt-status-devolucao'); } else setVal('reserva-status','pago'); }
         }
-    }
 
-    function calcularValorReservaAdmin() {
-        const st = val('reserva-status'); if(st==='cancelada'||st==='proprietario'||st==='bloqueio') { setVal('reserva-valor',0); verificarDiferencaPagamento(); return; }
-        const imId = val('reserva-imovel-select'); const ci = val('reserva-checkin'); const co = val('reserva-checkout'); if(!imId||!ci||!co) return; const im = imoveisDB.find(i=>i.id==imId); if(!im) return;
-        let inf = calcularPrecoDinamico(im, ci, co, val('reserva-id')); if(inf?.disponivel && inf.precoTotal!==undefined) setVal('reserva-valor', inf.precoTotal); else if(!val('reserva-valor')) setVal('reserva-valor', 0); verificarDiferencaPagamento();
-    }
+        function abrirModalExclusao(id) { imovelExcluirId = id; show('modal-exclusao'); }
+        function fecharModalExclusao() { imovelExcluirId = null; hide('modal-exclusao'); }
+        function confirmarExclusao() { if (imovelExcluirId) { imoveisDB = imoveisDB.filter(i => i.id !== imovelExcluirId); salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); fecharModalExclusao(); mostrarNotificacao('Imóvel excluído com sucesso.'); } }
 
-    function adicionarAcompanhanteAdmin() { acompanhantesTemp.push({id:Date.now(),nome:'',cpf:'',dataNasc:''}); renderizarAcompanhantes(); }
-    function removerAcompanhanteAdmin(id) { acompanhantesTemp=acompanhantesTemp.filter(a=>a.id!==id); renderizarAcompanhantes(); }
-    function atualizarAcompanhanteTemp(id, c, obj) { let a=acompanhantesTemp.find(x=>x.id==id); if(a) a[c]=obj.value; }
-    function renderizarAcompanhantes() {
-        const cont = el('container-lista-acompanhantes'); const msg = el('msg-sem-acompanhantes'); if(!cont) return; cont.innerHTML='';
-        if(!acompanhantesTemp.length){ if(msg) msg.classList.remove('hidden-view'); return; } if(msg) msg.classList.add('hidden-view');
-        acompanhantesTemp.forEach(a => cont.insertAdjacentHTML('beforeend', `<div class="bg-white p-3 rounded-lg border border-slate-200 relative pr-10 mb-2"><button type="button" onclick="removerAcompanhanteAdmin(${a.id})" class="absolute top-1/2 -translate-y-1/2 right-3 text-red-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><input type="text" placeholder="Nome" value="${a.nome}" oninput="atualizarAcompanhanteTemp(${a.id}, 'nome', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="text" placeholder="CPF" value="${a.cpf}" oninput="mascaraCpfCnpj(this);atualizarAcompanhanteTemp(${a.id}, 'cpf', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="date" value="${a.dataNasc}" onchange="atualizarAcompanhanteTemp(${a.id}, 'dataNasc', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium text-slate-500"></div></div></div>`));
-    }
-
-    function salvarReservaManual() {
-        const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); 
-        const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); 
-        const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
-        
-        if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
-        if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
-        const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
-        
-        let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
-        if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
-        
-        let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
-        let vPago = rOrig ? (rOrig.valorPago!==undefined?rOrig.valorPago:(rOrig.statusPagamento==='pago'?rOrig.valorTotal:0)) : 0;
-        let vTF = vT; if(st==='devolucao'||st==='cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada'))||0);
-        let sF = st; if(st==='cancelada') sF='cancelada'; else if(vTF>vPago && vPago>0) sF='pendente'; else if(vPago>vTF) sF='devolucao'; else if(st==='pago') vPago=vTF;
-        
-        const obj = { id: rId?parseInt(rId):Date.now(), dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), numeroReserva: numRes, imovelId: imId, checkin: ci, checkout: co, statusPagamento: sF, formaPagamento: fP, valorTotal: vTF, valorPago: vPago, titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)) };
-        if(rId) { let idx = im.reservas.findIndex(x=>x.id==rId); if(idx>-1) im.reservas[idx]=obj; } else im.reservas.push(obj);
-        
-        salvarBancoNoStorage(); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); renderizarVitrine(imoveisDB); fecharModalReserva(); mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
-    }
-
-    function excluirReservaConfirmacao() { const imId = val('reserva-imovel-select'); const rId = val('reserva-id'); const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas){ im.reservas=im.reservas.filter(r=>r.id!=rId); salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalReserva(); mostrarNotificacao("Ficha Apagada!"); } }
-
-    function abrirModalPagamento(imId, rId) {
-        setVal('pagamento-imovel-id', imId); setVal('pagamento-reserva-id', rId);
-        const im = imoveisDB.find(i=>i.id==imId); const res = im?.reservas.find(r=>r.id==rId); if(!res) return;
-        let p = res.valorPago!==undefined?res.valorPago:(res.statusPagamento==='pago'?res.valorTotal:0); let d = res.valorTotal-p;
-        const bx = el('pagamento-valor-box'); const tb = el('pagamento-texto-base'); const bc = el('btn-confirmar-pagamento');
-        if(bx && tb && bc) {
-            bx.className="bg-orange-50 border border-orange-200 text-orange-700 font-bold text-xl py-3 rounded-xl mb-4 text-center"; bc.className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; bc.innerText="Confirmar Baixa";
-            if(d>0 && p>0) { bx.innerText=`Cobrar: R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; bx.classList.remove('hidden-view'); tb.innerText="Forma de pagamento da diferença:"; }
-            else if(d<0 || (res.statusPagamento==='cancelada' && p>res.valorTotal)) { bx.innerText=`Devolver: R$ ${Math.abs(d).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; bx.className="bg-red-50 text-red-700 font-bold text-xl py-3 rounded-xl mb-4 border border-red-200"; bx.classList.remove('hidden-view'); tb.innerText="Como devolveu?"; bc.className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; bc.innerText="Confirmar Devolução"; }
-            else { bx.classList.add('hidden-view'); tb.innerText="Como pagou?"; } 
+        function abrirModalCadastro() { 
+            imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
+            ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
+            sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5');
+            fotosEmCriacao = []; renderizarPreviewFotos(); 
+            calendarioEmCriacao = []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
+            mudarAbaCadastro('proprietario'); show('modal-cadastro'); 
         }
-        show('modal-pagamento');
-    }
-    function fecharModalPagamento() { hide('modal-pagamento'); }
-    function confirmarPagamento() {
-        const imId = val('pagamento-imovel-id'); const rId = val('pagamento-reserva-id'); const m = val('pagamento-metodo');
-        const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas) { const res = im.reservas.find(r=>r.id==rId); if(res) { if(res.statusPagamento!=='cancelada') res.statusPagamento='pago'; res.formaPagamento=m; res.valorPago=res.valorTotal; salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalPagamento(); mostrarNotificacao("Pagamento Confirmado!"); } }
-    }
 
-    function toggleFiltroPersonalizadoReservas() { if(el('bloco-filtro-datas')) el('bloco-filtro-datas').classList[val('filtro-periodo-reservas')==='personalizado'?'remove':'add']('hidden-view'); }
-    function renderizarListaReservasAdmin() {
-        const tb = el('lista-reservas-tbody'); if(!tb) return;
-        tb.innerHTML=''; let lista=[];
-        imoveisDB.forEach(im => { if(im.reservas) im.reservas.forEach(r => lista.push({...r, nIm: im.numeroApto?`${im.nome} (${im.numeroApto})`:im.nome})) });
-        
-        const p = val('filtro-periodo-reservas') || 'todas'; let hj = new Date(); hj.setHours(0,0,0,0); let dI=null; let dF=null;
-        if(p==='hoje'){dI=new Date(hj);dF=new Date(hj);} else if(p==='7'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+7);} else if(p==='30'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+30);} else if(p==='personalizado'){if(val('filtro-reserva-inicio')) dI=new Date(val('filtro-reserva-inicio')+'T12:00:00'); if(val('filtro-reserva-fim')) dF=new Date(val('filtro-reserva-fim')+'T12:00:00');}
-        
-        let flt = lista.filter(r=>{ if(p==='todas')return true; let ri=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let ro=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dI&&dF)return ri<=dF&&ro>=dI; else if(dI)return ro>=dI; else if(dF)return ri<=dF; return true; });
-        flt.sort((a,b)=>b.id-a.id); reservasAtuaisExportacao = flt;
-        
-        if(!flt.length) { tb.innerHTML='<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas no período.</td></tr>'; return; }
-        flt.forEach(res => {
-            let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
-            let bdg=''; let bP=''; let bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
-            let pg = res.valorPago!==undefined?parseFloat(res.valorPago):0; if(res.statusPagamento==='pago'&&pg===0) pg=parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal)-pg; let addI = '';
-            if(res.statusPagamento==='pago'){bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`;}
-            else if(res.statusPagamento==='pendente'){bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`;}
-            else if(res.statusPagamento==='devolucao'){bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;}
-            else if(res.statusPagamento==='cancelada'){bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; if(pg>res.valorTotal) bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; bV=''; addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';}
-            else if(res.statusPagamento==='proprietario'){bdg=`<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;}
-            else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`; bV='';}
-            tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-500">${dC}</td><td class="p-3 font-medium text-slate-400">${res.numeroReserva||'-'}</td><td class="p-3">${bdg}</td><td class="p-3 font-medium text-slate-700">${res.titular?.nome||'-'}</td><td class="p-3 text-[#0071c2] font-medium text-xs">${res.nIm||'-'}</td><td class="p-3 text-xs text-slate-500">${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}</td><td class="p-3 leading-tight"><div class="font-bold text-slate-800 text-sm">R$ ${parseFloat(res.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td><td class="p-3 text-center whitespace-nowrap">${bV}${bP}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar Reserva" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button></td></tr>`);
-        });
-    }
-
-    function exportarExcelReservas() {
-        if(!reservasAtuaisExportacao.length) return; 
-        let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
-        reservasAtuaisExportacao.forEach(r => { let dC = r.dataCriacao ? new Date(r.dataCriacao).toLocaleDateString('pt-BR') : (r.id > 1000000000000 ? new Date(r.id).toLocaleDateString('pt-BR') : '-'); let pg = r.valorPago!==undefined?parseFloat(r.valorPago):0; if(r.statusPagamento==='pago'&&pg===0)pg=parseFloat(r.valorTotal||0); let d=parseFloat(r.valorTotal||0)-pg; let s=(r.statusPagamento==='pago')?'QUITADO':(r.statusPagamento==='pendente'?`FALTA R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:(r.statusPagamento==='devolucao'||r.statusPagamento==='cancelada'?'DEVOLVER/MULTA':'-')); h+=`<tr><td style="text-align:center">${dC}</td><td style="text-align:center">${r.statusPagamento.toUpperCase()}</td><td>${r.titular?.nome||'-'}</td><td style="text-align:center">${r.nIm||''}</td><td style="text-align:center">${parseInputDateSafe(r.checkin).split('-').reverse().join('/')}</td><td style="text-align:center">${parseInputDateSafe(r.checkout).split('-').reverse().join('/')}</td><td style="text-align:right">R$ ${parseFloat(r.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="text-align:center">${s}</td></tr>`; }); h += `</table></body></html>`;
-        const b = new Blob([h], {type:'application/vnd.ms-excel;charset=utf-8'}); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Reservas.xls"; l.click();
-    }
-
-    // ================= ORÇAMENTOS =================
-
-    function mudarAbaOrcamento(a) { 
-        if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); 
-        if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); 
-        if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; 
-        if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; 
-        if(a!=='novo') renderListaOrc(); 
-    }
-
-    function buscarDisponibilidadeOrcamento() {
-        const ci = val('busca-orc-checkin'); const co = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
-        if(!ci||!co) { mostrarAlerta("Preencha as datas."); return; } const div = el('lista-imoveis-orcamento'); if(div) div.innerHTML='';
-        let count=0; let minNoitesBloqueio = null; let conflitoReserva = false;
-        
-        imoveisDB.forEach(im => { 
-            if(im.capacidadeTotal < ps) return; 
-            let inf = calcularPrecoDinamico(im, ci, co); 
-            if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
-            if(!inf.disponivel || inf.bloqueioMinNoites) { if(verificarChoqueDatas(im.id, ci, co)) { conflitoReserva = true; } return; }
-            count++; 
-            if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`); 
-        });
-        
-        if(count===0 && div) {
-            if(minNoitesBloqueio) { div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`; } 
-            else if (conflitoReserva) { div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`; } 
-            else { div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`; }
+        function editarImovel(id) {
+            const imovel = imoveisDB.find(i => i.id === id); if(!imovel) return; imovelEditandoId = id;
+            sv('cad-prop-nome', imovel.proprietario?.nome || ''); sv('cad-prop-cpf', imovel.proprietario?.cpf || ''); sv('cad-prop-zap', imovel.proprietario?.zap || ''); sv('cad-prop-email', imovel.proprietario?.email || ''); sv('cad-prop-comissao', imovel.proprietario?.comissao !== undefined ? imovel.proprietario.comissao : 20);
+            sv('cad-nome', imovel.nome || ''); sv('cad-num-apto', imovel.numeroApto || ''); sv('cad-tipo', imovel.tipo || 'Apartamento'); sv('cad-checkin', imovel.checkin || '14:00'); sv('cad-checkout', imovel.checkout || '11:00'); sv('cad-capacidade', imovel.capacidadeTotal || 5); sv('cad-estrutura', imovel.estrutura || ''); sv('cad-pagamento', imovel.pagamento || '');
+            sv('cad-cep', imovel.endereco?.cep || ''); sv('cad-cidade', imovel.endereco?.cidade || (imovel.cidade ? imovel.cidade.split(' - ')[0] : '')); sv('cad-uf', imovel.endereco?.uf || (imovel.cidade ? imovel.cidade.split(' - ')[1] : '')); sv('cad-rua', imovel.endereco?.rua || ''); sv('cad-bairro', imovel.endereco?.bairro || ''); sv('cad-numero', imovel.endereco?.numero || ''); sv('cad-complemento', imovel.endereco?.complemento || '');
+            fotosEmCriacao = [...(imovel.fotos || [])]; renderizarPreviewFotos(); 
+            calendarioEmCriacao = imovel.calendario ? JSON.parse(JSON.stringify(imovel.calendario)) : []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
+            if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Editar Imóvel"; mudarAbaCadastro('proprietario'); show('modal-cadastro');
         }
-    }
 
-    function abrirModalGerarOrcamento(id, v, ci, co, ps) { 
-        sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); 
-        if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
-        show('modal-gerar-orcamento'); 
-    }
-
-    function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
-
-    function editarOrcamento(id) {
-        const o = orcamentosDB.find(x => x.id === id); if (!o) return;
-        sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap);
-        if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-        show('modal-gerar-orcamento');
-    }
-    
-    function salvarECopiarOrcamento() {
-        const nome = val('orc-cliente-nome'); const zap = val('orc-cliente-zap'); if(!nome||zap.length<14){ mostrarAlerta("Nome e WhatsApp (DDD) são obrigatórios."); return; }
-        const im = imoveisDB.find(i=>i.id==val('orc-imovel-id')); let ci=parseInputDateSafe(val('orc-checkin')).split('-').reverse().join('/'); let co=parseInputDateSafe(val('orc-checkout')).split('-').reverse().join('/');
+        function fecharModalCadastro() { hide('modal-cadastro'); }
         
-        let primeiroNome = nome.split(' ')[0]; let ap = im.numeroApto ? `\n👉 Apto ${im.numeroApto}` : ''; let pg = im.pagamento ? `\n\n👉 Regras de pagamento:\n- ${im.pagamento}` : '';
-        let txt = `Olá, *${primeiroNome}*! Tudo bem?\n\nSegue seu orçamento\n\n*${im.nome}*${ap}\n👉 Entrada: ${ci}\n👉 Saída: ${co}\n👉 Hóspedes: ${formatarNumero(val('orc-hospedes'))}\n✅ Valor do pacote: R$ ${parseFloat(val('orc-valor')).toLocaleString('pt-BR',{minimumFractionDigits:2})}${pg}\n\n*Orçamento sujeito a disponibilidade.\n\nQualquer dúvida estou à disposição.\n*${empresaDB.nome||'Laranja Stays'}*\nAtendimento Comercial\n${empresaDB.zap||''}`;
+        function mudarAbaCadastro(a) { 
+            ['proprietario','imovel','fotos','tarifas'].forEach(id => { 
+                let dContent = el('tab-content-'+id); let dBtn = el('tab-btn-'+id);
+                if(dContent && dBtn) { if(id === a) { dContent.classList.remove('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] transition-colors border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none"; } else { dContent.classList.add('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap outline-none"; } }
+            }); abaAtivaCadastro = a;
+        }
+
+        function aplicarAjusteSazonalMassa() {
+            const dtIn = parseInputDateSafe(val('ajuste-lote-in')); const dtOut = parseInputDateSafe(val('ajuste-lote-out')); const tipo = val('ajuste-lote-tipo'); const perc = parseFloat(val('ajuste-lote-valor'));
+            if (!dtIn || !dtOut || isNaN(perc) || perc <= 0) { mostrarAlerta("Preencha as datas e informe uma porcentagem válida maior que zero."); return; }
+            let dI = new Date(dtIn + 'T12:00:00'); let dO = new Date(dtOut + 'T12:00:00');
+            if (dO < dI) { mostrarAlerta("A Data Fim deve ser maior ou igual a Data Início."); return; }
+            let diasAlterados = 0;
+            for (let d = new Date(dI); d <= dO; d.setDate(d.getDate() + 1)) { let dtStr = formatarDataLocalISO(d); let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dtStr); if (diaIdx > -1) { let valorAntigo = calendarioEmCriacao[diaIdx].valor; let modificador = perc / 100; let novoValor = tipo === 'aumento' ? valorAntigo * (1 + modificador) : valorAntigo * (1 - modificador); calendarioEmCriacao[diaIdx].valor = Math.round(novoValor); diasAlterados++; } }
+            if (diasAlterados === 0) { mostrarAlerta("Nenhuma tarifa encontrada no período selecionado. Você precisa cadastrar tarifas antes de ajustá-las."); return; }
+            sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); renderizarFiltrosCalendarioGestao(); mostrarNotificacao(`Ajuste de ${perc}% aplicado com sucesso em ${diasAlterados} diárias!`);
+        }
+
+        function aplicarTarifasEmLote() {
+            const nome = val('lote-tarifa-nome').trim(); const dtIn = parseInputDateSafe(val('lote-tarifa-in')); const dtOut = parseInputDateSafe(val('lote-tarifa-out')); const valor = parseFloat(val('lote-tarifa-valor')); const minNoites = parseInt(val('lote-tarifa-min')) || 1;
+            if (!nome || !dtIn || !dtOut || isNaN(valor)) { mostrarAlerta("Preencha todos os campos: Nome, Datas e Valor para aplicar a tarifa."); return; }
+            let dI = new Date(dtIn + 'T12:00:00'); let dO = new Date(dtOut + 'T12:00:00');
+            if (dO < dI) { mostrarAlerta("A Data Fim deve ser maior ou igual a Data Início."); return; }
+            let diasAtivos = []; document.querySelectorAll('.btn-dia-semana.ativo').forEach(btn => { diasAtivos.push(parseInt(btn.getAttribute('data-dia'))); });
+            if (diasAtivos.length === 0) { mostrarAlerta("Selecione pelo menos um dia da semana para aplicar."); return; }
+            let diasGerados = 0;
+            for (let d = new Date(dI); d <= dO; d.setDate(d.getDate() + 1)) { if (diasAtivos.includes(d.getDay())) { let dtStr = formatarDataLocalISO(d); let diaExistenteIndex = calendarioEmCriacao.findIndex(x => x.data === dtStr); let objDia = { data: dtStr, nome: nome, valor: valor, minNoites: minNoites }; if (diaExistenteIndex > -1) { calendarioEmCriacao[diaExistenteIndex] = objDia; } else { calendarioEmCriacao.push(objDia); } diasGerados++; } }
+            calendarioEmCriacao.sort((a, b) => new Date(a.data) - new Date(b.data));
+            sv('lote-tarifa-nome', ''); sv('lote-tarifa-valor', ''); renderizarFiltrosCalendarioGestao(); mostrarNotificacao(`${diasGerados} diárias aplicadas/atualizadas com sucesso!`);
+        }
+
+        function apagarDiaCalendario(dataStr) { calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); renderizarFiltrosCalendarioGestao(); }
+
+        function editarPrecoDiaCalendario(dataStr) {
+            let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dataStr);
+            if (diaIdx > -1) {
+                let precoAtual = calendarioEmCriacao[diaIdx].valor; let dataFormatada = dataStr.split('-').reverse().join('/'); let novoPreco = prompt(`Editar preço para o dia ${dataFormatada}:\n\nDigite apenas números (ex: 150):`, precoAtual);
+                if (novoPreco !== null && novoPreco.trim() !== "") { let v = parseFloat(novoPreco); if (!isNaN(v) && v > 0) { calendarioEmCriacao[diaIdx].valor = v; renderizarFiltrosCalendarioGestao(); } else { alert("Valor inválido. Digite apenas números."); } }
+            }
+        }
+
+        function limparFiltrosCalendario() { sv('filtro-mes-calendario', 'todos'); sv('filtro-nome-calendario', 'todas'); renderizarCalendarioGestao(); }
+
+        function renderizarFiltrosCalendarioGestao() {
+            const selMes = el('filtro-mes-calendario'); const selNome = el('filtro-nome-calendario'); let valMesAtual = selMes ? selMes.value : 'todos'; let valNomeAtual = selNome ? selNome.value : 'todas';
+            if(selMes) selMes.innerHTML = '<option value="todos">Todos os meses</option>'; if(selNome) selNome.innerHTML = '<option value="todas">Todas as tarifas</option>';
+            let mesesUnicos = new Set(); let nomesUnicos = new Set();
+            calendarioEmCriacao.forEach(d => { let dt = new Date(d.data + 'T12:00:00'); let mesAno = `${String(dt.getMonth() + 1).padStart(2,'0')}/${dt.getFullYear()}`; mesesUnicos.add(mesAno); nomesUnicos.add(d.nome); });
+            Array.from(mesesUnicos).sort().forEach(m => { let txt = `${mesesCompletos[parseInt(m.split('/')[0]) - 1]} ${m.split('/')[1]}`; if(selMes) selMes.insertAdjacentHTML('beforeend', `<option value="${m}">${txt}</option>`); });
+            Array.from(nomesUnicos).sort().forEach(n => { if(selNome) selNome.insertAdjacentHTML('beforeend', `<option value="${n}">${n}</option>`); });
+            if(selMes && Array.from(selMes.options).some(o => o.value === valMesAtual)) selMes.value = valMesAtual; if(selNome && Array.from(selNome.options).some(o => o.value === valNomeAtual)) selNome.value = valNomeAtual;
+            renderizarCalendarioGestao();
+        }
+
+        function renderizarCalendarioGestao() {
+            const tb = el('lista-calendario-tbody'); const badge = el('qtd-tarifas-badge'); if(!tb) return; tb.innerHTML = '';
+            let fMes = val('filtro-mes-calendario'); let fNome = val('filtro-nome-calendario');
+            let listaFiltrada = calendarioEmCriacao.filter(d => { let dt = new Date(d.data + 'T12:00:00'); let mesAno = `${String(dt.getMonth() + 1).padStart(2,'0')}/${dt.getFullYear()}`; if (fMes !== 'todos' && mesAno !== fMes) return false; if (fNome !== 'todas' && d.nome !== fNome) return false; return true; });
+            if (badge) badge.innerText = `${listaFiltrada.length} resultados`;
+            if(listaFiltrada.length === 0) { tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 font-bold">Nenhuma tarifa encontrada para os filtros.</td></tr>'; return; }
+            let maxMostrar = Math.min(listaFiltrada.length, 50);
+            for(let i=0; i < maxMostrar; i++) { let diaObj = listaFiltrada[i]; let dt = new Date(diaObj.data + 'T12:00:00'); let strData = diaObj.data.split('-').reverse().join('/'); let strDiaSemana = diasSemanaNomes[dt.getDay()]; tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-700">${strData}</td><td class="p-3 text-xs text-slate-500">${strDiaSemana}</td><td class="p-3"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">${diaObj.nome}</span></td><td class="p-3 text-sm font-bold text-slate-800">R$ ${diaObj.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-xs font-medium text-slate-600 text-center">${diaObj.minNoites}</td><td class="p-3 text-center"><button type="button" onclick="editarPrecoDiaCalendario('${diaObj.data}')" class="text-slate-400 hover:text-blue-500 p-1 mr-1 transition-colors" title="Editar Preço"><i class="fas fa-pencil-alt"></i></button><button type="button" onclick="apagarDiaCalendario('${diaObj.data}')" class="text-red-400 hover:text-red-600 p-1 transition-colors" title="Apagar Dia"><i class="fas fa-trash"></i></button></td></tr>`); }
+            if (listaFiltrada.length > 50) { tb.insertAdjacentHTML('beforeend', `<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400 font-bold bg-slate-50">Mostrando os primeiros 50 resultados. Use os filtros para refinar a busca.</td></tr>`); }
+        }
+
+        function adicionarFotoPorLink() { const u = val('input-foto-url').trim(); if(!u) return; if(fotosEmCriacao.length >= 10) { mostrarAlerta("Limite máximo de 10 fotos."); return; } fotosEmCriacao.push(u); renderizarPreviewFotos(); sv('input-foto-url', ''); }
+
+        function processarFotos(e) { 
+            const f=e.target.files; if(!f||!f.length) return; const limite = Math.min(f.length, 10 - fotosEmCriacao.length); if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; } 
+            for(let i=0; i<limite; i++) { const r=new FileReader(); r.onload=(ev)=>{ const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=500; c.height=333; c.getContext('2d').drawImage(img,0,0,500,333); fotosEmCriacao.push(c.toDataURL('image/jpeg',0.5)); renderizarPreviewFotos(); }; img.src=ev.target.result; }; r.readAsDataURL(f[i]); } sv('input-fotos',''); 
+        }
+
+        function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
+        function renderizarPreviewFotos() { const d=el('preview-fotos'); if(!d) return; d.innerHTML=''; fotosEmCriacao.forEach((f,i)=>d.insertAdjacentHTML('beforeend', `<div class="relative w-full h-24 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden"><img src="${f}" class="w-full h-full object-cover"><button type="button" onclick="removerFoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]"><i class="fas fa-times"></i></button></div>`)); }
+
+        function validarESalvarImovel() {
+            const n = val('cad-nome'); if(!n) { mudarAbaCadastro('imovel'); mostrarAlerta("Preencha o Nome do Imóvel."); return; } if(!calendarioEmCriacao || !calendarioEmCriacao.length) { mudarAbaCadastro('tarifas'); mostrarAlerta("Você precisa gerar as tarifas diárias no Calendário antes de salvar."); return; }
+            const obj = { id: imovelEditandoId || Date.now(), proprietario: { nome: val('cad-prop-nome'), cpf: val('cad-prop-cpf'), zap: val('cad-prop-zap'), email: val('cad-prop-email'), comissao: parseFloat(val('cad-prop-comissao'))||0 }, nome: n, numeroApto: val('cad-num-apto'), cidade: val('cad-cidade') + (val('cad-uf') ? ' - '+val('cad-uf') : ''), endereco: { cep: val('cad-cep'), cidade: val('cad-cidade'), uf: val('cad-uf'), rua: val('cad-rua'), numero: val('cad-numero'), bairro: val('cad-bairro'), complemento: val('cad-complemento') }, tipo: val('cad-tipo'), checkin: val('cad-checkin'), checkout: val('cad-checkout'), capacidadeTotal: parseInt(val('cad-capacidade'))||1, estrutura: val('cad-estrutura'), pagamento: val('cad-pagamento'), fotos: [...fotosEmCriacao], calendario: JSON.parse(JSON.stringify(calendarioEmCriacao)), reservas: imovelEditandoId ? imoveisDB.find(i=>i.id==imovelEditandoId).reservas : [], despesas: imovelEditandoId ? (imoveisDB.find(i=>i.id==imovelEditandoId).despesas || []) : [] };
+            if(imovelEditandoId) { let idx = imoveisDB.findIndex(x=>x.id===imovelEditandoId); if(idx>-1) imoveisDB[idx]=obj; } else { imoveisDB.push(obj); }
+            salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); fecharModalCadastro(); mostrarNotificacao("Imóvel salvo com sucesso!");
+        }
+
+        function abrirMenuDestinos() { show('dropdown-destinos'); filtrarDestinos(); }
+        function filtrarDestinos() { const txt = val('busca-cidade').toLowerCase().trim(); const ul = el('lista-custom-cidades'); ul.innerHTML = ''; const cids = [...new Set(imoveisDB.map(i => i.cidade).filter(c => c && c.trim() !== ''))].filter(c => c.toLowerCase().includes(txt)); if(!cids.length) { ul.innerHTML = '<li class="px-4 py-3 text-sm font-bold text-slate-500">Nenhum destino...</li>'; return; } cids.forEach(c => { const li = document.createElement('li'); li.className="px-4 py-3 text-sm font-bold cursor-pointer hover:bg-orange-50"; li.innerHTML=`<i class="fas fa-map-marker-alt text-slate-400 mr-2"></i> ${c}`; li.onclick=()=> { sv('busca-cidade', c); hide('dropdown-destinos'); }; ul.appendChild(li); }); }
+
+        function montarDropdownHospedes() { const ul = el('lista-custom-hospedes'); ul.innerHTML = ''; for(let i=1;i<=20;i++){ const li = document.createElement('li'); li.className="px-4 py-3 text-sm font-medium cursor-pointer hover:bg-orange-50 text-center"; li.innerText = i === 1 ? '1 Hóspede' : `${i} Hóspedes`; li.onclick=()=>{ sv('busca-pessoas', i); sv('busca-pessoas-display', li.innerText); hide('dropdown-hospedes'); }; ul.appendChild(li); } }
+
+        function calcularPrecoDinamico(im, checkin, checkout, resIgnorar=null) {
+            if(!im.calendario || !im.calendario.length) return { disponivel:false, msg:"Sem tarifas configuradas no calendário" };
+            if(checkin && checkout && im.reservas) { let dInB = new Date(parseInputDateSafe(checkin)+'T12:00:00'); let dOutB = new Date(parseInputDateSafe(checkout)+'T12:00:00'); for(let r of im.reservas) { if(resIgnorar && r.id==resIgnorar) continue; if(r.statusPagamento==='cancelada') continue; let dInR = new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let dOutR = new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dInB < dOutR && dOutB > dInR) return {disponivel:false}; } }
+            if(!checkin || !checkout) { let menorPreco = Infinity; im.calendario.forEach(d => { if(d.valor < menorPreco) menorPreco = d.valor; }); return { disponivel:true, precoCalculado:menorPreco, isAPartirDe:true, minNoites:1 }; }
+            let dI = new Date(parseInputDateSafe(checkin)+'T12:00:00'); let dO = new Date(parseInputDateSafe(checkout)+'T12:00:00'); if(dO <= dI) return {disponivel:false};
+            let noites = Math.round((dO-dI)/86400000); let total = 0; let indisp = false; let maiorRegraMinNoites = 1;
+            for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { let dtStr = formatarDataLocalISO(d); let diaTarifado = im.calendario.find(x => x.data === dtStr); if(!diaTarifado) { indisp = true; break; } if(diaTarifado.minNoites > maiorRegraMinNoites) { maiorRegraMinNoites = diaTarifado.minNoites; } total += diaTarifado.valor; }
+            if(indisp) return {disponivel:false};
+            let quebrouMinNoites = noites < maiorRegraMinNoites; return { disponivel: true, precoCalculado: Math.round(total/noites), isAPartirDe: false, minNoites: maiorRegraMinNoites, precoTotal: total, noites: noites, bloqueioMinNoites: quebrouMinNoites };
+        }
+
+        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
+
+        function realizarBusca() {
+            const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
+            if(dr.includes(" a ")){ cIn=dr.split(" a ")[0]; cOut=dr.split(" a ")[1]; } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0]; cOut=dr.split(" até ")[1]; } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0]; cOut=dr.split(" to ")[1]; } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0]; cOut=dr.split(" - ")[1]; }
+            let bk=false; let minNoitesSugestao = 0;
+            let flt = imoveisDB.filter(im => { if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; if(im.capacidadeTotal < pes) return false; if(cIn && cOut) { let i = calcularPrecoDinamico(im, cIn, cOut); if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } if(!i.disponivel) return false; } return true; });
+            if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
+            renderizarVitrine(flt, cIn, cOut, pes);
+        }
+
+        function renderizarVitrine(lista, ci, co, pes) {
+            const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
+            if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum disponível para esses critérios. (Pode faltar tarifa neste período).</div>'; return; }
+            lista.forEach(im => {
+                let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
+                let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
+                let setasHtml = fts.length > 1 ? `<button onclick="mudarFoto(event, ${im.id}, -1, ${fts.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-left text-xs"></i></button><button onclick="mudarFoto(event, ${im.id}, 1, ${fts.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-right text-xs"></i></button>` : '';
+                let carHtml = `<div class="relative w-full h-56 bg-slate-100 overflow-hidden rounded-xl" id="carousel-${im.id}" data-current="0" data-total="${fts.length}">${imagensHtml}${setasHtml}</div>`;
+                let numP = formatarNumero(pes); let numN = formatarNumero(info.noites || 0); let minNStr = formatarNumero(info.minNoites || 1);
+                let precoCalcFormatado = (info.precoCalculado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}); let precoTotalFormatado = (info.precoTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+                let prcHtml = !info.disponivel ? `<div class="text-red-500 font-bold text-lg mb-2">Indisponível</div><button disabled class="w-full bg-slate-200 text-slate-400 px-4 py-2.5 rounded-xl font-bold text-sm">Sem datas</button>` : (info.isAPartirDe ? `<div class="text-[11px] text-slate-400 font-bold tracking-wider mb-1 uppercase">Diárias A partir de</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoCalcFormatado}</div>` : (info.bloqueioMinNoites ? `<button disabled class="w-full bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold text-sm">Mínimo ${minNStr} noites</button>` : `<div class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">Valor do pacote</div><div class="bg-orange-50 border border-orange-100 text-orange-600 font-bold text-xs px-2 py-0.5 rounded inline-block mb-2">${numN} noites</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoTotalFormatado}</div>`));
+                let zapProp = im.proprietario?.zap?.replace(/\D/g,'') || empresaDB.zap?.replace(/\D/g,''); let dIn = ci ? parseInputDateSafe(ci).split('-').reverse().join('/') : ''; let dOut = co ? parseInputDateSafe(co).split('-').reverse().join('/') : '';
+                let msgZ = encodeURIComponent(`Olá! Tenho interesse no imóvel *${im.nome}*.\n\n${ci ? `Período: ${dIn} a ${dOut} (${info.noites || 0} noites).\n${numP} hóspedes\nValor do pacote: R$ ${precoTotalFormatado}` : `Diárias a partir de: R$ ${precoCalcFormatado}`}\n\n*Orçamento sujeito a disponibilidade.\n\nUm instante que já já iremos te atender.`);
+                let btnZ = (info.isAPartirDe || (!info.isAPartirDe && !info.bloqueioMinNoites)) && info.disponivel ? `<a href="https://wa.me/55${zapProp}?text=${msgZ}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2.5 rounded-xl flex items-center justify-center font-bold shadow transition-colors active:scale-95"><i class="fab fa-whatsapp text-lg mr-2"></i> Reservar com Agência</a>` : '';
+                div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${im.nome}</h3> <p class="text-xs text-[#0071c2] underline cursor-pointer mb-3">${im.cidade}</p> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <p class="text-[11px] text-slate-600 mt-1 leading-relaxed">${im.estrutura||''}</p> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-[11px] text-slate-500 mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
+            });
+        }
+
+        function renderizarMapaDisponibilidade() {
+            if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
+            let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
+            if(!imoveisDB.length) { h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; } else {
+                imoveisDB.forEach(im => {
+                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome; h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
+                    for (let dia=1; dia<=dias; dia++) {
+                        let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; let dObj = new Date(dt+'T12:00:00'); let cls = 'status-livre'; let txt = '1'; let rF = null;
+                        if(im.reservas) { for(let r of im.reservas) { if(r.statusPagamento==='cancelada') continue; let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dObj>=di && dObj<do_) { cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; txt='0'; rF=r; if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); break; } } }
+                        let evt = rF ? `abrirEdicaoReservaMapa(${im.id}, ${rF.id})` : `abrirNovaReservaMapa(${im.id}, '${dt}')`; let tooltip = rF ? (rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`) : `Nova Reserva: ${dt.split('-').reverse().join('/')}`; h += `<div onclick="${evt}" class="mapa-celula ${cls} truncate px-1 text-[10px]" title="${tooltip}">${txt}</div>`;
+                    } h += `</div>`;
+                });
+            } cont.innerHTML = h;
+        }
+
+        function mudarMesMapa(dir) { mapaMes += dir; if(mapaMes>12){mapaMes=1;mapaAno++;} if(mapaMes<1){mapaMes=12;mapaAno--;} renderizarMapaDisponibilidade(); }
+        function povoarSelectImoveis() { const s = el('reserva-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i => { let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome; s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); }); } }
         
-        const idEdit = val('orc-id');
-        if (idEdit) { const idx = orcamentosDB.findIndex(x => x.id == idEdit); if (idx > -1) { orcamentosDB[idx].clienteNome = nome; orcamentosDB[idx].clienteZap = zap; orcamentosDB[idx].txtCopia = txt; } } 
-        else { orcamentosDB.unshift({ id:Date.now(), dataCriacao:new Date().toISOString(), clienteNome:nome, clienteZap:zap, imovelId:im.id, nomeImovel:im.nome, checkin:parseInputDateSafe(val('orc-checkin')), checkout:parseInputDateSafe(val('orc-checkout')), hospedes:val('orc-hospedes'), valorTotal:val('orc-valor'), txtCopia: txt }); }
+        function verificarChoqueDatas(imId, ci, co, resId) { 
+            if(!imId||!ci||!co) return false; const im = imoveisDB.find(i=>i.id==imId); if(!im||!im.reservas) return false; 
+            let dI = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dO = new Date(parseInputDateSafe(co)+'T12:00:00'); 
+            for(let r of im.reservas){ if(resId && r.id==resId) continue; if(r.statusPagamento==='cancelada') continue; if(dI < new Date(parseInputDateSafe(r.checkout)+'T12:00:00') && dO > new Date(parseInputDateSafe(r.checkin)+'T12:00:00')) return true; } 
+            return false; 
+        }
+
+        function checarDisponibilidadeAoDigitar() { 
+            const imId=val('reserva-imovel-select'); const ci=val('reserva-checkin'); const co=val('reserva-checkout'); const resId=val('reserva-id'); 
+            if(!imId || !ci || !co) { mostrarAlerta("Por favor, selecione o imóvel e as datas de check-in e check-out antes de verificar."); return; }
+            if(imId&&ci&&co){ 
+                if(verificarChoqueDatas(imId, ci, co, resId)) { mostrarAlerta("Data ocupada por outra reserva ou bloqueio."); setVal('reserva-checkin',''); setVal('reserva-checkout',''); return; } 
+                const im = imoveisDB.find(i=>i.id==imId); let inf = calcularPrecoDinamico(im, ci, co, resId);
+                if (inf.bloqueioMinNoites) { let min = inf.minNoites; let dIn = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + min); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(co)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${min} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); setVal('reserva-checkout',''); setVal('reserva-valor', 0); return; }
+                calcularValorReservaAdmin(); mostrarNotificacao("Disponível! Valor calculado.");
+            } 
+        }
         
-        salvarBancoNoStorage(); fecharModalGerarOrcamento(); 
-        if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = '';
-        mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
-    }
+        function abrirNovaReservaManualLista() { povoarSelectImoveis(); resetarModalReserva(); if(el('titulo-modal-reserva')) el('titulo-modal-reserva').innerText="Nova Reserva"; hide('btn-excluir-reserva'); hide('btn-cancelar-reserva'); show('modal-reserva-manual'); }
+        
+        function abrirNovaReservaMapa(imId, dt) { 
+            abrirNovaReservaManualLista(); setVal('reserva-imovel-select', imId); 
+            let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
+            if(fpIn) { fpIn.setDate(dt, true); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); let dtOut = formatarDataLocalISO(do_); if(fpOut) fpOut.setDate(dtOut, true); } 
+            else { setVal('reserva-checkin', dt); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); setVal('reserva-checkout', formatarDataLocalISO(do_)); }
+        }
+        
+        function abrirEdicaoReservaMapa(imId, resId) {
+            povoarSelectImoveis(); const im = imoveisDB.find(i=>i.id==imId); const res = im?.reservas.find(r=>r.id==resId); if(!res) return;
+            if(el('titulo-modal-reserva')) el('titulo-modal-reserva').innerText="Editar Reserva"; setVal('reserva-id', res.id); setVal('reserva-imovel-select', imId); 
+            let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
+            if(fpIn && fpOut) { fpIn.setDate(res.checkin, true); fpOut.setDate(res.checkout, true); } else { setVal('reserva-checkin', res.checkin); setVal('reserva-checkout', res.checkout); }
+            let pg = res.statusPagamento==='pago' ? (res.valorPago!==undefined?res.valorPago:res.valorTotal) : (res.valorPago||0); setVal('reserva-valor-pago', pg);
+            if(res.statusPagamento==='pago') show('opt-status-pago'); if(res.statusPagamento==='cancelada') show('opt-status-cancelada');
+            setVal('reserva-status', res.statusPagamento); hide('opt-status-devolucao');
+            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada') setVal('reserva-valor', 0);
+            if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
+            acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva();
+            show('btn-excluir-reserva'); if(res.statusPagamento!=='cancelada') show('btn-cancelar-reserva'); else hide('btn-cancelar-reserva'); verificarDiferencaPagamento(); show('modal-reserva-manual');
+        }
 
-    function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopia) { if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.txtCopia).then(()=>mostrarNotificacao("Copiado!")).catch(()=>{}); else { const a=document.createElement('textarea'); a.value=o.txtCopia; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Copiado!"); } } }
+        function fecharModalReserva() { hide('modal-reserva-manual'); }
+        function resetarModalReserva() {
+            setVal('reserva-imovel-select', ''); let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr;
+            if(fpIn) { fpIn.clear(); } else setVal('reserva-checkin', ''); 
+            if(fpOut) { fpOut.clear(); fpOut.set("minDate", null); } else setVal('reserva-checkout', ''); 
+            
+            setVal('reserva-valor-pago', '0'); hide('aviso-diferenca');
+            hide('opt-status-pago'); hide('opt-status-devolucao'); hide('opt-status-cancelada'); setVal('reserva-status', 'pendente');
+            hide('bloco-multa-devolucao'); setVal('reserva-multa-perc', '0'); setVal('reserva-valor-multa-calculada', '0'); setVal('reserva-valor', '');
+            setVal('reserva-titular-nome', ''); setVal('reserva-titular-cpf', ''); setVal('reserva-titular-nasc', ''); setVal('reserva-titular-zap', ''); setVal('reserva-titular-email', '');
+            acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
+        }
 
-    function renderListaOrc() {
-        const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
-        if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
-        orcamentosDB.forEach(o => {
-            let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
-            tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="orcamentosDB=orcamentosDB.filter(x=>x.id!==${o.id});salvarBancoNoStorage();renderListaOrc();" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
-        });
-    }
+        function toggleCamposReserva() { const s = val('reserva-status'); const b = el('bloco-acompanhantes'); if(b) { if(s==='bloqueio'){ b.classList.add('opacity-50','pointer-events-none'); } else { b.classList.remove('opacity-50','pointer-events-none'); } } }
+        function iniciarCancelamentoTotal() { const pg = parseFloat(val('reserva-valor-pago'))||0; show('opt-status-cancelada'); setVal('reserva-status', 'cancelada'); setVal('reserva-valor', 0); verificarDiferencaPagamento(); hide('btn-cancelar-reserva'); mostrarNotificacao(pg>0?"Reserva Cancelada! Ajuste a multa.":"Ficha Cancelada. Datas livres!"); }
+        
+        function verificarDiferencaPagamento() {
+            const vT = parseFloat(val('reserva-valor'))||0; const pg = parseFloat(val('reserva-valor-pago'))||0;
+            const aviso = el('aviso-diferenca'); const st = val('reserva-status'); const blocoDev = el('bloco-multa-devolucao');
+            const lblDev = el('label-valor-devolver'); const inMulta = el('reserva-valor-multa-calculada'); const pMulta = el('reserva-multa-perc');
+            if(aviso) aviso.classList.add('hidden-view'); if(blocoDev) blocoDev.classList.add('hidden-view'); if(inMulta) inMulta.value=0; 
+            let p = parseFloat(pMulta?.value)||0; if(p>100)p=100; if(p<0)p=0;
+            if(st==='cancelada') { if(pg>0 && blocoDev) { blocoDev.classList.remove('hidden-view'); let vM=pg*(p/100); let vD=pg-vM; inMulta.value=vM; lblDev.innerText=`R$ ${vD.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; } } 
+            else if(pg>0) {
+                if(vT>pg && aviso) { aviso.innerHTML=`Já pago: R$ ${pg.toLocaleString('pt-BR',{minimumFractionDigits:2})} | <b class="text-orange-800">Falta: R$ ${(vT-pg).toLocaleString('pt-BR',{minimumFractionDigits:2})}</b>`; aviso.classList.remove('hidden-view'); setVal('reserva-status','pendente'); }
+                else if(pg>vT && blocoDev) { blocoDev.classList.remove('hidden-view'); let d=pg-vT; let vM=d*(p/100); let vD=d-vM; inMulta.value=vM; lblDev.innerText=`R$ ${vD.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(vD>0){ setVal('reserva-status','devolucao'); show('opt-status-devolucao'); } else setVal('reserva-status','pago'); }
+            }
+        }
 
-    // ================= DESPESAS E DRE =================
-    
-    function povoarFiltrosDespesas() { const s = el('filtro-imovel-despesas'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
-    function carregarListaDespesas() {
-        if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; const iId=parseInt(val('filtro-imovel-despesas')); const tb=el('tbody-aba-despesas');
-        if(!iId) { show('placeholder-despesas'); hide('tabela-container-despesas'); return; }
-        hide('placeholder-despesas'); show('tabela-container-despesas'); if(tb) tb.innerHTML='';
-        const im = imoveisDB.find(i=>i.id===iId); let f = `${despesaAno}-${String(despesaMes).padStart(2,'0')}`; 
-        let ls = im?.despesas?.filter(d => parseInputDateSafe(d.data).startsWith(f)).sort((a,b)=>new Date(parseInputDateSafe(b.data))-new Date(parseInputDateSafe(a.data))) || [];
-        if(!ls.length) { if(tb) tb.innerHTML=`<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Vazio.</td></tr>`; return; }
-        ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="imoveisDB.find(i=>i.id==${im.id}).despesas=imoveisDB.find(i=>i.id==${im.id}).despesas.filter(x=>x.id!=${d.id});salvarBancoNoStorage();carregarListaDespesas()" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
-    }
-    function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
-    function abrirModalDespesa() { sv('despesa-id',''); sv('despesa-data',''); sv('despesa-valor',''); povoarSelectCategorias(); sv('despesa-categoria',categoriasDB[0]); toggleCampoOutrosDespesa(); const s=el('despesa-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend',`<option value="${i.id}">${i.nome}</option>`)); if(val('filtro-imovel-despesas')) s.value=val('filtro-imovel-despesas'); } show('modal-nova-despesa'); }
-    function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id',d.id); sv('despesa-imovel-select',imId); sv('despesa-data',d.data); sv('despesa-categoria',d.categoria||'Outros'); toggleCampoOutrosDespesa(); if(d.categoria==='Outros') sv('despesa-desc-outros',d.descricao); sv('despesa-valor',d.valor); }
-    function fecharModalDespesa() { hide('modal-nova-despesa'); }
-    function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-desc-outros'), vl=parseFloat(val('despesa-valor')), id=val('despesa-id'); if(!im||!dt||!vl){mostrarAlerta("Preencha os dados básicos.");return;} const imov = imoveisDB.find(i=>i.id==im); if(!imov.despesas)imov.despesas=[]; const obj={id:id?parseInt(id):Date.now(), data:dt, categoria:ct, descricao:ct==='Outros'?ds:ct, valor:vl}; if(id){let ix=imov.despesas.findIndex(x=>x.id==id); if(ix>-1)imov.despesas[ix]=obj;} else imov.despesas.push(obj); salvarBancoNoStorage(); fecharModalDespesa(); carregarListaDespesas(); mostrarNotificacao("Despesa Salva!"); }
+        function calcularValorReservaAdmin() {
+            const st = val('reserva-status'); if(st==='cancelada'||st==='proprietario'||st==='bloqueio') { setVal('reserva-valor',0); verificarDiferencaPagamento(); return; }
+            const imId = val('reserva-imovel-select'); const ci = val('reserva-checkin'); const co = val('reserva-checkout'); if(!imId||!ci||!co) return; const im = imoveisDB.find(i=>i.id==imId); if(!im) return;
+            let inf = calcularPrecoDinamico(im, ci, co, val('reserva-id')); if(inf?.disponivel && inf.precoTotal!==undefined) setVal('reserva-valor', inf.precoTotal); else if(!val('reserva-valor')) setVal('reserva-valor', 0); verificarDiferencaPagamento();
+        }
 
-    function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(categoriasDB.includes(v))s.value=v; }
-    function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
-    function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
-    function renderizarListaCategorias() { const u=el('lista-gerenciar-categorias'); if(!u)return; u.innerHTML=''; categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="categoriasDB.splice(${i},1);salvarBancoNoStorage();renderizarListaCategorias()" title="Excluir Categoria" class="text-red-500 px-2"><i class="fas fa-trash"></i></button>`:'Fixo'}</div></li>`)); }
-    function adicionarCategoria() { const n=val('nova-categoria-nome').trim(); if(!n || categoriasDB.includes(n)) return; categoriasDB.push(n); salvarBancoNoStorage(); sv('nova-categoria-nome',''); renderizarListaCategorias(); }
-    function editarNomeCategoria(i) { const novoNome = prompt("Editar categoria:", categoriasDB[i]); if(novoNome && novoNome.trim() !== "" && !categoriasDB.includes(novoNome.trim())) { categoriasDB[i] = novoNome.trim(); salvarBancoNoStorage(); renderizarListaCategorias(); povoarSelectCategorias(); } }
-    function toggleCampoOutrosDespesa() { if(el('bloco-despesa-outros')) el('bloco-despesa-outros').classList[val('despesa-categoria')==='Outros'?'remove':'add']('hidden-view'); }
+        function adicionarAcompanhanteAdmin() { acompanhantesTemp.push({id:Date.now(),nome:'',cpf:'',dataNasc:''}); renderizarAcompanhantes(); }
+        function removerAcompanhanteAdmin(id) { acompanhantesTemp=acompanhantesTemp.filter(a=>a.id!==id); renderizarAcompanhantes(); }
+        function atualizarAcompanhanteTemp(id, c, obj) { let a=acompanhantesTemp.find(x=>x.id==id); if(a) a[c]=obj.value; }
+        function renderizarAcompanhantes() {
+            const cont = el('container-lista-acompanhantes'); const msg = el('msg-sem-acompanhantes'); if(!cont) return; cont.innerHTML='';
+            if(!acompanhantesTemp.length){ if(msg) msg.classList.remove('hidden-view'); return; } if(msg) msg.classList.add('hidden-view');
+            acompanhantesTemp.forEach(a => cont.insertAdjacentHTML('beforeend', `<div class="bg-white p-3 rounded-lg border border-slate-200 relative pr-10 mb-2"><button type="button" onclick="removerAcompanhanteAdmin(${a.id})" class="absolute top-1/2 -translate-y-1/2 right-3 text-red-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><input type="text" placeholder="Nome" value="${a.nome}" oninput="atualizarAcompanhanteTemp(${a.id}, 'nome', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="text" placeholder="CPF" value="${a.cpf}" oninput="mascaraCpfCnpj(this);atualizarAcompanhanteTemp(${a.id}, 'cpf', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="date" value="${a.dataNasc}" onchange="atualizarAcompanhanteTemp(${a.id}, 'dataNasc', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium text-slate-500"></div></div></div>`));
+        }
 
-    function povoarFiltrosResultados() { const s = el('fin-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDBSou uma IA com base em texto, e isso está além das minhas capacidades.
+        function salvarReservaManual() {
+            const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); 
+            const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); 
+            const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
+            
+            if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
+            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
+            const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
+            
+            let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
+            if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
+            
+            let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
+            let vPago = rOrig ? (rOrig.valorPago!==undefined?rOrig.valorPago:(rOrig.statusPagamento==='pago'?rOrig.valorTotal:0)) : 0;
+            let vTF = vT; if(st==='devolucao'||st==='cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada'))||0);
+            let sF = st; if(st==='cancelada') sF='cancelada'; else if(vTF>vPago && vPago>0) sF='pendente'; else if(vPago>vTF) sF='devolucao'; else if(st==='pago') vPago=vTF;
+            
+            const obj = { id: rId?parseInt(rId):Date.now(), dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), numeroReserva: numRes, imovelId: imId, checkin: ci, checkout: co, statusPagamento: sF, formaPagamento: fP, valorTotal: vTF, valorPago: vPago, titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)) };
+            if(rId) { let idx = im.reservas.findIndex(x=>x.id==rId); if(idx>-1) im.reservas[idx]=obj; } else im.reservas.push(obj);
+            
+            salvarBancoNoStorage(); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); renderizarVitrine(imoveisDB); fecharModalReserva(); mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
+        }
+
+        function excluirReservaConfirmacao() { const imId = val('reserva-imovel-select'); const rId = val('reserva-id'); const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas){ im.reservas=im.reservas.filter(r=>r.id!=rId); salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalReserva(); mostrarNotificacao("Ficha Apagada!"); } }
+
+        function abrirModalPagamento(imId, rId) {
+            setVal('pagamento-imovel-id', imId); setVal('pagamento-reserva-id', rId);
+            const im = imoveisDB.find(i=>i.id==imId); const res = im?.reservas.find(r=>r.id==rId); if(!res) return;
+            let p = res.valorPago!==undefined?res.valorPago:(res.statusPagamento==='pago'?res.valorTotal:0); let d = res.valorTotal-p;
+            const bx = el('pagamento-valor-box'); const tb = el('pagamento-texto-base'); const bc = el('btn-confirmar-pagamento');
+            if(bx && tb && bc) {
+                bx.className="bg-orange-50 border border-orange-200 text-orange-700 font-bold text-xl py-3 rounded-xl mb-4 text-center"; bc.className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; bc.innerText="Confirmar Baixa";
+                if(d>0 && p>0) { bx.innerText=`Cobrar: R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; bx.classList.remove('hidden-view'); tb.innerText="Forma de pagamento da diferença:"; }
+                else if(d<0 || (res.statusPagamento==='cancelada' && p>res.valorTotal)) { bx.innerText=`Devolver: R$ ${Math.abs(d).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; bx.className="bg-red-50 text-red-700 font-bold text-xl py-3 rounded-xl mb-4 border border-red-200"; bx.classList.remove('hidden-view'); tb.innerText="Como devolveu?"; bc.className="flex-1 bg-red-50 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; bc.innerText="Confirmar Devolução"; }
+                else { bx.classList.add('hidden-view'); tb.innerText="Como pagou?"; } 
+            }
+            show('modal-pagamento');
+        }
+        function fecharModalPagamento() { hide('modal-pagamento'); }
+        function confirmarPagamento() {
+            const imId = val('pagamento-imovel-id'); const rId = val('pagamento-reserva-id'); const m = val('pagamento-metodo');
+            const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas) { const res = im.reservas.find(r=>r.id==rId); if(res) { if(res.statusPagamento!=='cancelada') res.statusPagamento='pago'; res.formaPagamento=m; res.valorPago=res.valorTotal; salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalPagamento(); mostrarNotificacao("Pagamento Confirmado!"); } }
+        }
+
+        function toggleFiltroPersonalizadoReservas() { if(el('bloco-filtro-datas')) el('bloco-filtro-datas').classList[val('filtro-periodo-reservas')==='personalizado'?'remove':'add']('hidden-view'); }
+        function renderizarListaReservasAdmin() {
+            const tb = el('lista-reservas-tbody'); if(!tb) return;
+            tb.innerHTML=''; let lista=[];
+            imoveisDB.forEach(im => { if(im.reservas) im.reservas.forEach(r => lista.push({...r, nIm: im.numeroApto?`${im.nome} (${im.numeroApto})`:im.nome})) });
+            
+            const p = val('filtro-periodo-reservas') || 'todas'; let hj = new Date(); hj.setHours(0,0,0,0); let dI=null; let dF=null;
+            if(p==='hoje'){dI=new Date(hj);dF=new Date(hj);} else if(p==='7'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+7);} else if(p==='30'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+30);} else if(p==='personalizado'){if(val('filtro-reserva-inicio')) dI=new Date(val('filtro-reserva-inicio')+'T12:00:00'); if(val('filtro-reserva-fim')) dF=new Date(val('filtro-reserva-fim')+'T12:00:00');}
+            
+            let flt = lista.filter(r=>{ if(p==='todas')return true; let ri=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let ro=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dI&&dF)return ri<=dF&&ro>=dI; else if(dI)return ro>=dI; else if(dF)return ri<=dF; return true; });
+            flt.sort((a,b)=>b.id-a.id); reservasAtuaisExportacao = flt;
+            
+            if(!flt.length) { tb.innerHTML='<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas no período.</td></tr>'; return; }
+            flt.forEach(res => {
+                let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
+                let bdg=''; let bP=''; let bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+                let pg = res.valorPago!==undefined?parseFloat(res.valorPago):0; if(res.statusPagamento==='pago'&&pg===0) pg=parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal)-pg; let addI = '';
+                if(res.statusPagamento==='pago'){bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`;}
+                else if(res.statusPagamento==='pendente'){bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`;}
+                else if(res.statusPagamento==='devolucao'){bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;}
+                else if(res.statusPagamento==='cancelada'){bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; if(pg>res.valorTotal) bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; bV=''; addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';}
+                else if(res.statusPagamento==='proprietario'){bdg=`<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;}
+                else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`; bV='';}
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-500">${dC}</td><td class="p-3 font-medium text-slate-400">${res.numeroReserva||'-'}</td><td class="p-3">${bdg}</td><td class="p-3 font-medium text-slate-700">${res.titular?.nome||'-'}</td><td class="p-3 text-[#0071c2] font-medium text-xs">${res.nIm||'-'}</td><td class="p-3 text-xs text-slate-500">${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}</td><td class="p-3 leading-tight"><div class="font-bold text-slate-800 text-sm">R$ ${parseFloat(res.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td><td class="p-3 text-center whitespace-nowrap">${bV}${bP}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar Reserva" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button></td></tr>`);
+            });
+        }
+
+        function exportarExcelReservas() {
+            if(!reservasAtuaisExportacao.length) return; 
+            let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
+            reservasAtuaisExportacao.forEach(r => { let dC = r.dataCriacao ? new Date(r.dataCriacao).toLocaleDateString('pt-BR') : (r.id > 1000000000000 ? new Date(r.id).toLocaleDateString('pt-BR') : '-'); let pg = r.valorPago!==undefined?parseFloat(r.valorPago):0; if(r.statusPagamento==='pago'&&pg===0)pg=parseFloat(r.valorTotal||0); let d=parseFloat(r.valorTotal||0)-pg; let s=(r.statusPagamento==='pago')?'QUITADO':(r.statusPagamento==='pendente'?`FALTA R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:(r.statusPagamento==='devolucao'||r.statusPagamento==='cancelada'?'DEVOLVER/MULTA':'-')); h+=`<tr><td style="text-align:center">${dC}</td><td style="text-align:center">${r.statusPagamento.toUpperCase()}</td><td>${r.titular?.nome||'-'}</td><td style="text-align:center">${r.nIm||''}</td><td style="text-align:center">${parseInputDateSafe(r.checkin).split('-').reverse().join('/')}</td><td style="text-align:center">${parseInputDateSafe(r.checkout).split('-').reverse().join('/')}</td><td style="text-align:right">R$ ${parseFloat(r.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="text-align:center">${s}</td></tr>`; }); h += `</table></body></html>`;
+            const b = new Blob([h], {type:'application/vnd.ms-excel;charset=utf-8'}); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Reservas.xls"; l.click();
+        }
+
+        // ================= ORÇAMENTOS =================
+
+        function mudarAbaOrcamento(a) { 
+            if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); 
+            if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); 
+            if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; 
+            if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; 
+            if(a!=='novo') renderListaOrc(); 
+        }
+
+        function buscarDisponibilidadeOrcamento() {
+            const ci = val('busca-orc-checkin'); const co = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
+            if(!ci||!co) { mostrarAlerta("Preencha as datas."); return; } const div = el('lista-imoveis-orcamento'); if(div) div.innerHTML='';
+            let count=0; let minNoitesBloqueio = null; let conflitoReserva = false;
+            
+            imoveisDB.forEach(im => { 
+                if(im.capacidadeTotal < ps) return; 
+                let inf = calcularPrecoDinamico(im, ci, co); 
+                if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
+                if(!inf.disponivel || inf.bloqueioMinNoites) { if(verificarChoqueDatas(im.id, ci, co)) { conflitoReserva = true; } return; }
+                count++; 
+                if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`); 
+            });
+            
+            if(count===0 && div) {
+                if(minNoitesBloqueio) { div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`; } 
+                else if (conflitoReserva) { div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`; } 
+                else { div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`; }
+            }
+        }
+
+        function abrirModalGerarOrcamento(id, v, ci, co, ps) { 
+            sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); 
+            if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            show('modal-gerar-orcamento'); 
+        }
+
+        function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
+
+        function editarOrcamento(id) {
+            const o = orcamentosDB.find(x => x.id === id); if (!o) return;
+            sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap);
+            if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+            show('modal-gerar-orcamento');
+        }
+        
+        function salvarECopiarOrcamento() {
+            const nome = val('orc-cliente-nome'); const zap = val('orc-cliente-zap'); if(!nome||zap.length<14){ mostrarAlerta("Nome e WhatsApp (DDD) são obrigatórios."); return; }
+            const im = imoveisDB.find(i=>i.id==val('orc-imovel-id')); let ci=parseInputDateSafe(val('orc-checkin')).split('-').reverse().join('/'); let co=parseInputDateSafe(val('orc-checkout')).split('-').reverse().join('/');
+            
+            let primeiroNome = nome.split(' ')[0]; let ap = im.numeroApto ? `\n👉 Apto ${im.numeroApto}` : ''; let pg = im.pagamento ? `\n\n👉 Regras de pagamento:\n- ${im.pagamento}` : '';
+            let txt = `Olá, *${primeiroNome}*! Tudo bem?\n\nSegue seu orçamento\n\n*${im.nome}*${ap}\n👉 Entrada: ${ci}\n👉 Saída: ${co}\n👉 Hóspedes: ${formatarNumero(val('orc-hospedes'))}\n✅ Valor do pacote: R$ ${parseFloat(val('orc-valor')).toLocaleString('pt-BR',{minimumFractionDigits:2})}${pg}\n\n*Orçamento sujeito a disponibilidade.\n\nQualquer dúvida estou à disposição.\n*${empresaDB.nome||'Laranja Stays'}*\nAtendimento Comercial\n${empresaDB.zap||''}`;
+            
+            const idEdit = val('orc-id');
+            if (idEdit) { const idx = orcamentosDB.findIndex(x => x.id == idEdit); if (idx > -1) { orcamentosDB[idx].clienteNome = nome; orcamentosDB[idx].clienteZap = zap; orcamentosDB[idx].txtCopia = txt; } } 
+            else { orcamentosDB.unshift({ id:Date.now(), dataCriacao:new Date().toISOString(), clienteNome:nome, clienteZap:zap, imovelId:im.id, nomeImovel:im.nome, checkin:parseInputDateSafe(val('orc-checkin')), checkout:parseInputDateSafe(val('orc-checkout')), hospedes:val('orc-hospedes'), valorTotal:val('orc-valor'), txtCopia: txt }); }
+            
+            salvarBancoNoStorage(); fecharModalGerarOrcamento(); 
+            if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = '';
+            mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
+        }
+
+        function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopia) { if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.txtCopia).then(()=>mostrarNotificacao("Copiado!")).catch(()=>{}); else { const a=document.createElement('textarea'); a.value=o.txtCopia; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Copiado!"); } } }
+
+        function renderListaOrc() {
+            const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
+            if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
+            orcamentosDB.forEach(o => {
+                let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="orcamentosDB=orcamentosDB.filter(x=>x.id!==${o.id});salvarBancoNoStorage();renderListaOrc();" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
+            });
+        }
+
+        // ================= DESPESAS E DRE =================
+        
+        function povoarFiltrosDespesas() { const s = el('filtro-imovel-despesas'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
+        function carregarListaDespesas() {
+            if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; const iId=parseInt(val('filtro-imovel-despesas')); const tb=el('tbody-aba-despesas');
+            if(!iId) { show('placeholder-despesas'); hide('tabela-container-despesas'); return; }
+            hide('placeholder-despesas'); show('tabela-container-despesas'); if(tb) tb.innerHTML='';
+            const im = imoveisDB.find(i=>i.id===iId); let f = `${despesaAno}-${String(despesaMes).padStart(2,'0')}`; 
+            let ls = im?.despesas?.filter(d => parseInputDateSafe(d.data).startsWith(f)).sort((a,b)=>new Date(parseInputDateSafe(b.data))-new Date(parseInputDateSafe(a.data))) || [];
+            if(!ls.length) { if(tb) tb.innerHTML=`<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Vazio.</td></tr>`; return; }
+            ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="imoveisDB.find(i=>i.id==${im.id}).despesas=imoveisDB.find(i=>i.id==${im.id}).despesas.filter(x=>x.id!=${d.id});salvarBancoNoStorage();carregarListaDespesas()" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
+        }
+        function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
+        function abrirModalDespesa() { sv('despesa-id',''); sv('despesa-data',''); sv('despesa-valor',''); povoarSelectCategorias(); sv('despesa-categoria',categoriasDB[0]); toggleCampoOutrosDespesa(); const s=el('despesa-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend',`<option value="${i.id}">${i.nome}</option>`)); if(val('filtro-imovel-despesas')) s.value=val('filtro-imovel-despesas'); } show('modal-nova-despesa'); }
+        function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id',d.id); sv('despesa-imovel-select',imId); sv('despesa-data',d.data); sv('despesa-categoria',d.categoria||'Outros'); toggleCampoOutrosDespesa(); if(d.categoria==='Outros') sv('despesa-desc-outros',d.descricao); sv('despesa-valor',d.valor); }
+        function fecharModalDespesa() { hide('modal-nova-despesa'); }
+        function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-desc-outros'), vl=parseFloat(val('despesa-valor')), id=val('despesa-id'); if(!im||!dt||!vl){mostrarAlerta("Preencha os dados básicos.");return;} const imov = imoveisDB.find(i=>i.id==im); if(!imov.despesas)imov.despesas=[]; const obj={id:id?parseInt(id):Date.now(), data:dt, categoria:ct, descricao:ct==='Outros'?ds:ct, valor:vl}; if(id){let ix=imov.despesas.findIndex(x=>x.id==id); if(ix>-1)imov.despesas[ix]=obj;} else imov.despesas.push(obj); salvarBancoNoStorage(); fecharModalDespesa(); carregarListaDespesas(); mostrarNotificacao("Despesa Salva!"); }
+
+        function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(categoriasDB.includes(v))s.value=v; }
+        function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
+        function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
+        function renderizarListaCategorias() { const u=el('lista-gerenciar-categorias'); if(!u)return; u.innerHTML=''; categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="categoriasDB.splice(${i},1);salvarBancoNoStorage();renderizarListaCategorias()" title="Excluir Categoria" class="text-red-500 px-2"><i class="fas fa-trash"></i></button>`:'Fixo'}</div></li>`)); }
+        function adicionarCategoria() { const n=val('nova-categoria-nome').trim(); if(!n || categoriasDB.includes(n)) return; categoriasDB.push(n); salvarBancoNoStorage(); sv('nova-categoria-nome',''); renderizarListaCategorias(); }
+        function editarNomeCategoria(i) { const novoNome = prompt("Editar categoria:", categoriasDB[i]); if(novoNome && novoNome.trim() !== "" && !categoriasDB.includes(novoNome.trim())) { categoriasDB[i] = novoNome.trim(); salvarBancoNoStorage(); renderizarListaCategorias(); povoarSelectCategorias(); } }
+        function toggleCampoOutrosDespesa() { if(el('bloco-despesa-outros')) el('bloco-despesa-outros').classList[val('despesa-categoria')==='Outros'?'remove':'add']('hidden-view'); }
+
+        function povoarFiltrosResultados() { const s = el('fin-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
+        
+        function gerarRelatorioFinanceiro() {
+            const iId = val('fin-imovel-select'); 
+            const mSt = val('fin-mes-select'); 
+            if(!iId || !mSt) return;
+            
+            const im = imoveisDB.find(i => i.id == iId); 
+            if(!im) return;
+            
+            hide('fin-vazio'); show('fin-painel'); mudarAbaDRE('receitas');
+            if(el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome; 
+            if(el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`; 
+            if(el('fin-mes-label')) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+            
+            let tx = im.proprietario?.comissao || 20; 
+            if(el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+            
+            let r = 0, d = 0; 
+            const tR = el('fin-lista-receitas');
+            const tD = el('fin-lista-despesas'); 
+            
+            // Limpar Tabelas sempre
+            if(tR) tR.innerHTML = ''; 
+            if(tD) tD.innerHTML = '';
+            
+            if(im.reservas) {
+                im.reservas.forEach(x => { 
+                    let checkinSeguro = parseInputDateSafe(x.checkin);
+                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
+                        let v = parseFloat(x.valorTotal) || 0; 
+                        r += v; 
+                        let din = checkinSeguro.split('-').reverse().join('/'); 
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/'); 
+                        let retido = v * (tx / 100);
+                        
+                        if(tR) {
+                            tR.insertAdjacentHTML('beforeend', `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                                    <td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td>
+                                    <td class="p-3 text-center text-xs text-slate-500">${din} até ${dout}</td>
+                                    <td class="p-3 text-right font-medium text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td class="p-3 text-right text-green-600 font-bold bg-green-50/30">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                </tr>
+                            `); 
+                        }
+                    } 
+                });
+            }
+            
+            if(im.despesas) {
+                im.despesas.forEach(x => { 
+                    let dataSegura = parseInputDateSafe(x.data);
+                    if(dataSegura.startsWith(mSt)) { 
+                        let v = parseFloat(x.valor) || 0; 
+                        d += v; 
+                        if(tD) {
+                            tD.insertAdjacentHTML('beforeend', `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                                    <td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td>
+                                    <td class="p-3 font-medium text-slate-700">${x.descricao}</td>
+                                    <td class="p-3 text-right text-red-600 font-bold">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                </tr>
+                            `); 
+                        }
+                    } 
+                });
+            }
+
+            if(tR && tR.innerHTML === '') tR.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>`;
+            if(tD && tD.innerHTML === '') tD.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>`;
+            
+            let c = r * (tx / 100);
+            let l = r - c - d;
+            
+            if(el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        }
+
+        function mudarAbaDRE(a) { if(el('dre-content-receitas')) el('dre-content-receitas').classList[a==='receitas'?'remove':'add']('hidden-view'); if(el('dre-content-despesas')) el('dre-content-despesas').classList[a==='despesas'?'remove':'add']('hidden-view'); if(el('btn-tab-dre-receitas')) el('btn-tab-dre-receitas').className=a==='receitas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-dre-despesas')) el('btn-tab-dre-despesas').className=a==='despesas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; }
+        
+        function exportarExcelDRE() {
+            const iId=val('fin-imovel-select'); const mSt=val('fin-mes-select'); if(!iId||!mSt)return; const im = imoveisDB.find(i=>i.id==iId); if(!im)return; let tx = im.proprietario?.comissao||20;
+            let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>`;
+            html += `<table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="4" style="background-color:#f97316;color:white;font-size:18px;height:40px;">DRE - ${im.nome.toUpperCase()}</th></tr><tr><td colspan="4" style="background-color:#fff7ed;text-align:center;color:#ea580c;font-weight:bold;">Mês: ${mSt} | Prop: ${im.proprietario?.nome||'-'} | Com: ${tx}%</td></tr>`;
+            let r=0, d=0; let rH='', dH='';
+            
+            if(im.reservas) {
+                im.reservas.forEach(x => { 
+                    let checkinSeguro = parseInputDateSafe(x.checkin);
+                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
+                        let v = parseFloat(x.valorTotal) || 0; 
+                        r += v; 
+                        let p = `${checkinSeguro.split('-').reverse().join('/')} a ${parseInputDateSafe(x.checkout).split('-').reverse().join('/')}`; 
+                        let retido = v * (tx / 100);
+                        rH += `<tr><td>${x.titular?.nome || '-'} (${x.statusPagamento})</td><td style="text-align:center;">${p}</td><td style="text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; 
+                    } 
+                });
+            }
+            
+            if(im.despesas) {
+                im.despesas.forEach(x => { 
+                    let dataSegura = parseInputDateSafe(x.data);
+                    if(dataSegura.startsWith(mSt)) { 
+                        let v = parseFloat(x.valor) || 0; 
+                        d += v; 
+                        dH += `<tr><td style="text-align:center;">${dataSegura.split('-').reverse().join('/')}</td><td colspan="2">${x.descricao}</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; 
+                    } 
+                });
+            }
+            
+            let c=r*(tx/100), l=r-c-d;
+            html += `<tr><td colspan="3">(+) Receitas Brutas</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Comissão Agência</td><td style="color:#ea580c;font-weight:bold;text-align:right;">R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Despesas</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3" style="background:#f1f5f9;font-weight:bold;">(=) LÍQUIDO PROPRIETÁRIO</td><td style="background:#f1f5f9;font-weight:bold;text-align:right;">R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#22c55e;color:white;text-align:center;font-weight:bold;">ENTRADAS</th></tr><tr style="background-color:#dcfce7;color:#166534;font-weight:bold;text-align:center;"><td>Hóspede</td><td>Período</td><td>Bruto</td><td>Retido</td></tr>${rH || `<tr><td colspan="4" style="text-align:center;">Nenhuma entrada neste mês.</td></tr>`}`;
+            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#ef4444;color:white;text-align:center;font-weight:bold;">SAÍDAS</th></tr><tr style="background-color:#fee2e2;color:#b91c1c;font-weight:bold;text-align:center;"><td>Data</td><td colspan="2">Descrição</td><td>Valor</td></tr>${dH || `<tr><td colspan="4" style="text-align:center;">Nenhuma despesa neste mês.</td></tr>`}`;
+            html += `</table></body></html>`;
+            const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `DRE_${im.nome.replace(/\s+/g,'_')}.xls`; link.click();
+        }
+
+        window.onload = function() {};
+    </script>
+</body>
+</html>
