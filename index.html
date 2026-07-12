@@ -1181,4 +1181,130 @@
         function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(categoriasDB.includes(v))s.value=v; }
         function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
         function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
-        function renderizarListaCategorias() { const u=el('lista-gerenciar-categorias'); if(!u)return; u.innerHTML=''; categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="categoriasNão posso ajudar, eu sou apenas um modelo de linguagem e não consegui entender o que você está pedindo.
+        function renderizarListaCategorias() { const u=el('lista-gerenciar-categorias'); if(!u)return; u.innerHTML=''; categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="categoriasDB.splice(${i},1);salvarBancoNoStorage();renderizarListaCategorias()" title="Excluir Categoria" class="text-red-500 px-2"><i class="fas fa-trash"></i></button>`:'Fixo'}</div></li>`)); }
+        function adicionarCategoria() { const n=val('nova-categoria-nome').trim(); if(!n || categoriasDB.includes(n)) return; categoriasDB.push(n); salvarBancoNoStorage(); sv('nova-categoria-nome',''); renderizarListaCategorias(); }
+        function editarNomeCategoria(i) { const novoNome = prompt("Editar categoria:", categoriasDB[i]); if(novoNome && novoNome.trim() !== "" && !categoriasDB.includes(novoNome.trim())) { categoriasDB[i] = novoNome.trim(); salvarBancoNoStorage(); renderizarListaCategorias(); povoarSelectCategorias(); } }
+        function toggleCampoOutrosDespesa() { if(el('bloco-despesa-outros')) el('bloco-despesa-outros').classList[val('despesa-categoria')==='Outros'?'remove':'add']('hidden-view'); }
+
+        function povoarFiltrosResultados() { const s = el('fin-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
+        
+        function gerarRelatorioFinanceiro() {
+            const iId = val('fin-imovel-select'); 
+            const mSt = val('fin-mes-select'); 
+            if(!iId || !mSt) return;
+            
+            const im = imoveisDB.find(i => i.id == iId); 
+            if(!im) return;
+            
+            hide('fin-vazio'); show('fin-painel'); mudarAbaDRE('receitas');
+            if(el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome; 
+            if(el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`; 
+            if(el('fin-mes-label')) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+            
+            let tx = im.proprietario?.comissao || 20; 
+            if(el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+            
+            let r = 0, d = 0; 
+            const tR = el('fin-lista-receitas');
+            const tD = el('fin-lista-despesas'); 
+            
+            if(tR) tR.innerHTML = ''; 
+            if(tD) tD.innerHTML = '';
+            
+            if(im.reservas) {
+                im.reservas.forEach(x => { 
+                    let checkinSeguro = parseInputDateSafe(x.checkin);
+                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
+                        let v = parseFloat(x.valorTotal) || 0; 
+                        r += v; 
+                        let din = checkinSeguro.split('-').reverse().join('/'); 
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/'); 
+                        let retido = v * (tx / 100);
+                        
+                        if(tR) {
+                            tR.insertAdjacentHTML('beforeend', `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                                    <td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td>
+                                    <td class="p-3 text-center text-xs text-slate-500">${din} até ${dout}</td>
+                                    <td class="p-3 text-right font-medium text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td class="p-3 text-right text-green-600 font-bold bg-green-50/30">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                </tr>
+                            `); 
+                        }
+                    } 
+                });
+            }
+            
+            if(im.despesas) {
+                im.despesas.forEach(x => { 
+                    let dataSegura = parseInputDateSafe(x.data);
+                    if(dataSegura.startsWith(mSt)) { 
+                        let v = parseFloat(x.valor) || 0; 
+                        d += v; 
+                        if(tD) {
+                            tD.insertAdjacentHTML('beforeend', `
+                                <tr class="border-b border-slate-50 hover:bg-slate-50">
+                                    <td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td>
+                                    <td class="p-3 font-medium text-slate-700">${x.descricao}</td>
+                                    <td class="p-3 text-right text-red-600 font-bold">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                </tr>
+                            `); 
+                        }
+                    } 
+                });
+            }
+
+            if(tR && tR.innerHTML === '') tR.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>`;
+            if(tD && tD.innerHTML === '') tD.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>`;
+            
+            let c = r * (tx / 100);
+            let l = r - c - d;
+            
+            if(el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+            if(el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+        }
+
+        function mudarAbaDRE(a) { if(el('dre-content-receitas')) el('dre-content-receitas').classList[a==='receitas'?'remove':'add']('hidden-view'); if(el('dre-content-despesas')) el('dre-content-despesas').classList[a==='despesas'?'remove':'add']('hidden-view'); if(el('btn-tab-dre-receitas')) el('btn-tab-dre-receitas').className=a==='receitas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-dre-despesas')) el('btn-tab-dre-despesas').className=a==='despesas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; }
+        
+        function exportarExcelDRE() {
+            const iId=val('fin-imovel-select'); const mSt=val('fin-mes-select'); if(!iId||!mSt)return; const im = imoveisDB.find(i=>i.id==iId); if(!im)return; let tx = im.proprietario?.comissao||20;
+            let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body>`;
+            html += `<table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="4" style="background-color:#f97316;color:white;font-size:18px;height:40px;">DRE - ${im.nome.toUpperCase()}</th></tr><tr><td colspan="4" style="background-color:#fff7ed;text-align:center;color:#ea580c;font-weight:bold;">Mês: ${mSt} | Prop: ${im.proprietario?.nome||'-'} | Com: ${tx}%</td></tr>`;
+            let r=0, d=0; let rH='', dH='';
+            
+            if(im.reservas) {
+                im.reservas.forEach(x => { 
+                    let checkinSeguro = parseInputDateSafe(x.checkin);
+                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
+                        let v = parseFloat(x.valorTotal) || 0; 
+                        r += v; 
+                        let p = `${checkinSeguro.split('-').reverse().join('/')} a ${parseInputDateSafe(x.checkout).split('-').reverse().join('/')}`; 
+                        let retido = v * (tx / 100);
+                        rH += `<tr><td>${x.titular?.nome || '-'} (${x.statusPagamento})</td><td style="text-align:center;">${p}</td><td style="text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; 
+                    } 
+                });
+            }
+            
+            if(im.despesas) {
+                im.despesas.forEach(x => { 
+                    let dataSegura = parseInputDateSafe(x.data);
+                    if(dataSegura.startsWith(mSt)) { 
+                        let v = parseFloat(x.valor) || 0; 
+                        d += v; 
+                        dH += `<tr><td style="text-align:center;">${dataSegura.split('-').reverse().join('/')}</td><td colspan="2">${x.descricao}</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; 
+                    } 
+                });
+            }
+            
+            let c=r*(tx/100), l=r-c-d;
+            html += `<tr><td colspan="3">(+) Receitas Brutas</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Comissão Agência</td><td style="color:#ea580c;font-weight:bold;text-align:right;">R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Despesas</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3" style="background:#f1f5f9;font-weight:bold;">(=) LÍQUIDO PROPRIETÁRIO</td><td style="background:#f1f5f9;font-weight:bold;text-align:right;">R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#22c55e;color:white;text-align:center;font-weight:bold;">ENTRADAS</th></tr><tr style="background-color:#dcfce7;color:#166534;font-weight:bold;text-align:center;"><td>Hóspede</td><td>Período</td><td>Bruto</td><td>Retido</td></tr>${rH || `<tr><td colspan="4" style="text-align:center;">Nenhuma entrada neste mês.</td></tr>`}`;
+            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#ef4444;color:white;text-align:center;font-weight:bold;">SAÍDAS</th></tr><tr style="background-color:#fee2e2;color:#b91c1c;font-weight:bold;text-align:center;"><td>Data</td><td colspan="2">Descrição</td><td>Valor</td></tr>${dH || `<tr><td colspan="4" style="text-align:center;">Nenhuma despesa neste mês.</td></tr>`}`;
+            html += `</table></body></html>`;
+            const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `DRE_${im.nome.replace(/\s+/g,'_')}.xls`; link.click();
+        }
+
+        window.onload = function() {};
+    </script>
