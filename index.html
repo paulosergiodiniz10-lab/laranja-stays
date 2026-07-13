@@ -886,7 +886,7 @@
 
         function renderizarVitrine(lista, ci, co, pes) {
         const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
-        if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum disponível para esses critérios. (Pode faltar tarifa neste período).</div>'; return; }
+        if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum imóvel disponível para os critérios selecionados. Por favor, tente uma nova busca com outra data ou ajuste o número de hóspedes.</div>'; return; }
         lista.forEach(im => {
             let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
             let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
