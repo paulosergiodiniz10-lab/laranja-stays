@@ -237,245 +237,9 @@
                     <div id="tab-content-imovel" class="space-y-4 hidden-view fade-in">
                         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                             <h4 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Principal</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4">
-                                <div class="md:col-span-6">
-                                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Imóvel</label>
-                                    <input type="text" id="cad-nome" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-xs font-medium text-slate-600 mb-1">Unidade</label>
-                                    <input type="text" id="cad-num-apto" placeholder="Ex: 102" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                </div>
-                                <div class="md:col-span-4">
-                                    <label class="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
-                                    <select id="cad-tipo" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <option>Apartamento</option>
-                                        <option>Casa</option>
-                                        <option>Chalé</option>
-                                        <option>Chácara</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                                <h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5>
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-12 md:col-span-4 relative">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">CEP</label>
-                                        <input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span>
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label>
-                                        <input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-2">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">UF</label>
-                                        <input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-8">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label>
-                                        <input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-4">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Número</label>
-                                        <input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label>
-                                        <input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label>
-                                        <input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label>
-                                        <input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad-checkout" value="11:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Capacidade</label><input type="number" id="cad-capacidade" min="1" value="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-bold text-orange-600"></div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Estrutura (Detalhes)</label><textarea id="cad-estrutura" rows="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium resize-none"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-600 mb-1">Pagamento (Vitrine)</label><input type="text" id="cad-pagamento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium" placeholder="Ex: PIX ou 3x">
-                            </div>
-                        </div>
-                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                                <h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5>
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-12 md:col-span-4 relative">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">CEP</label>
-                                        <input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span>
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label>
-                                        <input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-2">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">UF</label>
-                                        <input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-8">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label>
-                                        <input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-4">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Número</label>
-                                        <input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label>
-                                        <input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label>
-                                        <input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label>
-                                        <input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                                <h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5>
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-12 md:col-span-4 relative">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">CEP</label>
-                                        <input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span>
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label>
-                                        <input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-2">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">UF</label>
-                                        <input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-8">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label>
-                                        <input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-4">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Número</label>
-                                        <input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label>
-                                        <input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label>
-                                        <input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label>
-                                        <input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                                <h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5>
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-12 md:col-span-4 relative">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">CEP</label>
-                                        <input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span>
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label>
-                                        <input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-2">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">UF</label>
-                                        <input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-8">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label>
-                                        <input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-4">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Número</label>
-                                        <input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label>
-                                        <input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label>
-                                        <input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label>
-                                        <input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad                            </div>
-                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                                <h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5>
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-12 md:col-span-4 relative">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">CEP</label>
-                                        <input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                        <span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span>
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label>
-                                        <input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-2">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">UF</label>
-                                        <input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-8">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label>
-                                        <input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-4">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Número</label>
-                                        <input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label>
-                                        <input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12 md:col-span-6">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label>
-                                        <input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                    <div class="col-span-12">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label>
-                                        <input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div>
-                                <div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4"><div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div><div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad-checkout" value="11:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div><div><label class="block text-xs font-medium text-slate-600 mb-1">Capacidade</label><input type="number" id="cad-capacidade" min="1" value="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-bold text-orange-600"></div></div>
-                            <div class="mb-3"><label class="block text-xs font-medium text-slate-600 mb-1">Estrutura (Detalhes)</label><textarea id="cad-estrutura" rows="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium resize-none"></textarea></div>
-                            <div><label class="block text-xs font-medium text-slate-600 mb-1">Pagamento (Vitrine)</label><input type="text" id="cad-pagamento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium" placeholder="Ex: PIX ou 3x"></div>
-                        </div>
-                    </div>
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                            <h4 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Principal</h4>
                             <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4"><div class="md:col-span-6"><label class="block text-xs font-medium text-slate-600 mb-1">Nome do Imóvel</label><input type="text" id="cad-nome" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="md:col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">Unidade</label><input type="text" id="cad-num-apto" placeholder="Ex: 102" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="md:col-span-4"><label class="block text-xs font-medium text-slate-600 mb-1">Tipo</label><select id="cad-tipo" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"><option>Apartamento</option><option>Casa</option><option>Chalé</option><option>Chácara</option></select></div></div>
-                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4"><h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5><div class="grid grid-cols-12 gap-3"><div class="col-span-12 md:col-span-4 relative"><label class="block text-xs font-medium text-slate-600 mb-1">CEP</label><input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"><span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span></div><<div class="col-span-12 md:col-span-6"><label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label><input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="col-span-12"><label class="block text-xs font-medium text-slate-600 mb-1">Link do Google Maps (Opcional)</label><input type="url" id="cad-link-loc" placeholder="Cole o link exato da localização aqui" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div></div></div>
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4"><h5 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Endereço</h5><div class="grid grid-cols-12 gap-3"><div class="col-span-12 md:col-span-4 relative"><label class="block text-xs font-medium text-slate-600 mb-1">CEP</label><input type="text" id="cad-cep" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"><span id="cep-loading" class="hidden-view absolute right-3 top-8 text-orange-500 text-sm"><i class="fas fa-spinner fa-spin"></i></span></div><div class="col-span-12 md:col-span-6"><label class="block text-xs font-medium text-slate-600 mb-1">Cidade</label><input type="text" id="cad-cidade" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 cursor-not-allowed outline-none text-sm font-medium"></div><div class="col-span-12 md:col-span-2"><label class="block text-xs font-medium text-slate-600 mb-1">UF</label><input type="text" id="cad-uf" readonly class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 bg-slate-200 text-center cursor-not-allowed outline-none text-sm font-medium"></div><div class="col-span-12 md:col-span-8"><label class="block text-xs font-medium text-slate-600 mb-1">Logradouro</label><input type="text" id="cad-rua" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="col-span-12 md:col-span-4"><label class="block text-xs font-medium text-slate-600 mb-1">Número</label><input type="text" id="cad-numero" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="col-span-12 md:col-span-6"><label class="block text-xs font-medium text-slate-600 mb-1">Bairro</label><input type="text" id="cad-bairro" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div><div class="col-span-12 md:col-span-6"><label class="block text-xs font-medium text-slate-600 mb-1">Complemento</label><input type="text" id="cad-complemento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium"></div></div></div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4"><div><label class="block text-xs font-medium text-slate-600 mb-1">Check-in</label><input type="time" id="cad-checkin" value="14:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div><div><label class="block text-xs font-medium text-slate-600 mb-1">Check-out</label><input type="time" id="cad-checkout" value="11:00" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium"></div><div><label class="block text-xs font-medium text-slate-600 mb-1">Capacidade</label><input type="number" id="cad-capacidade" min="1" value="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-bold text-orange-600"></div></div>
                             <div class="mb-3"><label class="block text-xs font-medium text-slate-600 mb-1">Estrutura (Detalhes)</label><textarea id="cad-estrutura" rows="5" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium resize-none"></textarea></div>
                             <div><label class="block text-xs font-medium text-slate-600 mb-1">Pagamento (Vitrine)</label><input type="text" id="cad-pagamento" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium" placeholder="Ex: PIX ou 3x"></div>
                         </div>
@@ -991,22 +755,24 @@
         function confirmarExclusao() { if (imovelExcluirId) { imoveisDB = imoveisDB.filter(i => i.id !== imovelExcluirId); salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); fecharModalExclusao(); mostrarNotificacao('Imóvel excluído com sucesso.'); } }
 
         function abrirModalCadastro() { 
-        imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
-        ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-link-loc','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
-        sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5');
-        fotosEmCriacao = []; renderizarPreviewFotos(); 
-        calendarioEmCriacao = []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
-        mudarAbaCadastro('proprietario'); show('modal-cadastro'); 
-    }
+            imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
+            ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
+            sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5');
+            fotosEmCriacao = []; renderizarPreviewFotos(); 
+            calendarioEmCriacao = []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
+            mudarAbaCadastro('proprietario'); show('modal-cadastro'); 
+        }
+
         function editarImovel(id) {
-        const imovel = imoveisDB.find(i => i.id === id); if(!imovel) return; imovelEditandoId = id;
-        sv('cad-prop-nome', imovel.proprietario?.nome || ''); sv('cad-prop-cpf', imovel.proprietario?.cpf || ''); sv('cad-prop-zap', imovel.proprietario?.zap || ''); sv('cad-prop-email', imovel.proprietario?.email || ''); sv('cad-prop-comissao', imovel.proprietario?.comissao !== undefined ? imovel.proprietario.comissao : 20);
-        sv('cad-nome', imovel.nome || ''); sv('cad-num-apto', imovel.numeroApto || ''); sv('cad-tipo', imovel.tipo || 'Apartamento'); sv('cad-checkin', imovel.checkin || '14:00'); sv('cad-checkout', imovel.checkout || '11:00'); sv('cad-capacidade', imovel.capacidadeTotal || 5); sv('cad-estrutura', imovel.estrutura || ''); sv('cad-pagamento', imovel.pagamento || '');
-        sv('cad-cep', imovel.endereco?.cep || ''); sv('cad-cidade', imovel.endereco?.cidade || (imovel.cidade ? imovel.cidade.split(' - ')[0] : '')); sv('cad-uf', imovel.endereco?.uf || (imovel.cidade ? imovel.cidade.split(' - ')[1] : '')); sv('cad-rua', imovel.endereco?.rua || ''); sv('cad-bairro', imovel.endereco?.bairro || ''); sv('cad-numero', imovel.endereco?.numero || ''); sv('cad-complemento', imovel.endereco?.complemento || ''); sv('cad-link-loc', imovel.endereco?.linkMapa || '');
-        fotosEmCriacao = [...(imovel.fotos || [])]; renderizarPreviewFotos(); 
-        calendarioEmCriacao = imovel.calendario ? JSON.parse(JSON.stringify(imovel.calendario)) : []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
-        if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Editar Imóvel"; mudarAbaCadastro('proprietario'); show('modal-cadastro');
-    }
+            const imovel = imoveisDB.find(i => i.id === id); if(!imovel) return; imovelEditandoId = id;
+            sv('cad-prop-nome', imovel.proprietario?.nome || ''); sv('cad-prop-cpf', imovel.proprietario?.cpf || ''); sv('cad-prop-zap', imovel.proprietario?.zap || ''); sv('cad-prop-email', imovel.proprietario?.email || ''); sv('cad-prop-comissao', imovel.proprietario?.comissao !== undefined ? imovel.proprietario.comissao : 20);
+            sv('cad-nome', imovel.nome || ''); sv('cad-num-apto', imovel.numeroApto || ''); sv('cad-tipo', imovel.tipo || 'Apartamento'); sv('cad-checkin', imovel.checkin || '14:00'); sv('cad-checkout', imovel.checkout || '11:00'); sv('cad-capacidade', imovel.capacidadeTotal || 5); sv('cad-estrutura', imovel.estrutura || ''); sv('cad-pagamento', imovel.pagamento || '');
+            sv('cad-cep', imovel.endereco?.cep || ''); sv('cad-cidade', imovel.endereco?.cidade || (imovel.cidade ? imovel.cidade.split(' - ')[0] : '')); sv('cad-uf', imovel.endereco?.uf || (imovel.cidade ? imovel.cidade.split(' - ')[1] : '')); sv('cad-rua', imovel.endereco?.rua || ''); sv('cad-bairro', imovel.endereco?.bairro || ''); sv('cad-numero', imovel.endereco?.numero || ''); sv('cad-complemento', imovel.endereco?.complemento || '');
+            fotosEmCriacao = [...(imovel.fotos || [])]; renderizarPreviewFotos(); 
+            calendarioEmCriacao = imovel.calendario ? JSON.parse(JSON.stringify(imovel.calendario)) : []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
+            if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Editar Imóvel"; mudarAbaCadastro('proprietario'); show('modal-cadastro');
+        }
+
         function fecharModalCadastro() { hide('modal-cadastro'); }
         
         function mudarAbaCadastro(a) { 
@@ -1092,11 +858,11 @@
             }); 
         }
         function validarESalvarImovel() {
-        const n = val('cad-nome'); if(!n) { mudarAbaCadastro('imovel'); mostrarAlerta("Preencha o Nome do Imóvel."); return; } if(!calendarioEmCriacao || !calendarioEmCriacao.length) { mudarAbaCadastro('tarifas'); mostrarAlerta("Você precisa gerar as tarifas diárias no Calendário antes de salvar."); return; }
-        const obj = { id: imovelEditandoId || Date.now(), proprietario: { nome: val('cad-prop-nome'), cpf: val('cad-prop-cpf'), zap: val('cad-prop-zap'), email: val('cad-prop-email'), comissao: parseFloat(val('cad-prop-comissao'))||0 }, nome: n, numeroApto: val('cad-num-apto'), cidade: val('cad-cidade') + (val('cad-uf') ? ' - '+val('cad-uf') : ''), endereco: { cep: val('cad-cep'), cidade: val('cad-cidade'), uf: val('cad-uf'), rua: val('cad-rua'), numero: val('cad-numero'), bairro: val('cad-bairro'), complemento: val('cad-complemento'), linkMapa: val('cad-link-loc') }, tipo: val('cad-tipo'), checkin: val('cad-checkin'), checkout: val('cad-checkout'), capacidadeTotal: parseInt(val('cad-capacidade'))||1, estrutura: val('cad-estrutura'), pagamento: val('cad-pagamento'), fotos: [...fotosEmCriacao], calendario: JSON.parse(JSON.stringify(calendarioEmCriacao)), reservas: imovelEditandoId ? imoveisDB.find(i=>i.id==imovelEditandoId).reservas : [], despesas: imovelEditandoId ? (imoveisDB.find(i=>i.id==imovelEditandoId).despesas || []) : [] };
-        if(imovelEditandoId) { let idx = imoveisDB.findIndex(x=>x.id===imovelEditandoId); if(idx>-1) imoveisDB[idx]=obj; } else { imoveisDB.push(obj); }
-        salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); fecharModalCadastro(); mostrarNotificacao("Imóvel salvo com sucesso!");
-    }
+            const n = val('cad-nome'); if(!n) { mudarAbaCadastro('imovel'); mostrarAlerta("Preencha o Nome do Imóvel."); return; } if(!calendarioEmCriacao || !calendarioEmCriacao.length) { mudarAbaCadastro('tarifas'); mostrarAlerta("Você precisa gerar as tarifas diárias no Calendário antes de salvar."); return; }
+            const obj = { id: imovelEditandoId || Date.now(), proprietario: { nome: val('cad-prop-nome'), cpf: val('cad-prop-cpf'), zap: val('cad-prop-zap'), email: val('cad-prop-email'), comissao: parseFloat(val('cad-prop-comissao'))||0 }, nome: n, numeroApto: val('cad-num-apto'), cidade: val('cad-cidade') + (val('cad-uf') ? ' - '+val('cad-uf') : ''), endereco: { cep: val('cad-cep'), cidade: val('cad-cidade'), uf: val('cad-uf'), rua: val('cad-rua'), numero: val('cad-numero'), bairro: val('cad-bairro'), complemento: val('cad-complemento') }, tipo: val('cad-tipo'), checkin: val('cad-checkin'), checkout: val('cad-checkout'), capacidadeTotal: parseInt(val('cad-capacidade'))||1, estrutura: val('cad-estrutura'), pagamento: val('cad-pagamento'), fotos: [...fotosEmCriacao], calendario: JSON.parse(JSON.stringify(calendarioEmCriacao)), reservas: imovelEditandoId ? imoveisDB.find(i=>i.id==imovelEditandoId).reservas : [], despesas: imovelEditandoId ? (imoveisDB.find(i=>i.id==imovelEditandoId).despesas || []) : [] };
+            if(imovelEditandoId) { let idx = imoveisDB.findIndex(x=>x.id===imovelEditandoId); if(idx>-1) imoveisDB[idx]=obj; } else { imoveisDB.push(obj); }
+            salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); fecharModalCadastro(); mostrarNotificacao("Imóvel salvo com sucesso!");
+        }
 
         function abrirMenuDestinos() { show('dropdown-destinos'); filtrarDestinos(); }
         function filtrarDestinos() { const txt = val('busca-cidade').toLowerCase().trim(); const ul = el('lista-custom-cidades'); ul.innerHTML = ''; const cids = [...new Set(imoveisDB.map(i => i.cidade).filter(c => c && c.trim() !== ''))].filter(c => c.toLowerCase().includes(txt)); if(!cids.length) { ul.innerHTML = '<li class="px-4 py-3 text-sm font-bold text-slate-500">Nenhum destino...</li>'; return; } cids.forEach(c => { const li = document.createElement('li'); li.className="px-4 py-3 text-sm font-bold cursor-pointer hover:bg-orange-50"; li.innerHTML=`<i class="fas fa-map-marker-alt text-slate-400 mr-2"></i> ${c}`; li.onclick=()=> { sv('busca-cidade', c); hide('dropdown-destinos'); }; ul.appendChild(li); }); }
@@ -1141,9 +907,11 @@
             let dIn = ci ? parseInputDateSafe(ci).split('-').reverse().join('/') : ''; 
             let dOut = co ? parseInputDateSafe(co).split('-').reverse().join('/') : '';
             
+            // Tratamento do nome e número para exibição na Vitrine e no WhatsApp
             let nomeImovelWP = im.numeroApto ? `${im.nome} ${im.numeroApto}` : im.nome;
             let nomeImovelDisplay = im.numeroApto ? `${im.nome} - Apto ${im.numeroApto}` : im.nome;
 
+            // Formatação Exata da Mensagem do WhatsApp
             let txtMsg = `Olá! Tenho interesse no imóvel *${nomeImovelWP}*.\n\n`;
             if (ci && co) {
                 txtMsg += `*Período:* ${dIn} a ${dOut} (${info.noites || 0} noites).\n`;
@@ -1156,10 +924,11 @@
             
             let msgZ = encodeURIComponent(txtMsg);
             
+            // Botão "Reservar" modificado
             let btnZ = (info.isAPartirDe || (!info.isAPartirDe && !info.bloqueioMinNoites)) && info.disponivel ? `<a href="https://wa.me/55${zapProp}?text=${msgZ}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2.5 rounded-xl flex items-center justify-center font-bold shadow transition-colors active:scale-95"><i class="fab fa-whatsapp text-lg mr-2"></i> Reservar</a>` : '';
             
-            // NOVO: Lê o link exato que o proprietário digitou no cadastro
-            let linkMapa = (im.endereco && im.endereco.linkMapa) ? `<a href="${im.endereco.linkMapa}" target="_blank" class="text-xs text-orange-500 hover:text-orange-600 font-bold flex items-center ml-3 transition-colors"><i class="fas fa-map-marker-alt mr-1"></i> Localização</a>` : '';
+            // NOVO: Link do Google Maps via CEP
+            let linkMapa = (im.endereco && im.endereco.cep) ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(im.endereco.cep)}" target="_blank" class="text-xs text-orange-500 hover:text-orange-600 font-bold flex items-center ml-3 transition-colors"><i class="fas fa-map-marker-alt mr-1"></i> Localização</a>` : '';
             
             div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${nomeImovelDisplay}</h3> <div class="flex items-center mb-3"><p class="text-xs text-[#0071c2]">${im.cidade}</p>${linkMapa}</div> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <div class="text-sm text-slate-700 mt-1 leading-relaxed max-h-24 overflow-y-auto custom-scroll pr-2 whitespace-pre-line">${im.estrutura||''}</div> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-sm text-slate-700 font-medium mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
         });
