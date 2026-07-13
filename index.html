@@ -444,8 +444,24 @@
             const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
             if(dr.includes(" a ")){ cIn=dr.split(" a ")[0]; cOut=dr.split(" a ")[1]; } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0]; cOut=dr.split(" até ")[1]; } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0]; cOut=dr.split(" to ")[1]; } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0]; cOut=dr.split(" - ")[1]; }
             let bk=false; let minNoitesSugestao = 0;
-            let flt = imoveisDB.filter(im => { if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; if(im.capacidadeTotal < pes) return false; if(cIn && cOut) { let i = calcularPrecoDinamico(im, cIn, cOut); if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } if(!i.disponivel) return false; } return true; });
+            
+            let flt = imoveisDB.filter(im => { 
+                if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
+                
+                // Salva-vidas: Se a capacidade do imóvel estiver vazia, assume 10 para não esconder da vitrine
+                let cap = parseInt(im.capacidadeTotal); if(isNaN(cap) || cap === 0) cap = 10;
+                if(cap < pes) return false; 
+                
+                if(cIn && cOut) { 
+                    let i = calcularPrecoDinamico(im, cIn, cOut); 
+                    if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } 
+                    if(!i.disponivel) return false; 
+                } 
+                return true; 
+            });
+            
             if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
+            
             renderizarVitrine(flt, cIn, cOut, pes);
         }
 
