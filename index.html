@@ -449,7 +449,10 @@
             let flt = imoveisDB.filter(im => { 
                 if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
                 
-                // Trava de capacidade foi 100% removida daqui!
+                // RESTABELECENDO A TRAVA DE CAPACIDADE:
+                let cap = parseInt(im.capacidadeTotal); 
+                if(isNaN(cap) || cap === 0) cap = 10; // Salva-vidas caso o banco esteja vazio
+                if(cap < pes) return false; // Se a capacidade for menor que a busca, esconde o imóvel!
                 
                 if(cIn && cOut) { 
                     let i = calcularPrecoDinamico(im, cIn, cOut); 
