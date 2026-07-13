@@ -885,27 +885,44 @@
         }
 
         function renderizarVitrine(lista, ci, co, pes) {
-            const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
-            if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum disponível para esses critérios. (Pode faltar tarifa neste período).</div>'; return; }
-            lista.forEach(im => {
-                let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
-                let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
-                let setasHtml = fts.length > 1 ? `<button onclick="mudarFoto(event, ${im.id}, -1, ${fts.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-left text-xs"></i></button><button onclick="mudarFoto(event, ${im.id}, 1, ${fts.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-right text-xs"></i></button>` : '';
-                let carHtml = `<div class="relative w-full h-56 bg-slate-100 overflow-hidden rounded-xl" id="carousel-${im.id}" data-current="0" data-total="${fts.length}">${imagensHtml}${setasHtml}</div>`;
-                let numP = formatarNumero(pes); let numN = formatarNumero(info.noites || 0); let minNStr = formatarNumero(info.minNoites || 1);
-                let precoCalcFormatado = (info.precoCalculado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}); let precoTotalFormatado = (info.precoTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-                let prcHtml = !info.disponivel ? `<div class="text-red-500 font-bold text-lg mb-2">Indisponível</div><button disabled class="w-full bg-slate-200 text-slate-400 px-4 py-2.5 rounded-xl font-bold text-sm">Sem datas</button>` : (info.isAPartirDe ? `<div class="text-[11px] text-slate-400 font-bold tracking-wider mb-1 uppercase">Diárias A partir de</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoCalcFormatado}</div>` : (info.bloqueioMinNoites ? `<button disabled class="w-full bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold text-sm">Mínimo ${minNStr} noites</button>` : `<div class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">Valor do pacote</div><div class="bg-orange-50 border border-orange-100 text-orange-600 font-bold text-xs px-2 py-0.5 rounded inline-block mb-2">${numN} noites</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoTotalFormatado}</div>`));
-                let zapProp = im.proprietario?.zap?.replace(/\D/g,'') || empresaDB.zap?.replace(/\D/g,''); let dIn = ci ? parseInputDateSafe(ci).split('-').reverse().join('/') : ''; let dOut = co ? parseInputDateSafe(co).split('-').reverse().join('/') : '';
-                let msgZ = encodeURIComponent(`Olá! Tenho interesse no imóvel *${im.nome}*.\n\n${ci ? `Período: ${dIn} a ${dOut} (${info.noites || 0} noites).\n${numP} hóspedes\nValor do pacote: R$ ${precoTotalFormatado}` : `Diárias a partir de: R$ ${precoCalcFormatado}`}\n\n*Orçamento sujeito a disponibilidade.\n\nUm instante que já já iremos te atender.`);
-                
-                let btnZ = (info.isAPartirDe || (!info.isAPartirDe && !info.bloqueioMinNoites)) && info.disponivel ? `<a href="https://wa.me/55${zapProp}?text=${msgZ}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2.5 rounded-xl flex items-center justify-center font-bold shadow transition-colors active:scale-95"><i class="fab fa-whatsapp text-lg mr-2"></i> Reservar</a>` : '';
-                
-                let nomeImovelDisplay = im.numeroApto ? `${im.nome} - Apto ${im.numeroApto}` : im.nome;
-                
-                div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${nomeImovelDisplay}</h3> <p class="text-xs text-[#0071c2] underline cursor-pointer mb-3">${im.cidade}</p> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <p class="text-[11px] text-slate-800 mt-1 leading-relaxed">${im.estrutura||''}</p> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-[11px] text-slate-800 mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
-            });
-        }
+        const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
+        if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum disponível para esses critérios. (Pode faltar tarifa neste período).</div>'; return; }
+        lista.forEach(im => {
+            let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
+            let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
+            let setasHtml = fts.length > 1 ? `<button onclick="mudarFoto(event, ${im.id}, -1, ${fts.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-left text-xs"></i></button><button onclick="mudarFoto(event, ${im.id}, 1, ${fts.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full z-20 shadow text-slate-700 flex items-center justify-center"><i class="fas fa-chevron-right text-xs"></i></button>` : '';
+            let carHtml = `<div class="relative w-full h-56 bg-slate-100 overflow-hidden rounded-xl" id="carousel-${im.id}" data-current="0" data-total="${fts.length}">${imagensHtml}${setasHtml}</div>`;
+            let numP = formatarNumero(pes); let numN = formatarNumero(info.noites || 0); let minNStr = formatarNumero(info.minNoites || 1);
+            let precoCalcFormatado = (info.precoCalculado || 0).toLocaleString('pt-BR', {minimumFractionDigits:2}); let precoTotalFormatado = (info.precoTotal || 0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+            let prcHtml = !info.disponivel ? `<div class="text-red-500 font-bold text-lg mb-2">Indisponível</div><button disabled class="w-full bg-slate-200 text-slate-400 px-4 py-2.5 rounded-xl font-bold text-sm">Sem datas</button>` : (info.isAPartirDe ? `<div class="text-[11px] text-slate-400 font-bold tracking-wider mb-1 uppercase">Diárias A partir de</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoCalcFormatado}</div>` : (info.bloqueioMinNoites ? `<button disabled class="w-full bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold text-sm">Mínimo ${minNStr} noites</button>` : `<div class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1">Valor do pacote</div><div class="bg-orange-50 border border-orange-100 text-orange-600 font-bold text-xs px-2 py-0.5 rounded inline-block mb-2">${numN} noites</div><div class="text-2xl font-bold text-slate-800 mb-3">R$ ${precoTotalFormatado}</div>`));
+            
+            let zapProp = im.proprietario?.zap?.replace(/\D/g,'') || empresaDB.zap?.replace(/\D/g,''); 
+            let dIn = ci ? parseInputDateSafe(ci).split('-').reverse().join('/') : ''; 
+            let dOut = co ? parseInputDateSafe(co).split('-').reverse().join('/') : '';
+            
+            // Tratamento do nome e número para exibição na Vitrine e no WhatsApp
+            let nomeImovelWP = im.numeroApto ? `${im.nome} ${im.numeroApto}` : im.nome;
+            let nomeImovelDisplay = im.numeroApto ? `${im.nome} - Apto ${im.numeroApto}` : im.nome;
 
+            // Formatação Exata da Mensagem do WhatsApp
+            let txtMsg = `Olá! Tenho interesse no imóvel *${nomeImovelWP}*.\n\n`;
+            if (ci && co) {
+                txtMsg += `*Período:* ${dIn} a ${dOut} (${info.noites || 0} noites).\n`;
+                txtMsg += `👉 ${numP} hóspedes\n`;
+                txtMsg += `👉 Valor do pacote: *R$ ${precoTotalFormatado}*\n\n`;
+            } else {
+                txtMsg += `Diárias a partir de: *R$ ${precoCalcFormatado}*\n\n`;
+            }
+            txtMsg += `*Orçamento sujeito a disponibilidade.\n\nUm instante que já já iremos te atender. 😎`;
+            
+            let msgZ = encodeURIComponent(txtMsg);
+            
+            // Botão "Reservar" modificado
+            let btnZ = (info.isAPartirDe || (!info.isAPartirDe && !info.bloqueioMinNoites)) && info.disponivel ? `<a href="https://wa.me/55${zapProp}?text=${msgZ}" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2.5 rounded-xl flex items-center justify-center font-bold shadow transition-colors active:scale-95"><i class="fab fa-whatsapp text-lg mr-2"></i> Reservar</a>` : '';
+            
+            div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${nomeImovelDisplay}</h3> <p class="text-xs text-[#0071c2] underline cursor-pointer mb-3">${im.cidade}</p> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <p class="text-sm text-slate-700 mt-1 leading-relaxed">${im.estrutura||''}</p> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-sm text-slate-700 font-medium mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
+        });
+    }
         function renderizarMapaDisponibilidade() {
             if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
             let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
