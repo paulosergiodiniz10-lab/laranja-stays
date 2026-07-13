@@ -661,6 +661,28 @@
             });
             
             if(count===0 && div) { if(minNoitesBloqueio) { div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`; } else if (conflitoReserva) { div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`; } else { div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`; } }
+        }                
+                let inf = calcularPrecoDinamico(im, ci, co);
+                console.log(`✅ Resultado do cálculo de preço:`, inf);
+
+                if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
+                if(!inf.disponivel || inf.bloqueioMinNoites) { 
+                    if(verificarChoqueDatas(im.id, ci, co)) { 
+                        conflitoReserva = true; 
+                        console.log(`❌ Ignorado: Já possui reserva/bloqueio nestas datas.`);
+                    } else {
+                        console.log(`❌ Ignorado: Sem tarifas geradas no calendário para as datas.`);
+                    }
+                    return; 
+                }
+                
+                count++;
+                let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
+                
+                if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
+            });
+            
+            if(count===0 && div) { if(minNoitesBloqueio) { div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`; } else if (conflitoReserva) { div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`; } else { div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`; } }
         }
 
             console.log("Check-in enviado para busca:", ci);
