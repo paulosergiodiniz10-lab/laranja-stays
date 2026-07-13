@@ -242,24 +242,28 @@
                 } else {
                     if (user && !user.isAnonymous) { 
                         currentUserUid = user.uid; 
-                        hide('tela-login');
                         
-                        // Busca o perfil do usuário para saber de qual agência ele é e o nível de acesso
-                        const userProfileSnap = await db.collection("usuarios").doc(user.uid).get();
+                        // Proteção anti-falha para o Multi-empresas
+                        let pData = null;
+                        try {
+                            const userProfileSnap = await db.collection("usuarios").doc(user.uid).get();
+                            if (userProfileSnap.exists) pData = userProfileSnap.data();
+                        } catch (err) {
+                            console.warn("Firebase bloqueou a leitura de usuários. Entrando no modo fallback de dono.");
+                        }
                         
-                        if (userProfileSnap.exists) {
-                            const pData = userProfileSnap.data();
+                        if (pData) {
                             currentAgenciaId = pData.agenciaId;
-                            userRole = pData.role; // Pode ser 'superadmin', 'dono', ou 'parceiro'
+                            userRole = pData.role;
                         } else {
-                            // Se não existir, retrocompatibilidade: ele é o dono da própria agência
                             currentAgenciaId = user.uid;
                             userRole = 'dono';
                             db.collection("usuarios").doc(user.uid).set({ agenciaId: user.uid, role: 'dono', email: user.email }).catch(()=>{});
                         }
 
+                        hide('tela-login');
                         show('tela-app'); show('btn-logout'); 
-                        await carregarDadosFirebase(currentAgenciaId); // Carrega os dados da EMPRESA correta
+                        await carregarDadosFirebase(currentAgenciaId); 
                         aplicarPermissoesDeAcesso();
                         appInicializado = true; 
                     } 
@@ -271,7 +275,6 @@
                 }
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
-
         function aplicarPermissoesDeAcesso() {
             if (userRole === 'parceiro') {
                 // Esconde funções que o parceiro/vendedor não pode ver
