@@ -848,8 +848,15 @@
         }
 
         function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
-        function renderizarPreviewFotos() { const d=el('preview-fotos'); if(!d) return; d.innerHTML=''; fotosEmCriacao.forEach((f,i)=>d.insertAdjacentHTML('beforeend', `<div class="relative w-full h-24 bg-slate-100 rounded-xl border border-slate-200 overflow-hidden"><img src="${f}" class="w-full h-full object-cover"><button type="button" onclick="removerFoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px]"><i class="fas fa-times"></i></button></div>`)); }
-
+        function definirCapa(i) { if(i===0)return; const foto = fotosEmCriacao.splice(i, 1)[0]; fotosEmCriacao.unshift(foto); renderizarPreviewFotos(); }
+        function renderizarPreviewFotos() { 
+            const d=el('preview-fotos'); if(!d) return; d.innerHTML=''; 
+            fotosEmCriacao.forEach((f,i) => {
+                let badgeCapa = i === 0 ? `<div class="absolute bottom-0 left-0 right-0 bg-orange-500 text-white text-[9px] font-bold text-center py-1 uppercase tracking-wider">Capa / Vitrine</div>` : '';
+                let btnCapa = i > 0 ? `<button type="button" onclick="definirCapa(${i})" class="absolute top-1 left-1 bg-slate-800/80 text-white hover:bg-orange-500 px-2 py-1 rounded text-[9px] font-bold transition-colors">Tornar Capa</button>` : '';
+                d.insertAdjacentHTML('beforeend', `<div class="relative w-full h-24 bg-slate-100 rounded-xl border ${i===0?'border-orange-500 ring-2 ring-orange-200':'border-slate-200'} overflow-hidden"><img src="${f}" class="w-full h-full object-cover">${badgeCapa}${btnCapa}<button type="button" onclick="removerFoto(${i})" class="absolute top-1 right-1 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] hover:bg-red-600"><i class="fas fa-times"></i></button></div>`);
+            }); 
+        }
         function validarESalvarImovel() {
             const n = val('cad-nome'); if(!n) { mudarAbaCadastro('imovel'); mostrarAlerta("Preencha o Nome do Imóvel."); return; } if(!calendarioEmCriacao || !calendarioEmCriacao.length) { mudarAbaCadastro('tarifas'); mostrarAlerta("Você precisa gerar as tarifas diárias no Calendário antes de salvar."); return; }
             const obj = { id: imovelEditandoId || Date.now(), proprietario: { nome: val('cad-prop-nome'), cpf: val('cad-prop-cpf'), zap: val('cad-prop-zap'), email: val('cad-prop-email'), comissao: parseFloat(val('cad-prop-comissao'))||0 }, nome: n, numeroApto: val('cad-num-apto'), cidade: val('cad-cidade') + (val('cad-uf') ? ' - '+val('cad-uf') : ''), endereco: { cep: val('cad-cep'), cidade: val('cad-cidade'), uf: val('cad-uf'), rua: val('cad-rua'), numero: val('cad-numero'), bairro: val('cad-bairro'), complemento: val('cad-complemento') }, tipo: val('cad-tipo'), checkin: val('cad-checkin'), checkout: val('cad-checkout'), capacidadeTotal: parseInt(val('cad-capacidade'))||1, estrutura: val('cad-estrutura'), pagamento: val('cad-pagamento'), fotos: [...fotosEmCriacao], calendario: JSON.parse(JSON.stringify(calendarioEmCriacao)), reservas: imovelEditandoId ? imoveisDB.find(i=>i.id==imovelEditandoId).reservas : [], despesas: imovelEditandoId ? (imoveisDB.find(i=>i.id==imovelEditandoId).despesas || []) : [] };
