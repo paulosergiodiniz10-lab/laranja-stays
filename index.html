@@ -908,12 +908,12 @@
             let txtMsg = `Olá! Tenho interesse no imóvel *${nomeImovelWP}*.\n\n`;
             if (ci && co) {
                 txtMsg += `*Período:* ${dIn} a ${dOut} (${info.noites || 0} noites).\n`;
-                txtMsg += `👉 ${numP} hóspedes\n`;
-                txtMsg += `👉 Valor do pacote: *R$ ${precoTotalFormatado}*\n\n`;
+                txtMsg += `  · ${numP} hóspedes\n`;
+                txtMsg += `  · Valor do pacote: *R$ ${precoTotalFormatado}*\n\n`;
             } else {
                 txtMsg += `Diárias a partir de: *R$ ${precoCalcFormatado}*\n\n`;
             }
-            txtMsg += `*Orçamento sujeito a disponibilidade.\n\nUm instante que já já iremos te atender. 😎`;
+            txtMsg += `*Orçamento sujeito a disponibilidade.*\n\nUm instante que já já iremos te atender.`;
             
             let msgZ = encodeURIComponent(txtMsg);
             
