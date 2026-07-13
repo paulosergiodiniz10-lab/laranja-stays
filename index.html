@@ -614,15 +614,36 @@
         function buscarDisponibilidadeOrcamento() {
             const ciRaw = val('busca-orc-checkin'); const coRaw = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
             if(!ciRaw||!coRaw) { mostrarAlerta("Preencha as datas."); return; }
-            const ci = parseInputDateSafe(ciRaw); const co = parseInputDateSafe(coRaw);
+            
+            // Força a formatação de YYYY-MM-DD
+            let ci = ciRaw;
+            if (ciRaw.includes('/')) {
+                let p = ciRaw.split('/');
+                ci = `${p[2]}-${p[1]}-${p[0]}`;
+            }
+            let co = coRaw;
+            if (coRaw.includes('/')) {
+                let p = coRaw.split('/');
+                co = `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            console.log("Check-in enviado para busca:", ci);
+            console.log("Check-out enviado para busca:", co);
+
             const div = el('lista-imoveis-orcamento'); if(div) div.innerHTML='';
             let count=0; let minNoitesBloqueio = null; let conflitoReserva = false;
+            
             imoveisDB.forEach(im => {
                 let cap = parseInt(im.capacidadeTotal) || 1;
-                if(cap < ps) return; let inf = calcularPrecoDinamico(im, ci, co);
+                if(cap < ps) return; 
+                
+                let inf = calcularPrecoDinamico(im, ci, co);
+                console.log(`Resultado calcularPrecoDinamico para imóvel ID ${im.id}:`, inf);
+
                 if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
                 if(!inf.disponivel || inf.bloqueioMinNoites) { if(verificarChoqueDatas(im.id, ci, co)) { conflitoReserva = true; } return; }
                 count++;
+                
                 let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
                 if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
             });
