@@ -652,18 +652,35 @@
             if(!flt.length) { tb.innerHTML='<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas no período.</td></tr>'; return; }
             flt.forEach(res => {
                 let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
-                let bdg=''; let bP=''; let bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+                let bdg=''; let bP=''; let bV=''; // Voucher inicia vazio para garantir que só gere se estiver pago
                 let pg = res.valorPago!==undefined?parseFloat(res.valorPago):0; if(res.statusPagamento==='pago'&&pg===0) pg=parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal)-pg; let addI = '';
-                if(res.statusPagamento==='pago'){bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`;}
-                else if(res.statusPagamento==='pendente'){bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`;}
-                else if(res.statusPagamento==='devolucao'){bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;}
-                else if(res.statusPagamento==='cancelada'){bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; if(pg>res.valorTotal) bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; bV=''; addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';}
+                
+                if(res.statusPagamento==='pago'){
+                    bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; 
+                    addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
+                    bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+                }
+                else if(res.statusPagamento==='pendente'){
+                    bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; 
+                    if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; 
+                    addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`;
+                }
+                else if(res.statusPagamento==='devolucao'){
+                    bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; 
+                    if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; 
+                    addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+                }
+                else if(res.statusPagamento==='cancelada'){
+                    bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; 
+                    if(pg>res.valorTotal && userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; 
+                    addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
+                }
                 else if(res.statusPagamento==='proprietario'){bdg=`<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;}
-                else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`; bV='';}
+                else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;}
+                
                 tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-500">${dC}</td><td class="p-3 font-medium text-slate-400">${res.numeroReserva||'-'}</td><td class="p-3">${bdg}</td><td class="p-3 font-medium text-slate-700">${res.titular?.nome||'-'}</td><td class="p-3 text-[#0071c2] font-medium text-xs">${res.nIm||'-'}</td><td class="p-3 text-xs text-slate-500">${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}</td><td class="p-3 leading-tight"><div class="font-bold text-slate-800 text-sm">R$ ${parseFloat(res.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td><td class="p-3 text-center whitespace-nowrap">${bV}${bP}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar Reserva" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button></td></tr>`);
             });
         }
-
         function exportarExcelReservas() {
             if(!reservasAtuaisExportacao.length) return; 
             let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
