@@ -297,19 +297,40 @@
             if (isPublicVitrine || !currentAgenciaId) return; 
             try { await db.collection("sistema_saas").doc(currentAgenciaId).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); } catch (e) { console.error("Erro ao salvar:", e); mostrarNotificacao("Erro ao salvar dados!"); } 
         }        function salvarBancoNoStorage() { sincronizarNuvem(); }
+        
         function toggleSenha() {
-            const input = el('login-senha');
-            const icone = el('icone-senha');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icone.classList.remove('fa-eye');
-                icone.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icone.classList.remove('fa-eye-slash');
-                icone.classList.add('fa-eye');
+            const input = document.getElementById('login-senha');
+            const icone = document.getElementById('icone-senha');
+            if (input && icone) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icone.classList.remove('fa-eye');
+                    icone.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icone.classList.remove('fa-eye-slash');
+                    icone.classList.add('fa-eye');
+                }
             }
         }
+
+        function fazerLogin() { 
+            const e = val('login-email'); 
+            const s = val('login-senha'); 
+            const errDiv = el('login-erro');
+            
+            if(!e || !s) {
+                if(errDiv) { errDiv.innerText = "Preencha e-mail e senha."; errDiv.classList.remove('hidden-view'); }
+                return; 
+            } 
+            if(errDiv) errDiv.classList.add('hidden-view');
+            
+            auth.signInWithEmailAndPassword(e, s).catch(err => { 
+                if(errDiv) { errDiv.innerText = "Erro: Verifique seu e-mail e senha."; errDiv.classList.remove('hidden-view'); }
+            }); 
+        }
+
+        function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }
         function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
