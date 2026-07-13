@@ -627,6 +627,12 @@
         function excluirReservaConfirmacao() { const imId = val('reserva-imovel-select'); const rId = val('reserva-id'); const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas){ im.reservas=im.reservas.filter(r=>r.id!=rId); salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalReserva(); mostrarNotificacao("Ficha Apagada!"); } }
 
         function abrirModalPagamento(imId, rId) {
+            // Trava de segurança: Parceiros não podem abrir o caixa
+            if (userRole === 'parceiro') { 
+                mostrarAlerta("Apenas o Administrador pode registrar pagamentos e baixas financeiras."); 
+                return; 
+            }
+            
             setVal('pagamento-imovel-id', imId); setVal('pagamento-reserva-id', rId); const im = imoveisDB.find(i=>i.id==imId); const res = im?.reservas.find(r=>r.id==rId); if(!res) return;
             let p = res.valorPago!==undefined?res.valorPago:(res.statusPagamento==='pago'?res.valorTotal:0); let d = res.valorTotal-p;
             const bx = el('pagamento-valor-box'); const tb = el('pagamento-texto-base'); const bc = el('btn-confirmar-pagamento');
