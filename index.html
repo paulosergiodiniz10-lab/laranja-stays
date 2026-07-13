@@ -584,11 +584,39 @@
             let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada') setVal('reserva-valor', 0);
             if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
             acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva();
-            show('btn-excluir-reserva'); if(res.statusPagamento!=='cancelada') show('btn-cancelar-reserva'); else hide('btn-cancelar-reserva'); verificarDiferencaPagamento(); show('modal-reserva-manual');
+            
+            // TRAVA DE SEGURANÇA: Corretor não pode mudar o status financeiro nem excluir/cancelar a ficha
+            if (userRole === 'parceiro') {
+                if(el('reserva-status')) el('reserva-status').disabled = true;
+                hide('btn-excluir-reserva');
+                hide('btn-cancelar-reserva');
+            } else {
+                if(el('reserva-status')) el('reserva-status').disabled = false;
+                show('btn-excluir-reserva'); 
+                if(res.statusPagamento!=='cancelada') show('btn-cancelar-reserva'); else hide('btn-cancelar-reserva');
+            }
+
+            verificarDiferencaPagamento(); show('modal-reserva-manual');
         }
 
         function fecharModalReserva() { hide('modal-reserva-manual'); }
-        function resetarModalReserva() { setVal('reserva-imovel-select', ''); let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr; if(fpIn) { fpIn.clear(); } else setVal('reserva-checkin', ''); if(fpOut) { fpOut.clear(); fpOut.set("minDate", null); } else setVal('reserva-checkout', ''); setVal('reserva-valor-pago', '0'); hide('aviso-diferenca'); hide('opt-status-pago'); hide('opt-status-devolucao'); hide('opt-status-cancelada'); setVal('reserva-status', 'pendente'); hide('bloco-multa-devolucao'); setVal('reserva-multa-perc', '0'); setVal('reserva-valor-multa-calculada', '0'); setVal('reserva-valor', ''); setVal('reserva-titular-nome', ''); setVal('reserva-titular-cpf', ''); setVal('reserva-titular-nasc', ''); setVal('reserva-titular-zap', ''); setVal('reserva-titular-email', ''); acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva(); }
+        
+        function resetarModalReserva() { 
+            setVal('reserva-imovel-select', ''); let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr; 
+            if(fpIn) { fpIn.clear(); } else setVal('reserva-checkin', ''); 
+            if(fpOut) { fpOut.clear(); fpOut.set("minDate", null); } else setVal('reserva-checkout', ''); 
+            setVal('reserva-valor-pago', '0'); hide('aviso-diferenca'); hide('opt-status-pago'); hide('opt-status-devolucao'); hide('opt-status-cancelada'); 
+            setVal('reserva-status', 'pendente'); hide('bloco-multa-devolucao'); setVal('reserva-multa-perc', '0'); setVal('reserva-valor-multa-calculada', '0'); 
+            setVal('reserva-valor', ''); setVal('reserva-titular-nome', ''); setVal('reserva-titular-cpf', ''); setVal('reserva-titular-nasc', ''); setVal('reserva-titular-zap', ''); setVal('reserva-titular-email', ''); 
+            acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva(); 
+            
+            // TRAVA DE SEGURANÇA: Nova reserva feita por corretor já nasce bloqueada para edição financeira
+            if (userRole === 'parceiro') {
+                if(el('reserva-status')) el('reserva-status').disabled = true;
+            } else {
+                if(el('reserva-status')) el('reserva-status').disabled = false;
+            }
+        }
         function toggleCamposReserva() { const s = val('reserva-status'); const b = el('bloco-acompanhantes'); if(b) { if(s==='bloqueio'){ b.classList.add('opacity-50','pointer-events-none'); } else { b.classList.remove('opacity-50','pointer-events-none'); } } }
         function iniciarCancelamentoTotal() { const pg = parseFloat(val('reserva-valor-pago'))||0; show('opt-status-cancelada'); setVal('reserva-status', 'cancelada'); setVal('reserva-valor', 0); verificarDiferencaPagamento(); hide('btn-cancelar-reserva'); mostrarNotificacao(pg>0?"Reserva Cancelada! Ajuste a multa.":"Ficha Cancelada. Datas livres!"); }
         
