@@ -233,22 +233,62 @@
                 if (isPublicVitrine) {
                     hide('tela-login'); if (!user) { await auth.signInAnonymously(); return; } let donoId = agenciaId;
                     if (linkSlug) { const docSnap = await db.collection("agencias_urls").doc(linkSlug).get(); if (docSnap.exists) donoId = docSnap.data().uid; else { mostrarTelaErro(`O link "<b>${linkSlug}</b>" não foi encontrado ou ainda não foi salvo.<br><br><b>O que fazer:</b> Acesse o seu painel, vá em 'Minha Empresa', preencha os dados e clique no botão laranja 'Salvar' no final da página para ativá-lo.`); return; } }
-                    if (donoId) { await carregarDadosFirebase(donoId); appInicializado = true; }
+                    if (donoId) { currentAgenciaId = donoId; await carregarDadosFirebase(currentAgenciaId); appInicializado = true; }
                 } else {
-                    if (user && !user.isAnonymous) { currentUserUid = user.uid; hide('tela-login'); show('tela-app'); show('btn-logout'); await carregarDadosFirebase(user.uid); appInicializado = true; } 
-                    else { if (user && user.isAnonymous) await auth.signOut(); currentUserUid = null; show('tela-login'); hide('tela-app'); }
+                    if (user && !user.isAnonymous) { 
+                        currentUserUid = user.uid; 
+                        hide('tela-login');
+                        
+                        // Busca o perfil do usuário para saber de qual agência ele é e o nível de acesso
+                        const userProfileSnap = await db.collection("usuarios").doc(user.uid).get();
+                        
+                        if (userProfileSnap.exists) {
+                            const pData = userProfileSnap.data();
+                            currentAgenciaId = pData.agenciaId;
+                            userRole = pData.role; // Pode ser 'superadmin', 'dono', ou 'parceiro'
+                        } else {
+                            // Se não existir, retrocompatibilidade: ele é o dono da própria agência
+                            currentAgenciaId = user.uid;
+                            userRole = 'dono';
+                            db.collection("usuarios").doc(user.uid).set({ agenciaId: user.uid, role: 'dono', email: user.email }).catch(()=>{});
+                        }
+
+                        show('tela-app'); show('btn-logout'); 
+                        await carregarDadosFirebase(currentAgenciaId); // Carrega os dados da EMPRESA correta
+                        aplicarPermissoesDeAcesso();
+                        appInicializado = true; 
+                    } 
+                    else { 
+                        if (user && user.isAnonymous) await auth.signOut(); 
+                        currentUserUid = null; currentAgenciaId = null; 
+                        show('tela-login'); hide('tela-app'); 
+                    }
                 }
-            } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados.<br>Certifique-se de ter publicado as <b>Regras do Firestore</b> corretamente lá no painel do Firebase."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
+            } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
 
-        async function carregarDadosFirebase(uid) {
-            try { const docSnap = await db.collection("sistema_saas").doc(uid).get(); if (docSnap.exists) { const data = docSnap.data(); imoveisDB = data.imoveisDB || []; empresaDB = data.empresaDB || empresaDB; orcamentosDB = data.orcamentosDB || []; categoriasDB = data.categoriasDB || categoriasDB; } else if (!isPublicVitrine) { imoveisDB = dbMockInicial; await sincronizarNuvem(); }
+        function aplicarPermissoesDeAcesso() {
+            if (userRole === 'parceiro') {
+                // Esconde funções que o parceiro/vendedor não pode ver
+                hide('btn-admin-empresa');
+                hide('btn-admin-imoveis');
+                hide('btn-admin-despesas');
+                hide('btn-admin-resultados');
+            } else if (userRole === 'superadmin') {
+                // Futuro botão do painel Master de franquias
+            }
+        }
+
+        async function carregarDadosFirebase(uidEmpresa) {
+            try { const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); if (docSnap.exists) { const data = docSnap.data(); imoveisDB = data.imoveisDB || []; empresaDB = data.empresaDB || empresaDB; orcamentosDB = data.orcamentosDB || []; categoriasDB = data.categoriasDB || categoriasDB; } else if (!isPublicVitrine) { imoveisDB = dbMockInicial; await sincronizarNuvem(); }
                 imoveisDB.forEach(im => { if(!im.despesas) im.despesas=[]; if(!im.reservas) im.reservas=[]; if(!im.calendario) im.calendario=[]; if(im.proprietario && im.proprietario.comissao === undefined) im.proprietario.comissao=20; }); inicializarApp();
             } catch(e) { throw e; }
         }
 
-        async function sincronizarNuvem() { if (isPublicVitrine || !currentUserUid) return; try { await db.collection("sistema_saas").doc(currentUserUid).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); } catch (e) { console.error("Erro ao salvar:", e); mostrarNotificacao("Erro ao salvar dados!"); } }
-        function salvarBancoNoStorage() { sincronizarNuvem(); }
+        async function sincronizarNuvem() { 
+            if (isPublicVitrine || !currentAgenciaId) return; 
+            try { await db.collection("sistema_saas").doc(currentAgenciaId).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); } catch (e) { console.error("Erro ao salvar:", e); mostrarNotificacao("Erro ao salvar dados!"); } 
+        }        function salvarBancoNoStorage() { sincronizarNuvem(); }
         function fazerLogin() { const e = val('login-email'); const s = val('login-senha'); if(!e || !s) return; auth.signInWithEmailAndPassword(e, s).catch(err => { show('login-erro'); }); }
         function fazerLogout() { auth.signOut(); }
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }
