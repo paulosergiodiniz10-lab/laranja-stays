@@ -891,7 +891,7 @@
             renderizarVitrine(flt, cIn, cOut, pes);
         }
 
-        ffunction renderizarVitrine(lista, ci, co, pes) {
+        function renderizarVitrine(lista, ci, co, pes) {
         const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
         if(!lista.length) { div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Nenhum imóvel disponível para os critérios selecionados. Por favor, tente uma nova busca com outra data ou ajuste o número de hóspedes.</div>'; return; }
         lista.forEach(im => {
