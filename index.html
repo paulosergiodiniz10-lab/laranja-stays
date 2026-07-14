@@ -383,34 +383,82 @@
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
 
         // ================= EQUIPE E ACESSOS =================
+        let editandoMembroIndex = null;
+
         function renderizarEquipe() {
             const tb = el('lista-equipe-tbody'); if(!tb) return; tb.innerHTML = '';
             if(!empresaDB.equipe || empresaDB.equipe.length === 0) {
-                tb.innerHTML = '<tr><td colspan="3" class="text-center p-6 text-slate-400 font-bold">Nenhum parceiro cadastrado. Adicione um e-mail acima.</td></tr>';
+                tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-slate-400 font-bold">Nenhum parceiro cadastrado. Adicione acima.</td></tr>';
                 return;
             }
             empresaDB.equipe.forEach((membro, index) => {
                 let badge = membro.role === 'parceiro' ? `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Corretor/Parceiro</span>` : `<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-[10px] font-bold uppercase">${membro.role}</span>`;
-                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-4 font-medium text-slate-700">${membro.email}</td><td class="p-4">${badge}</td><td class="p-4 text-center"><button onclick="removerMembroEquipe(${index})" title="Remover Acesso" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fas fa-trash"></i></button></td></tr>`);
+                let nome = membro.nome || '-'; let zap = membro.zap || '-';
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="p-4"><div class="font-bold text-slate-700">${nome}</div><div class="text-xs text-slate-500">${membro.email}</div></td>
+                    <td class="p-4 text-sm font-medium text-slate-600">${zap}</td>
+                    <td class="p-4">${badge}</td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                        <button onclick="editarMembroEquipe(${index})" title="Editar" class="text-blue-500 hover:text-blue-700 p-2 transition-colors mr-1"><i class="fas fa-edit"></i></button>
+                        <button onclick="removerMembroEquipe(${index})" title="Remover Acesso" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`);
             });
         }
 
-        async function adicionarMembroEquipe() {
+        async function salvarMembroEquipe() {
+            const nome = val('novo-equipe-nome').trim();
+            const zap = val('novo-equipe-zap').trim();
             const email = val('novo-equipe-email').trim().toLowerCase();
             const role = val('novo-equipe-perfil');
-            if(!email) { mostrarAlerta("Digite o e-mail do parceiro."); return; }
+            
+            if(!nome || !email) { mostrarAlerta("Nome e E-mail são obrigatórios."); return; }
             if(!empresaDB.equipe) empresaDB.equipe = [];
-            if(empresaDB.equipe.find(m => m.email === email)) { mostrarAlerta("Este e-mail já está na sua equipe."); return; }
             
-            empresaDB.equipe.push({ email: email, role: role });
+            let duplicado = empresaDB.equipe.findIndex(m => m.email === email);
+            if(duplicado !== -1 && duplicado !== editandoMembroIndex) { mostrarAlerta("Este e-mail já está na sua equipe."); return; }
+            
+            if (editandoMembroIndex !== null) {
+                let emailAntigo = empresaDB.equipe[editandoMembroIndex].email;
+                empresaDB.equipe[editandoMembroIndex] = { nome: nome, zap: zap, email: email, role: role };
+                if(email !== emailAntigo) { try { await db.collection("usuarios_pendentes").doc(emailAntigo).delete(); } catch(e){} }
+                mostrarNotificacao("Parceiro atualizado!");
+            } else {
+                empresaDB.equipe.push({ nome: nome, zap: zap, email: email, role: role });
+                mostrarNotificacao("Parceiro adicionado com sucesso!");
+            }
+            
             salvarBancoNoStorage();
-            
             try { await db.collection("usuarios_pendentes").doc(email).set({ agenciaId: currentAgenciaId, role: role, email: email }); } catch(e) {}
             
-            sv('novo-equipe-email', ''); renderizarEquipe(); mostrarNotificacao("Parceiro adicionado com sucesso!");
+            cancelarEdicaoEquipe();
+            renderizarEquipe();
+        }
+
+        function editarMembroEquipe(index) {
+            editandoMembroIndex = index;
+            const membro = empresaDB.equipe[index];
+            sv('novo-equipe-nome', membro.nome || ''); sv('novo-equipe-zap', membro.zap || '');
+            sv('novo-equipe-email', membro.email || ''); sv('novo-equipe-perfil', membro.role || 'parceiro');
+            
+            el('btn-salvar-equipe').innerHTML = '<i class="fas fa-save mr-2"></i> Salvar';
+            el('btn-salvar-equipe').classList.replace('bg-slate-800', 'bg-blue-600');
+            el('btn-salvar-equipe').classList.replace('hover:bg-slate-900', 'hover:bg-blue-700');
+            show('btn-cancelar-edicao-equipe');
+        }
+
+        function cancelarEdicaoEquipe() {
+            editandoMembroIndex = null;
+            sv('novo-equipe-nome', ''); sv('novo-equipe-zap', ''); sv('novo-equipe-email', ''); sv('novo-equipe-perfil', 'parceiro');
+            el('btn-salvar-equipe').innerHTML = '<i class="fas fa-plus mr-2"></i> Adicionar';
+            el('btn-salvar-equipe').classList.replace('bg-blue-600', 'bg-slate-800');
+            el('btn-salvar-equipe').classList.replace('hover:bg-blue-700', 'hover:bg-slate-900');
+            hide('btn-cancelar-edicao-equipe');
         }
 
         async function removerMembroEquipe(index) {
+            if(!confirm("Tem certeza que deseja remover o acesso deste parceiro? Ele não poderá mais acessar o sistema.")) return;
+            
             const emailRemovido = empresaDB.equipe[index].email;
             empresaDB.equipe.splice(index, 1);
             salvarBancoNoStorage(); renderizarEquipe(); mostrarNotificacao("Acesso removido!");
@@ -420,7 +468,6 @@
                 if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
             } catch(e) {}
         }
-
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
         function enviarEmailRecuperacao() { const e = val('recuperar-email'); const msg = el('recuperar-mensagem'); if(!e) { msg.innerText = "Por favor, digite seu e-mail."; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); return; } auth.sendPasswordResetEmail(e).then(() => { msg.innerText = "Link de recuperação enviado para " + e + ". Verifique sua caixa de entrada."; msg.className = "text-sm mt-4 font-bold text-green-600"; msg.classList.remove('hidden-view'); setTimeout(() => fecharRecuperarSenha(), 4000); }).catch((error) => { let txtErro = "Erro ao enviar e-mail."; if(error.code === 'auth/user-not-found') txtErro = "E-mail não encontrado no sistema."; if(error.code === 'auth/invalid-email') txtErro = "E-mail inválido."; msg.innerText = txtErro; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); }); }
         function copiarLinkVitrine() { if (!currentUserUid || !empresaDB.slug) return; const url = window.location.origin + window.location.pathname + '?link=' + empresaDB.slug; if(navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(() => mostrarNotificacao("Link copiado!")).catch(()=>{}); } else { const a=document.createElement('textarea'); a.value=url; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Link copiado!"); } }
