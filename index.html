@@ -369,7 +369,6 @@
         }
 
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
-function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
 
         // ================= EQUIPE E ACESSOS =================
         function renderizarEquipe() {
@@ -409,11 +408,8 @@ function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }
                 if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
             } catch(e) {}
         }
-        // ====================================================
 
-        function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }
-        function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }
-        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
+        function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
         function enviarEmailRecuperacao() { const e = val('recuperar-email'); const msg = el('recuperar-mensagem'); if(!e) { msg.innerText = "Por favor, digite seu e-mail."; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); return; } auth.sendPasswordResetEmail(e).then(() => { msg.innerText = "Link de recuperação enviado para " + e + ". Verifique sua caixa de entrada."; msg.className = "text-sm mt-4 font-bold text-green-600"; msg.classList.remove('hidden-view'); setTimeout(() => fecharRecuperarSenha(), 4000); }).catch((error) => { let txtErro = "Erro ao enviar e-mail."; if(error.code === 'auth/user-not-found') txtErro = "E-mail não encontrado no sistema."; if(error.code === 'auth/invalid-email') txtErro = "E-mail inválido."; msg.innerText = txtErro; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); }); }
         function copiarLinkVitrine() { if (!currentUserUid || !empresaDB.slug) return; const url = window.location.origin + window.location.pathname + '?link=' + empresaDB.slug; if(navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(() => mostrarNotificacao("Link copiado!")).catch(()=>{}); } else { const a=document.createElement('textarea'); a.value=url; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Link copiado!"); } }
 
