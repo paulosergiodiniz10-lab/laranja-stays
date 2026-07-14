@@ -976,6 +976,44 @@
             const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `DRE_${im.nome.replace(/\s+/g,'_')}.xls`; link.click();
         }
 
+// ================= EQUIPE E ACESSOS =================
+        function renderizarEquipe() {
+            const tb = el('lista-equipe-tbody'); if(!tb) return; tb.innerHTML = '';
+            if(!empresaDB.equipe || empresaDB.equipe.length === 0) {
+                tb.innerHTML = '<tr><td colspan="3" class="text-center p-6 text-slate-400 font-bold">Nenhum parceiro cadastrado. Adicione um e-mail acima.</td></tr>';
+                return;
+            }
+            empresaDB.equipe.forEach((membro, index) => {
+                let badge = membro.role === 'parceiro' ? `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Corretor/Parceiro</span>` : `<span class="bg-slate-200 text-slate-700 px-2 py-1 rounded text-[10px] font-bold uppercase">${membro.role}</span>`;
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-4 font-medium text-slate-700">${membro.email}</td><td class="p-4">${badge}</td><td class="p-4 text-center"><button onclick="removerMembroEquipe(${index})" title="Remover Acesso" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fas fa-trash"></i></button></td></tr>`);
+            });
+        }
+
+        async function adicionarMembroEquipe() {
+            const email = val('novo-equipe-email').trim().toLowerCase();
+            const role = val('novo-equipe-perfil');
+            if(!email) { mostrarAlerta("Digite o e-mail do parceiro."); return; }
+            if(!empresaDB.equipe) empresaDB.equipe = [];
+            if(empresaDB.equipe.find(m => m.email === email)) { mostrarAlerta("Este e-mail já está na sua equipe."); return; }
+            
+            empresaDB.equipe.push({ email: email, role: role });
+            salvarBancoNoStorage();
+            
+            try { await db.collection("usuarios_pendentes").doc(email).set({ agenciaId: currentAgenciaId, role: role, email: email }); } catch(e) {}
+            
+            sv('novo-equipe-email', ''); renderizarEquipe(); mostrarNotificacao("Parceiro adicionado com sucesso!");
+        }
+
+        async function removerMembroEquipe(index) {
+            const emailRemovido = empresaDB.equipe[index].email;
+            empresaDB.equipe.splice(index, 1);
+            salvarBancoNoStorage(); renderizarEquipe(); mostrarNotificacao("Acesso removido!");
+            try {
+                await db.collection("usuarios_pendentes").doc(emailRemovido).delete();
+                const q = await db.collection("usuarios").where("email", "==", emailRemovido).get();
+                if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
+            } catch(e) {}
+        }            
         window.onload = function() {};
     </script>
 </body>
