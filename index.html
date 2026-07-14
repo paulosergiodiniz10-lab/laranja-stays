@@ -399,13 +399,12 @@
         }
 
         function mudarAbaInternaAdmin(aba) {
-            const abas = ['empresa', 'imoveis', 'mapa', 'reservas', 'orcamentos', 'despesas', 'resultados'];
+            const abas = ['empresa', 'imoveis', 'mapa', 'reservas', 'orcamentos', 'equipe', 'despesas', 'resultados'];
             abas.forEach(a => {
                 let d = el(`admin-content-${a}`); let b = el(`btn-admin-${a}`);
-                if (a === aba) { d?.classList.remove('hidden-view'); if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"; if(a==='mapa') renderizarMapaDisponibilidade(); if(a==='reservas') renderizarListaReservasAdmin(); if(a==='orcamentos') renderListaOrc(); if(a==='resultados') povoarFiltrosResultados(); if(a==='despesas'){ povoarFiltrosDespesas(); if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; }
+                if (a === aba) { d?.classList.remove('hidden-view'); if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"; if(a==='mapa') renderizarMapaDisponibilidade(); if(a==='reservas') renderizarListaReservasAdmin(); if(a==='orcamentos') renderListaOrc(); if(a==='resultados') povoarFiltrosResultados(); if(a==='equipe') renderizarEquipe(); if(a==='despesas'){ povoarFiltrosDespesas(); if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; }
                 } else { d?.classList.add('hidden-view'); if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"; }
             });
-        }
 
         let isSidebarOpen = true;
         function toggleSidebar() { isSidebarOpen = !isSidebarOpen; const sidebar = el('admin-sidebar'); const inner = el('admin-sidebar-inner'); const icon = el('icon-toggle-sidebar'); const btn = el('btn-toggle-sidebar'); if (isSidebarOpen) { sidebar.classList.remove('md:w-0', 'md:-mr-6'); sidebar.classList.add('md:w-64'); inner.classList.remove('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-left'; btn.title = 'Recolher Menu'; } else { sidebar.classList.remove('md:w-64'); sidebar.classList.add('md:w-0', 'md:-mr-6'); inner.classList.add('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-right'; btn.title = 'Expandir Menu'; } }
