@@ -454,7 +454,7 @@
                     if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"; 
                 }
             });
-
+        }
         let isSidebarOpen = true;
         function toggleSidebar() { isSidebarOpen = !isSidebarOpen; const sidebar = el('admin-sidebar'); const inner = el('admin-sidebar-inner'); const icon = el('icon-toggle-sidebar'); const btn = el('btn-toggle-sidebar'); if (isSidebarOpen) { sidebar.classList.remove('md:w-0', 'md:-mr-6'); sidebar.classList.add('md:w-64'); inner.classList.remove('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-left'; btn.title = 'Recolher Menu'; } else { sidebar.classList.remove('md:w-64'); sidebar.classList.add('md:w-0', 'md:-mr-6'); inner.classList.add('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-right'; btn.title = 'Expandir Menu'; } }
 
