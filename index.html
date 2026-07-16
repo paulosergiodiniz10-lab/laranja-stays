@@ -454,7 +454,41 @@
             }
         }
 
-      
+      function aplicarPermissoesDeAcesso() {
+            let nomeExibicao = "Painel Gestor";
+            let cargoExibicao = "Laranja Stays PMS";
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+
+            if (ehParceiro) {
+                cargoExibicao = "Corretor / Parceiro";
+                // Busca o nome do corretor lá na lista de equipe da agência
+                if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                    const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
+                    if (meuCadastro && meuCadastro.nome) {
+                        nomeExibicao = meuCadastro.nome;
+                    } else {
+                        nomeExibicao = auth.currentUser.email;
+                    }
+                } else if (auth.currentUser) {
+                    nomeExibicao = auth.currentUser.email;
+                }
+            }
+
+            // Aplica os nomes no painel esquerdo
+            if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
+            if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
+
+            // Bloqueio forçado com display none (não pode ser apagado por outras funções)
+            const displayValor = ehParceiro ? 'none' : '';
+
+            if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+            if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+            if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+            if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
+            if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = displayValor;
+
+            if (ehParceiro) mudarAbaInternaAdmin('imoveis');
+        }
                // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
 
