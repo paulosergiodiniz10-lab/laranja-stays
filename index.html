@@ -358,14 +358,24 @@
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
         function aplicarPermissoesDeAcesso() {
-            if (userRole === 'parceiro') {
-                // Esconde funções que o parceiro/vendedor não pode ver
-                hide('btn-admin-empresa');
-                hide('btn-admin-imoveis');
-                hide('btn-admin-despesas');
-                hide('btn-admin-resultados');
-            } else if (userRole === 'superadmin') {
-                // Futuro botão do painel Master de franquias
+            // Se o usuário for um Corretor/Parceiro, aplicamos o bloqueio forçado
+            if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+                if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = 'none';
+                if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = 'none';
+                if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = 'none';
+                if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = 'none';
+                if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = 'none';
+                
+                mudarAbaInternaAdmin('imoveis');
+            } else {
+                // Se for o Gestor/Dono, removemos o bloqueio forçado
+                if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = '';
+                if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = '';
+                if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = '';
+                if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = '';
+                if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
+                
+                mudarAbaInternaAdmin('imoveis');
             }
         }
 
