@@ -383,8 +383,7 @@
         }
 
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
-        function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
-
+       
         function aplicarPermissoesDeAcesso() {
             // Se o usuário for um Corretor/Parceiro, escondemos os menus financeiros e administrativos
             if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
@@ -405,6 +404,8 @@
             }
         }
 
+        // ================= EQUIPE E ACESSOS =================
+        let editandoMembroIndex = null;
         // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
 
