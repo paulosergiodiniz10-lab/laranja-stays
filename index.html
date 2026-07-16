@@ -339,7 +339,8 @@
                         }
 
                         // Aplica as permissões logo depois que o sistema descobre o cargo no banco de dados
-        setTimeout(() => { aplicarPermissoesDeAcesso(); }, 500);
+                        setTimeout(() => { aplicarPermissoesDeAcesso(); }, 500);
+                        
                         hide('tela-login');
                         show('tela-app'); show('btn-logout'); 
                         await carregarDadosFirebase(currentAgenciaId); 
@@ -354,62 +355,6 @@
                 }
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
-   
-            // 1. Atualizar o Nome e Cargo no Painel
-            let nomeExibicao = "Painel Gestor";
-            let cargoExibicao = "Laranja Stays PMS";
-            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-            
-            // COLOQUE ESTA LINHA AQUI PARA TESTARMOS:
-            alert("O sistema acha que você é: " + (typeof userRole !== 'undefined' ? userRole : 'indefinido'));
-            
-            if (ehParceiro) {
-
-                if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = 'none';
-                if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = 'none';
-                if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = 'none';
-                if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = 'none';
-                if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = 'none';
-                
-                mudarAbaInternaAdmin('imoveis');
-            } else {
-                // Se for o Gestor/Dono, removemos o bloqueio forçado
-                if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = '';
-                if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = '';
-                if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = '';
-                if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = '';
-                if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
-                
-                mudarAbaInternaAdmin('imoveis');
-            }
-        }
-
-        async function carregarDadosFirebase(uidEmpresa) {
-            try { const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); if (docSnap.exists) { const data = docSnap.data(); imoveisDB = data.imoveisDB || []; empresaDB = data.empresaDB || empresaDB; orcamentosDB = data.orcamentosDB || []; categoriasDB = data.categoriasDB || categoriasDB; } else if (!isPublicVitrine) { imoveisDB = dbMockInicial; await sincronizarNuvem(); }
-                imoveisDB.forEach(im => { if(!im.despesas) im.despesas=[]; if(!im.reservas) im.reservas=[]; if(!im.calendario) im.calendario=[]; if(im.proprietario && im.proprietario.comissao === undefined) im.proprietario.comissao=20; }); inicializarApp();
-            } catch(e) { throw e; }
-        }
-
-        async function sincronizarNuvem() { 
-            if (isPublicVitrine || !currentAgenciaId) return; 
-            try { await db.collection("sistema_saas").doc(currentAgenciaId).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); } catch (e) { console.error("Erro ao salvar:", e); mostrarNotificacao("Erro ao salvar dados!"); } 
-        }        function salvarBancoNoStorage() { sincronizarNuvem(); }
-        
-        function toggleSenha() {
-            const input = document.getElementById('login-senha');
-            const icone = document.getElementById('icone-senha');
-            if (input && icone) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icone.classList.remove('fa-eye');
-                    icone.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    icone.classList.remove('fa-eye-slash');
-                    icone.classList.add('fa-eye');
-                }
-            }
-        }
 
         function fazerLogin() { 
             const e = val('login-email'); 
@@ -428,7 +373,7 @@
         }
 
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
-
+        
         function aplicarPermissoesDeAcesso() {
             let nomeExibicao = "Painel Gestor";
             let cargoExibicao = "Laranja Stays PMS";
@@ -436,7 +381,7 @@
 
             if (ehParceiro) {
                 cargoExibicao = "Corretor / Parceiro";
-                // Busca o nome do corretor lá na lista de equipe da agência
+                // Busca o nome do corretor na equipe
                 if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
                     const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
                     if (meuCadastro && meuCadastro.nome) {
@@ -449,11 +394,11 @@
                 }
             }
 
-            // Aplica os nomes no painel esquerdo
+            // Escreve no painel
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
             if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
 
-            // Bloqueio forçado com display none (não pode ser apagado por outras funções)
+            // Esconde as abas forçadamente se for corretor
             const displayValor = ehParceiro ? 'none' : '';
 
             if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
