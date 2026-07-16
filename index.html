@@ -528,7 +528,7 @@
         function inicializarApp() { 
             show('tela-app'); inicializarCalendarios(); renderizarVitrine(imoveisDB); renderizarAdmin(); montarDropdownHospedes(); povoarSelectCategorias(); carregarEmpresa(); 
             if(el('link-vitrine-display') && currentUserUid && empresaDB.slug) { let urlBase = window.location.origin + window.location.pathname; if(urlBase.includes('?')) urlBase = urlBase.split('?')[0]; el('link-vitrine-display').innerText = urlBase + '?link=' + empresaDB.slug; } else if (el('link-vitrine-display') && currentUserUid) { el('link-vitrine-display').innerText = "Salve o Nome da Empresa primeiro."; }
-            if (isPublicVitrine) { mudarAba('vitrine'); hide('btn-admin'); hide('btn-logout'); } else { mudarAba('admin'); mudarAbaInternaAdmin('imoveis'); }
+            if (isPublicVitrine) { mudarAba('vitrine'); hide('btn-admin'); hide('btn-logout'); } else { mudarAba('admin'); mudarAbaInternaAdmin('imoveis'); aplicarPermissoesDeAcesso();}
         }
 
         function inicializarCalendarios() {
