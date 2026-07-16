@@ -383,6 +383,30 @@
         }
 
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
+        function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
+
+        function aplicarPermissoesDeAcesso() {
+            // Se o usuário for um Corretor/Parceiro, escondemos os menus financeiros e administrativos
+            if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+                if(el('btn-admin-empresa')) el('btn-admin-empresa').classList.add('hidden-view');
+                if(el('btn-admin-equipe')) el('btn-admin-equipe').classList.add('hidden-view');
+                if(el('btn-admin-despesas')) el('btn-admin-despesas').classList.add('hidden-view');
+                if(el('btn-admin-resultados')) el('btn-admin-resultados').classList.add('hidden-view');
+                
+                mudarAbaInternaAdmin('imoveis');
+            } else {
+                // Se for o Dono, garantimos que tudo fica visível
+                if(el('btn-admin-empresa')) el('btn-admin-empresa').classList.remove('hidden-view');
+                if(el('btn-admin-equipe')) el('btn-admin-equipe').classList.remove('hidden-view');
+                if(el('btn-admin-despesas')) el('btn-admin-despesas').classList.remove('hidden-view');
+                if(el('btn-admin-resultados')) el('btn-admin-resultados').classList.remove('hidden-view');
+                
+                mudarAbaInternaAdmin('imoveis');
+            }
+        }
+
+        // ================= EQUIPE E ACESSOS =================
+        let editandoMembroIndex = null;
 
         // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
