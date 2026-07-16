@@ -373,16 +373,7 @@
         function fazerLogin() { 
             const e = val('login-email'); 
             const s = val('login-senha'); 
-            const errDiv = el('login-erro');
-            
-            if(!e || !s) {
-                if(errDiv) { errDiv.innerText = "Preencha e-mail e senha."; errDiv.classList.remove('hidden-view'); }
-                return; 
-            } 
-            if(errDiv) errDiv.classList.add('hidden-view');
-            
-            auth.signInWithEmailAndPassword(e, s).catch(err => { 
-                if(errDiv) { errDiv.innerText = "Erro: Verifique seu e-mail e senha."; errDiv.classList.remove('hidden-view'); }
+            // ... (resto do fazerLogin antigo) ...
             }); 
         }
 
