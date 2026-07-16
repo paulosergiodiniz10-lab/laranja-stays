@@ -389,6 +389,22 @@
             }
         }
 
+        function toggleSenha() {
+            const input = document.getElementById('login-senha');
+            const icone = document.getElementById('icone-senha');
+            if (input && icone) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icone.classList.remove('fa-eye');
+                    icone.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icone.classList.remove('fa-eye-slash');
+                    icone.classList.add('fa-eye');
+                }
+            }
+        }
+
         function fazerLogin() { 
             const e = val('login-email'); 
             const s = val('login-senha'); 
@@ -400,11 +416,8 @@
             } 
             if(errDiv) errDiv.classList.add('hidden-view');
             
-            // 1. Tenta fazer o login do usuário (Caldas Novas ou Corretor)
             auth.signInWithEmailAndPassword(e, s).catch(err => { 
-                // 2. Se deu erro (não encontrou), tenta CRIAR A NOVA AGÊNCIA SAAS
                 auth.createUserWithEmailAndPassword(e, s).catch(err2 => {
-                    // 3. Se falhou ao criar porque o e-mail já existe, então a senha estava errada!
                     if(err2.code === 'auth/email-already-in-use') {
                         if(errDiv) { errDiv.innerText = "Senha incorreta para este e-mail."; errDiv.classList.remove('hidden-view'); }
                     } else {
