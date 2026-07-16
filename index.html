@@ -343,6 +343,8 @@
                             db.collection("usuarios").doc(user.uid).set({ agenciaId: user.uid, role: 'dono', email: user.email }).catch(()=>{});
                         }
 
+                        // Aplica as permissões logo depois que o sistema descobre o cargo no banco de dados
+        setTimeout(() => { aplicarPermissoesDeAcesso(); }, 500);
                         hide('tela-login');
                         show('tela-app'); show('btn-logout'); 
                         await carregarDadosFirebase(currentAgenciaId); 
