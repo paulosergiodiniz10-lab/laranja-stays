@@ -526,7 +526,6 @@
             if(el('filtro-reserva-fim') && !el('filtro-reserva-fim')._flatpickr) flatpickr("#filtro-reserva-fim", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
             if(el('busca-orc-checkin') && !el('busca-orc-checkin')._flatpickr) flatpickr("#busca-orc-checkin", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('busca-orc-checkout')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); fpOut.setDate(n); } } });
             if(el('busca-orc-checkout') && !el('busca-orc-checkout')._flatpickr) flatpickr("#busca-orc-checkout", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
-            if(el('reserva-titular-nasc') && !el('reserva-titular-nasc')._flatpickr) flatpickr("#reserva-titular-nasc", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
             if(el('despesa-data') && !el('despesa-data')._flatpickr) flatpickr("#despesa-data", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
         }
 
