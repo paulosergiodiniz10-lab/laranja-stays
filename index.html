@@ -1179,6 +1179,191 @@
                 btn.disabled = false;
             }
         }
+        // ==========================================
+        // ATUALIZAÇÃO MESTRE: REGRAS DO CORRETOR
+        // ==========================================
+
+        function aplicarPermissoesDeAcesso() {
+            let nomeExibicao = "Painel Gestor";
+            let cargoExibicao = "Laranja Stays PMS";
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+
+            if (ehParceiro) {
+                cargoExibicao = "Corretor / Parceiro";
+                // Busca o nome do corretor na equipe para registrar nas reservas
+                if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                    const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
+                    if (meuCadastro && meuCadastro.nome) { nomeExibicao = meuCadastro.nome; } 
+                    else { nomeExibicao = auth.currentUser.email; }
+                } else if (auth.currentUser) {
+                    nomeExibicao = auth.currentUser.email;
+                }
+                // Muda o botão superior
+                if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-user mr-1.5 hidden sm:inline"></i> Painel';
+            } else {
+                if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-cog mr-1.5 hidden sm:inline"></i> Admin';
+            }
+
+            // Grava a identidade na memória para assinar as reservas
+            window.nomeUsuarioLogado = nomeExibicao;
+            window.uidUsuarioLogado = auth.currentUser ? auth.currentUser.uid : 'admin';
+
+            // Aplica no menu lateral
+            if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
+            if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
+
+            const displayValor = ehParceiro ? 'none' : '';
+
+            // Oculta abas proibidas
+            if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+            if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+            if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+            if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
+            if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor; // Oculta imóveis
+            
+            // Libera orçamentos
+            if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
+
+            // Se for corretor, joga direto para o Mapa em vez de Imóveis
+            if (ehParceiro) mudarAbaInternaAdmin('mapa');
+        }
+
+        // ASSINAR RESERVA COM NOME DO CORRETOR
+        function salvarReservaManual() {
+            const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
+            if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
+            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
+            const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
+            let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
+            if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
+            let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
+            let vPago = rOrig ? (rOrig.valorPago!==undefined?rOrig.valorPago:(rOrig.statusPagamento==='pago'?rOrig.valorTotal:0)) : 0;
+            let vTF = vT; if(st==='devolucao'||st==='cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada'))||0);
+            let sF = st; if(st==='cancelada') sF='cancelada'; else if(vTF>vPago && vPago>0) sF='pendente'; else if(vPago>vTF) sF='devolucao'; else if(st==='pago') vPago=vTF;
+            
+            // Mantém o autor original se for edição, senão usa o atual
+            let criador = rOrig?.criadoPor || window.nomeUsuarioLogado || 'Gestor';
+            let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || 'admin';
+
+            const obj = { 
+                id: rId?parseInt(rId):Date.now(), dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), numeroReserva: numRes, imovelId: imId, checkin: ci, checkout: co, statusPagamento: sF, formaPagamento: fP, valorTotal: vTF, valorPago: vPago, 
+                titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, 
+                acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)),
+                criadoPor: criador, criadoPorUid: criadorUid // SALVA A AUTORIA
+            };
+            if(rId) { let idx = im.reservas.findIndex(x=>x.id==rId); if(idx>-1) im.reservas[idx]=obj; } else im.reservas.push(obj);
+            salvarBancoNoStorage(); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); renderizarVitrine(imoveisDB); fecharModalReserva(); mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
+        }
+
+        // TABELA E FILTROS DE CORRETOR (EXCEL INTEGRADAS)
+        function renderizarListaReservasAdmin() {
+            const tb = el('lista-reservas-tbody'); if(!tb) return; tb.innerHTML=''; let lista=[];
+            imoveisDB.forEach(im => { if(im.reservas) im.reservas.forEach(r => lista.push({...r, nIm: im.numeroApto?`${im.nome} (${im.numeroApto})`:im.nome})) });
+            
+            // Cria o filtro de Corretores para o Gestor
+            const containerFiltros = el('bloco-filtro-datas');
+            if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+                containerFiltros.insertAdjacentHTML('afterend', `
+                    <div id="filtro-corretor-select-container" class="ml-2">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
+                        <select id="filtro-corretor-select" onchange="renderizarListaReservasAdmin()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                `);
+            }
+            
+            const selectCorr = el('filtro-corretor-select');
+            if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+                let valAtual = selectCorr.value;
+                selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
+                let corretoresUnicos = {};
+                lista.forEach(r => { if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin') { corretoresUnicos[r.criadoPorUid] = r.criadoPor; } });
+                for (const [uid, nome] of Object.entries(corretoresUnicos)) { selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`); }
+                if (Array.from(selectCorr.options).some(o => o.value === valAtual)) selectCorr.value = valAtual;
+            }
+
+            const p = val('filtro-periodo-reservas') || 'todas'; let hj = new Date(); hj.setHours(0,0,0,0); let dI=null; let dF=null;
+            if(p==='hoje'){dI=new Date(hj);dF=new Date(hj);} else if(p==='7'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+7);} else if(p==='30'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+30);} else if(p==='personalizado'){if(val('filtro-reserva-inicio')) dI=new Date(val('filtro-reserva-inicio')+'T12:00:00'); if(val('filtro-reserva-fim')) dF=new Date(val('filtro-reserva-fim')+'T12:00:00');}
+            
+            let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+
+            let flt = lista.filter(r=>{ 
+                // Bloqueio Rigoroso do Corretor na Lista
+                if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+                    if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
+                } else if (fCorrValue !== 'todos') {
+                    if (r.criadoPorUid !== fCorrValue && !(fCorrValue==='admin' && (!r.criadoPorUid || r.criadoPorUid==='admin'))) return false;
+                }
+
+                if(p==='todas')return true; 
+                let ri=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let ro=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); 
+                if(dI&&dF)return ri<=dF&&ro>=dI; else if(dI)return ro>=dI; else if(dF)return ri<=dF; return true; 
+            });
+            flt.sort((a,b)=>b.id-a.id); reservasAtuaisExportacao = flt; // O Excel vai baixar exatamente o que o filtro mostrar!
+            if(!flt.length) { tb.innerHTML='<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas.</td></tr>'; return; }
+            
+            flt.forEach(res => {
+                let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
+                let bdg=''; let bP=''; let bV=''; 
+                let pg = res.valorPago!==undefined?parseFloat(res.valorPago):0; if(res.statusPagamento==='pago'&&pg===0) pg=parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal)-pg; let addI = '';
+                
+                if(res.statusPagamento==='pago'){ bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`; bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`; }
+                else if(res.statusPagamento==='pendente'){ bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`; }
+                else if(res.statusPagamento==='devolucao'){ bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`; }
+                else if(res.statusPagamento==='cancelada'){ bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; if(pg>res.valorTotal && userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>'; }
+                else if(res.statusPagamento==='proprietario'){bdg=`<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;}
+                else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;}
+                
+                // Mostra quem fez a reserva se for o Gestor olhando
+                let nomeCriador = '';
+                if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+                    let badgeNome = res.criadoPor || 'Gestor';
+                    nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
+                }
+
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-500">${dC}</td><td class="p-3 font-medium text-slate-400">${res.numeroReserva||'-'}</td><td class="p-3">${bdg}</td><td class="p-3 font-medium text-slate-700">${res.titular?.nome||'-'} ${nomeCriador}</td><td class="p-3 text-[#0071c2] font-medium text-xs">${res.nIm||'-'}</td><td class="p-3 text-xs text-slate-500">${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}</td><td class="p-3 leading-tight"><div class="font-bold text-slate-800 text-sm">R$ ${parseFloat(res.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td><td class="p-3 text-center whitespace-nowrap">${bV}${bP}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar Reserva" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button></td></tr>`);
+            });
+        }
+
+        // ESCONDE O NOME DO HÓSPEDE NO MAPA SE NÃO FOR DO CORRETOR
+        function renderizarMapaDisponibilidade() {
+            if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
+            let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
+            if(!imoveisDB.length) { h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; } else {
+                imoveisDB.forEach(im => {
+                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome; h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
+                    for (let dia=1; dia<=dias; dia++) {
+                        let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; let dObj = new Date(dt+'T12:00:00'); let cls = 'status-livre'; let txt = '1'; let rF = null;
+                        if(im.reservas) { for(let r of im.reservas) { if(r.statusPagamento==='cancelada') continue; let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dObj>=di && dObj<do_) { cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; txt='0'; rF=r; if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); break; } } }
+                        
+                        // Regra de Ocultação do Corretor
+                        let podeEditar = true;
+                        if (rF && typeof userRole !== 'undefined' && userRole === 'parceiro') {
+                            if (rF.criadoPorUid !== window.uidUsuarioLogado) { podeEditar = false; }
+                        }
+
+                        let evt = ''; let tooltip = '';
+                        if (rF) {
+                            if (podeEditar) {
+                                evt = `abrirEdicaoReservaMapa(${im.id}, ${rF.id})`;
+                                tooltip = rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`;
+                            } else {
+                                evt = ''; // Trava o clique
+                                txt = 'Ocupado'; // Esconde o nome do hóspede
+                                cls = 'bg-slate-300 text-white border-r border-slate-400'; // Cinza Escuro Neutro
+                                tooltip = 'Reservado por Outro Corretor';
+                            }
+                        } else {
+                            evt = `abrirNovaReservaMapa(${im.id}, '${dt}')`;
+                            tooltip = `Nova Reserva: ${dt.split('-').reverse().join('/')}`;
+                        }
+
+                        h += `<div ${evt ? `onclick="${evt}"` : ''} class="mapa-celula ${cls} truncate px-1 text-[10px] ${!evt?'cursor-not-allowed':''}" title="${tooltip}">${txt}</div>`;
+                    } h += `</div>`;
+                });
+            } cont.innerHTML = h;
+        }
         window.onload = function() {};
     </script>
 </body>
