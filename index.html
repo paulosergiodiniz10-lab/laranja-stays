@@ -358,8 +358,16 @@
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
         function aplicarPermissoesDeAcesso() {
-            // Se o usuário for um Corretor/Parceiro, aplicamos o bloqueio forçado
-            if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+            // 1. Atualizar o Nome e Cargo no Painel
+            let nomeExibicao = "Painel Gestor";
+            let cargoExibicao = "Laranja Stays PMS";
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            
+            // COLOQUE ESTA LINHA AQUI PARA TESTARMOS:
+            alert("O sistema acha que você é: " + (typeof userRole !== 'undefined' ? userRole : 'indefinido'));
+            
+            if (ehParceiro) {
+
                 if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = 'none';
                 if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = 'none';
                 if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = 'none';
