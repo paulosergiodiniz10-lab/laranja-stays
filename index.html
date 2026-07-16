@@ -1365,6 +1365,36 @@
             } cont.innerHTML = h;
         }
         window.onload = function() {};
+        // ==========================================
+        // ATUALIZAÇÃO: TABELA DE EQUIPE E BOTÕES
+        // ==========================================
+        function renderizarEquipe() {
+            const tb = el('lista-equipe-tbody'); if(!tb) return; tb.innerHTML = '';
+            if(!empresaDB.equipe || empresaDB.equipe.length === 0) {
+                tb.innerHTML = '<tr><td colspan="4" class="text-center p-6 text-slate-400 font-bold">Nenhum parceiro cadastrado. Adicione acima.</td></tr>';
+                return;
+            }
+            empresaDB.equipe.forEach((membro, index) => {
+                // Define o visual do crachá baseado no cargo
+                let txtPerfil = membro.role === 'parceiro' ? 'Corretor / Parceiro' : 'Gestor / Admin';
+                let corBdg = membro.role === 'parceiro' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+                let badge = `<span class="${corBdg} px-2 py-1 rounded text-[10px] font-bold uppercase">${txtPerfil}</span>`;
+                
+                let nome = membro.nome || '-'; 
+                let zap = membro.zap || '-';
+                
+                // Monta as 4 colunas perfeitamente alinhadas
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="p-4"><div class="font-bold text-slate-700">${nome}</div><div class="text-xs text-slate-500">${membro.email}</div></td>
+                    <td class="p-4 text-sm font-medium text-slate-600">${zap}</td>
+                    <td class="p-4">${badge}</td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                        <button onclick="editarMembroEquipe(${index})" title="Editar" class="text-blue-500 hover:text-blue-700 p-2 transition-colors mr-1"><i class="fas fa-edit"></i></button>
+                        <button onclick="removerMembroEquipe(${index})" title="Remover Acesso" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`);
+            });
+        }
     </script>
 </body>
 </html>
