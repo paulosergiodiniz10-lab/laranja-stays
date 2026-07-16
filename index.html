@@ -1227,7 +1227,47 @@
             // Se for corretor, joga direto para o Mapa em vez de Imóveis
             if (ehParceiro) mudarAbaInternaAdmin('mapa');
         }
-
+// ==========================================
+        // ATUALIZAÇÃO: SALVAR E MUDAR PERFIL DO PARCEIRO
+        // ==========================================
+        async function salvarMembroEquipe() {
+            const nome = val('novo-equipe-nome').trim();
+            const zap = val('novo-equipe-zap').trim();
+            const email = val('novo-equipe-email').trim().toLowerCase();
+            const role = val('novo-equipe-perfil');
+            
+            if(!nome || !email) { mostrarAlerta("Nome e E-mail são obrigatórios."); return; }
+            if(!empresaDB.equipe) empresaDB.equipe = [];
+            
+            let duplicado = empresaDB.equipe.findIndex(m => m.email === email);
+            if(duplicado !== -1 && duplicado !== editandoMembroIndex) { mostrarAlerta("Este e-mail já está na sua equipe."); return; }
+            
+            if (editandoMembroIndex !== null) {
+                let emailAntigo = empresaDB.equipe[editandoMembroIndex].email;
+                empresaDB.equipe[editandoMembroIndex] = { nome: nome, zap: zap, email: email, role: role };
+                if(email !== emailAntigo) { try { await db.collection("usuarios_pendentes").doc(emailAntigo).delete(); } catch(e){} }
+                mostrarNotificacao("Parceiro atualizado!");
+            } else {
+                empresaDB.equipe.push({ nome: nome, zap: zap, email: email, role: role });
+                mostrarNotificacao("Parceiro adicionado com sucesso!");
+            }
+            
+            salvarBancoNoStorage();
+            
+            // 1. Atualiza a lista de convites pendentes
+            try { await db.collection("usuarios_pendentes").doc(email).set({ agenciaId: currentAgenciaId, role: role, email: email }); } catch(e) {}
+            
+            // 2. A MÁGICA AQUI: Atualiza o cargo de segurança do usuário no banco de dados!
+            try {
+                const q = await db.collection("usuarios").where("email", "==", email).get();
+                if(!q.empty) {
+                    await db.collection("usuarios").doc(q.docs[0].id).update({ role: role });
+                }
+            } catch(e) { console.error("Erro ao atualizar perfil de segurança:", e); }
+            
+            cancelarEdicaoEquipe();
+            renderizarEquipe();
+        }
         // ASSINAR RESERVA COM NOME DO CORRETOR
         function salvarReservaManual() {
             const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
