@@ -359,7 +359,7 @@
                 }
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
-        function aplicarPermissoesDeAcesso() {
+   
             // 1. Atualizar o Nome e Cargo no Painel
             let nomeExibicao = "Painel Gestor";
             let cargoExibicao = "Laranja Stays PMS";
