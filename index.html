@@ -1126,6 +1126,72 @@
                 if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
             } catch(e) {}
         }            
+        async function criarSenhaPrimeiroAcesso() {
+            const email = val('primeiro-acesso-email').trim().toLowerCase();
+            const senha = val('primeiro-acesso-senha').trim();
+            const erroDiv = el('primeiro-acesso-erro');
+            const btn = el('btn-criar-acesso');
+
+            if (!email || !senha) {
+                erroDiv.innerText = "Preencha o e-mail e a senha.";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+            if (senha.length < 6) {
+                erroDiv.innerText = "A senha deve ter no mínimo 6 caracteres.";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+
+            btn.innerText = "Verificando...";
+            btn.disabled = true;
+            erroDiv.classList.add('hidden-view');
+
+            try {
+                // 1. Verifica se o e-mail foi realmente convidado pelo gestor
+                const pendenteDoc = await db.collection("usuarios_pendentes").doc(email).get();
+                
+                if (!pendenteDoc.exists) {
+                    erroDiv.innerText = "E-mail não encontrado na lista de convidados. Fale com o gestor da agência.";
+                    erroDiv.classList.remove('hidden-view');
+                    btn.innerText = "Criar Acesso e Entrar";
+                    btn.disabled = false;
+                    return;
+                }
+
+                const dadosPendente = pendenteDoc.data();
+
+                // 2. Cria a senha do usuário no Firebase
+                const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+
+                // 3. Registra o perfil dele ligando-o à sua agência
+                await db.collection("usuarios").doc(user.uid).set({
+                    email: email,
+                    role: dadosPendente.role,
+                    agenciaId: dadosPendente.agenciaId,
+                    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 4. Remove da lista de espera
+                await db.collection("usuarios_pendentes").doc(email).delete();
+
+                hide('modal-primeiro-acesso');
+                mostrarNotificacao("Acesso criado com sucesso!");
+                // O sistema vai recarregar automaticamente e logar o parceiro por causa do motor principal
+
+            } catch (error) {
+                console.error("Erro ao criar acesso:", error);
+                if (error.code === 'auth/email-already-in-use') {
+                    erroDiv.innerText = "Este e-mail já tem uma senha criada. Volte e faça o login normal.";
+                } else {
+                    erroDiv.innerText = "Erro ao criar conta. Verifique sua conexão e tente novamente.";
+                }
+                erroDiv.classList.remove('hidden-view');
+                btn.innerText = "Criar Acesso e Entrar";
+                btn.disabled = false;
+            }
+        }
         window.onload = function() {};
     </script>
 </body>
