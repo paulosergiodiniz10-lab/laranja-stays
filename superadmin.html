@@ -12,6 +12,9 @@
 </head>
 <body class="bg-[#0b1120] text-slate-200 font-sans h-screen flex overflow-hidden">
 
+    <!-- CONTAINER DOS AVISOS (TOASTS) -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3"></div>
+
     <!-- TELA DE LOGIN -->
     <div id="tela-login" class="fixed inset-0 z-50 bg-[#0b1120] flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
@@ -134,7 +137,7 @@
     </div>
 
     <script>
-        // Suas chaves exatas do Firebase (Já embutidas!)
+        // Suas chaves exatas do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAOj3ZTbFR9GjfjfKFzNv5pSuSFh8Wlx1c",
             authDomain: "ld-reservas.firebaseapp.com",
@@ -146,6 +149,34 @@
         const auth = firebase.auth();
         const appSecundario = firebase.initializeApp(firebaseConfig, "AppCriadorDeContas");
         const authSecundario = appSecundario.auth();
+
+        // ==================
+        // SISTEMA DE AVISOS (TOAST)
+        // ==================
+        function mostrarAviso(mensagem, tipo = 'sucesso') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let corBg = 'bg-emerald-600';
+            let icone = 'fa-check-circle';
+            
+            if (tipo === 'erro') { corBg = 'bg-red-600'; icone = 'fa-times-circle'; }
+            if (tipo === 'info') { corBg = 'bg-blue-600'; icone = 'fa-info-circle'; }
+
+            toast.className = `${corBg} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+            toast.innerHTML = `<i class="fas ${icone} text-xl"></i> <span class="font-bold text-sm whitespace-pre-line">${mensagem}</span>`;
+            
+            container.appendChild(toast);
+
+            // Anima para entrar na tela
+            setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
+
+            // Some e deleta após 4 segundos
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
 
         // ==================
         // CONTROLE DE LOGIN
@@ -184,9 +215,9 @@
 
         function recuperarSenhaAdmin() {
             const email = document.getElementById('login-admin-email').value.trim();
-            if (!email) { alert("Digite seu e-mail no campo acima."); return; }
-            auth.sendPasswordResetEmail(email).then(() => alert("E-mail de recuperação enviado!"))
-            .catch(err => alert("Erro: " + err.message));
+            if (!email) { mostrarAviso("Digite seu e-mail no campo acima.", "erro"); return; }
+            auth.sendPasswordResetEmail(email).then(() => mostrarAviso("E-mail de recuperação enviado! Verifique sua caixa de entrada.", "sucesso"))
+            .catch(err => mostrarAviso("Erro: " + err.message, "erro"));
         }
 
         // ==================
@@ -197,7 +228,7 @@
             const texto = `*Olá! A conta da sua empresa foi criada com sucesso na plataforma.*\n\n🔗 *Acesse o link:* ${urlSistema}\n\nPara o seu primeiro acesso e criação de senha oficial, clique em *"Esqueci minha senha"* na tela de login e digite o seu e-mail. Você receberá um link seguro para definir sua senha.`;
             
             navigator.clipboard.writeText(texto).then(() => {
-                alert("MENSAGEM COPIADA!\n\nAgora é só abrir o WhatsApp e colar (Ctrl+V) para enviar ao seu cliente. A mensagem já vai com o texto explicativo e o link do sistema.");
+                mostrarAviso("MENSAGEM COPIADA!\nAgora é só colar (Ctrl+V) no WhatsApp do seu cliente.", "info");
             });
         }
 
@@ -211,7 +242,10 @@
             const email = document.getElementById('nova-emp-email').value.trim().toLowerCase();
             const zap = document.getElementById('nova-emp-whatsapp').value;
 
-            if(!nome || !master || !email) { alert("Nome da Empresa, Nome do Master e E-mail são obrigatórios!"); return; }
+            if(!nome || !master || !email) { 
+                mostrarAviso("Nome da Empresa, Nome do Master e E-mail são obrigatórios!", "erro"); 
+                return; 
+            }
 
             const senhaProvisoriaOculta = Math.random().toString(36).slice(-10) + "Aa1@";
 
@@ -226,7 +260,7 @@
                 db.collection("sistema_saas").doc(uid).set({
                     nomeEmpresa: nome, cnpj: cnpj, status: 'ativo', dataCriacao: new Date().toISOString()
                 }).then(() => {
-                    alert("Empresa criada com sucesso!\n\nUse o botão 'Enviar Acesso (Link)' no menu esquerdo para mandar as instruções para o cliente.");
+                    mostrarAviso("Empresa criada com sucesso!", "sucesso");
                     document.getElementById('nova-emp-nome').value = '';
                     document.getElementById('nova-emp-cnpj').value = '';
                     document.getElementById('nova-emp-master').value = '';
@@ -235,7 +269,7 @@
                     carregarEmpresas();
                 });
             })
-            .catch(err => alert("Erro ao criar conta: " + err.message));
+            .catch(err => mostrarAviso("Erro ao criar conta: " + err.message, "erro"));
         }
 
         function carregarEmpresas() {
@@ -285,8 +319,11 @@
         function mudarStatus(id, novoStatus) {
             if(confirm(`Tem certeza que deseja marcar esta empresa como ${novoStatus.toUpperCase()}?`)) {
                 db.collection("sistema_saas").doc(id).update({ status: novoStatus })
-                .then(() => carregarEmpresas())
-                .catch(e => alert("Erro ao mudar status."));
+                .then(() => {
+                    mostrarAviso(`Status alterado para ${novoStatus.toUpperCase()}`, "info");
+                    carregarEmpresas();
+                })
+                .catch(e => mostrarAviso("Erro ao mudar status.", "erro"));
             }
         }
 
@@ -370,11 +407,11 @@
                     whatsapp: novoZap
                 }, { merge: true })
             ]).then(() => {
-                alert("Ficha da empresa atualizada com sucesso!");
+                mostrarAviso("Ficha da empresa atualizada com sucesso!", "sucesso");
                 fecharModal();
                 carregarEmpresas(); 
             }).catch(err => {
-                alert("Erro ao salvar: " + err.message);
+                mostrarAviso("Erro ao salvar: " + err.message, "erro");
                 btn.innerText = originalText;
                 btn.disabled = false;
             });
