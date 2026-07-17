@@ -119,14 +119,14 @@
             </div>
         </div>
 
-        <!-- MODAL DE DETALHES DA EMPRESA -->
+        <!-- MODAL DE EDIÇÃO / DETALHES DA EMPRESA -->
         <div id="modal-detalhes" class="hidden absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
             <div class="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl">
                 <div class="flex justify-between items-center p-6 border-b border-slate-800">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fas fa-building text-orange-500"></i> Ficha da Empresa</h3>
-                    <button onclick="fecharModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                    <button onclick="fecharModal()" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
                 </div>
-                <div class="p-6 space-y-4 text-sm" id="conteudo-modal">
+                <div class="p-6 text-sm" id="conteudo-modal">
                     <!-- Preenchido via JS -->
                 </div>
             </div>
@@ -193,7 +193,7 @@
         // BOTÃO COPIAR LINK
         // ==================
         function copiarLinkAcesso() {
-            const urlSistema = window.location.origin; // Pega o link raiz do site
+            const urlSistema = window.location.origin;
             const texto = `*Olá! A conta da sua empresa foi criada com sucesso na plataforma.*\n\n🔗 *Acesse o link:* ${urlSistema}\n\nPara o seu primeiro acesso e criação de senha oficial, clique em *"Esqueci minha senha"* na tela de login e digite o seu e-mail. Você receberá um link seguro para definir sua senha.`;
             
             navigator.clipboard.writeText(texto).then(() => {
@@ -213,8 +213,6 @@
 
             if(!nome || !master || !email) { alert("Nome da Empresa, Nome do Master e E-mail são obrigatórios!"); return; }
 
-            // Gera uma senha aleatória super forte só para criar a gaveta
-            // O cliente nunca vai ver ela, ele vai redefinir pelo "Esqueci a Senha"
             const senhaProvisoriaOculta = Math.random().toString(36).slice(-10) + "Aa1@";
 
             authSecundario.createUserWithEmailAndPassword(email, senhaProvisoriaOculta)
@@ -251,7 +249,7 @@
                 snap.forEach(doc => {
                     const dados = doc.data();
                     const empresaId = doc.id;
-                    const statusReal = dados.status || 'ativo'; // Se não tiver status, assume ativo
+                    const statusReal = dados.status || 'ativo';
                     
                     const badgeStatus = statusReal === 'ativo' 
                         ? `<span class="bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded text-[10px] font-bold">ATIVO</span>`
@@ -269,7 +267,7 @@
                             <td class="py-4 text-center">${badgeStatus}</td>
                             <td class="py-4 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button onclick="abrirFicha('${empresaId}', '${dados.nomeEmpresa}')" class="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors"><i class="fas fa-eye"></i> Editar / Ver</button>
+                                    <button onclick="abrirFicha('${empresaId}')" class="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors"><i class="fas fa-edit"></i> Editar / Ver</button>
                                     ${btnStatus}
                                 </div>
                             </td>
@@ -293,16 +291,15 @@
         }
 
         // ==================
-        // MODAL DE FICHA
+        // MODAL DE EDIÇÃO
         // ==================
         function fecharModal() { document.getElementById('modal-detalhes').classList.add('hidden'); }
         
-        function abrirFicha(id, nomeEmpresa) {
+        function abrirFicha(id) {
             const painel = document.getElementById('conteudo-modal');
             painel.innerHTML = '<p class="text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Buscando dados no cofre...</p>';
             document.getElementById('modal-detalhes').classList.remove('hidden');
 
-            // Busca os dados da empresa e do gestor simultaneamente
             Promise.all([
                 db.collection("sistema_saas").doc(id).get(),
                 db.collection("usuarios").doc(id).get()
@@ -311,36 +308,75 @@
                 const uData = userDoc.exists ? userDoc.data() : {};
                 
                 painel.innerHTML = `
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                            <span class="block text-[10px] text-slate-400 uppercase font-bold">Empresa</span>
-                            <span class="text-white font-bold">${sData.nomeEmpresa || 'Não informado'}</span>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Empresa</label>
+                                <input type="text" id="edit-nome" value="${sData.nomeEmpresa || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">CNPJ</label>
+                                <input type="text" id="edit-cnpj" value="${sData.cnpj || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
+                            </div>
                         </div>
-                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                            <span class="block text-[10px] text-slate-400 uppercase font-bold">CNPJ</span>
-                            <span class="text-white">${sData.cnpj || 'Não informado'}</span>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">Gestor (Master)</label>
+                            <input type="text" id="edit-master" value="${uData.nomeMaster || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
                         </div>
-                    </div>
-                    <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 mb-4">
-                        <span class="block text-[10px] text-slate-400 uppercase font-bold">Gestor (Master)</span>
-                        <span class="text-orange-400 font-bold">${uData.nomeMaster || 'Não informado'}</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                            <span class="block text-[10px] text-slate-400 uppercase font-bold">E-mail de Login</span>
-                            <span class="text-white">${uData.email || 'Não informado'}</span>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">E-mail de Login (Fixo)</label>
+                                <input type="email" value="${uData.email || ''}" readonly class="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2.5 text-slate-500 outline-none cursor-not-allowed" title="O e-mail de login não pode ser alterado por aqui.">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">WhatsApp</label>
+                                <input type="text" id="edit-whatsapp" value="${uData.whatsapp || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
+                            </div>
                         </div>
-                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                            <span class="block text-[10px] text-slate-400 uppercase font-bold">WhatsApp</span>
-                            <span class="text-white">${uData.whatsapp || 'Não informado'}</span>
+                        
+                        <div class="pt-4 mt-2 border-t border-slate-800">
+                            <button onclick="salvarEdicaoEmpresa('${id}')" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">
+                                Salvar Alterações
+                            </button>
                         </div>
-                    </div>
-                    <div class="text-center pt-2 border-t border-slate-700 mt-2">
-                        <span class="text-[10px] text-slate-500">ID Único de Banco de Dados: <br>${id}</span>
+                        <div class="text-center mt-2">
+                            <span class="text-[10px] text-slate-600">ID Único do Banco: ${id}</span>
+                        </div>
                     </div>
                 `;
             }).catch(e => {
                 painel.innerHTML = '<p class="text-red-500 text-center">Erro ao carregar os dados.</p>';
+            });
+        }
+
+        function salvarEdicaoEmpresa(id) {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Salvando...";
+            btn.disabled = true;
+
+            const novoNome = document.getElementById('edit-nome').value;
+            const novoCnpj = document.getElementById('edit-cnpj').value;
+            const novoMaster = document.getElementById('edit-master').value;
+            const novoZap = document.getElementById('edit-whatsapp').value;
+
+            Promise.all([
+                db.collection("sistema_saas").doc(id).set({
+                    nomeEmpresa: novoNome,
+                    cnpj: novoCnpj
+                }, { merge: true }),
+                db.collection("usuarios").doc(id).set({
+                    nomeMaster: novoMaster,
+                    whatsapp: novoZap
+                }, { merge: true })
+            ]).then(() => {
+                alert("Ficha da empresa atualizada com sucesso!");
+                fecharModal();
+                carregarEmpresas(); 
+            }).catch(err => {
+                alert("Erro ao salvar: " + err.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
             });
         }
     </script>
