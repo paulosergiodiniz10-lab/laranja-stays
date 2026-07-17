@@ -155,7 +155,44 @@
         }
 
         function sairSuperAdmin() { auth.signOut(); }
+function toggleSenhaAdmin() {
+            const input = document.getElementById('login-admin-senha');
+            const icone = document.getElementById('icone-senha-admin');
+            if (input && icone) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icone.classList.remove('fa-eye');
+                    icone.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icone.classList.remove('fa-eye-slash');
+                    icone.classList.add('fa-eye');
+                }
+            }
+        }
 
+        function recuperarSenhaAdmin() {
+            const email = document.getElementById('login-admin-email').value.trim();
+            const errDiv = document.getElementById('login-erro');
+            const sucDiv = document.getElementById('login-sucesso');
+            
+            errDiv.style.display = 'none';
+            sucDiv.style.display = 'none';
+
+            if (!email) {
+                errDiv.innerText = "Digite seu e-mail no campo acima para recuperar a senha.";
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            auth.sendPasswordResetEmail(email).then(() => {
+                sucDiv.innerText = "Link de recuperação enviado para seu e-mail!";
+                sucDiv.style.display = 'block';
+            }).catch(err => {
+                errDiv.innerText = "Erro: " + err.message;
+                errDiv.style.display = 'block';
+            });
+        }
         // Cria a conta do cliente usando o App Secundário
         function criarNovaEmpresa() {
             const nome = document.getElementById('nova-emp-nome').value;
