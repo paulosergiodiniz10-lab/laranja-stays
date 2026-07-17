@@ -696,47 +696,62 @@
 
         function adicionarFotoPorLink() { const u = val('input-foto-url').trim(); if(!u) return; if(fotosEmCriacao.length >= 10) { mostrarAlerta("Limite máximo de 10 fotos."); return; } fotosEmCriacao.push(u); renderizarPreviewFotos(); sv('input-foto-url', ''); }
 
-        function processarFotos(e) { 
-            const f = e.target.files; 
-            if(!f || !f.length) return; 
+        async function processarFotos(e) {
+            const f = e.target.files;
+            if(!f || !f.length) return;
+
+            const limite = Math.min(f.length, 10 - fotosEmCriacao.length);
+            if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; }
+
+            mostrarNotificacao("Enviando fotos otimizadas para a nuvem...");
             
-            const limite = Math.min(f.length, 10 - fotosEmCriacao.length); 
-            if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; } 
-            
-            mostrarNotificacao("Otimizando fotos... Aguarde.");
-            
-            for(let i=0; i<limite; i++) { 
-                const r = new FileReader(); 
-                r.onload = (ev) => { 
-                    const img = new Image(); 
-                    img.onload = () => { 
-                        const c = document.createElement('canvas'); 
-                        let w = img.width; 
-                        let h = img.height;
-                        
-                        const maxW = 600; const maxH = 400;
-                        if (w > h) { if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; } } 
-                        else { if (h > maxH) { w = Math.round((w * maxH) / h); h = maxH; } }
-                        
-                        c.width = w; c.height = h; 
-                        c.getContext('2d').drawImage(img, 0, 0, w, h); 
-                        
-                        let qual = 0.6; 
-                        let b64 = c.toDataURL('image/jpeg', qual);
-                        
-                        while(b64.length > 66000 && qual > 0.1) {
-                            qual -= 0.1;
-                            b64 = c.toDataURL('image/jpeg', qual);
-                        }
-                        
-                        fotosEmCriacao.push(b64); 
-                        renderizarPreviewFotos(); 
-                    }; 
-                    img.src = ev.target.result; 
-                }; 
-                r.readAsDataURL(f[i]); 
-            } 
-            sv('input-fotos',''); 
+            // Loop para enviar cada foto individualmente
+            for(let i=0; i<limite; i++) {
+                await new Promise((resolve) => {
+                    const r = new FileReader();
+                    r.onload = (ev) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const c = document.createElement('canvas');
+                            let w = img.width; let h = img.height;
+                            
+                            // Mantém o tamanho maximo de 800x600, leve e nítido
+                            const maxW = 800; const maxH = 600;
+                            if (w > h) { if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; } }
+                            else { if (h > maxH) { w = Math.round((w * maxH) / h); h = maxH; } }
+                            
+                            c.width = w; c.height = h;
+                            c.getContext('2d').drawImage(img, 0, 0, w, h);
+                            
+                            // Transforma no formato Blob (Arquivo real minúsculo)
+                            c.toBlob(async (blob) => {
+                                try {
+                                    // Cria um nome único e sobe pro Storage
+                                    const pasta = currentAgenciaId || 'geral';
+                                    const nomeArquivo = `img_${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
+                                    const ref = storage.ref(`fotos_imoveis/${pasta}/${nomeArquivo}`);
+                                    
+                                    await ref.put(blob);
+                                    
+                                    // Pega a URL definitiva da imagem
+                                    const url = await ref.getDownloadURL();
+                                    
+                                    fotosEmCriacao.push(url);
+                                    renderizarPreviewFotos();
+                                    resolve();
+                                } catch (erro) {
+                                    console.error("Erro upload:", erro);
+                                    resolve();
+                                }
+                            }, 'image/jpeg', 0.6); // 0.6 é 60% de qualidade
+                        };
+                        img.src = ev.target.result;
+                    };
+                    r.readAsDataURL(f[i]);
+                });
+            }
+            sv('input-fotos','');
+            mostrarNotificacao("Fotos prontas! Pode Salvar o Imóvel.");
         }
 
         function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
