@@ -84,13 +84,13 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4">
                     <div><label class="block text-xs font-bold text-slate-400 mb-1">Nome da Empresa</label><input type="text" id="nova-emp-nome" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
-                    <div><label class="block text-xs font-bold text-slate-400 mb-1">CNPJ (Opcional)</label><input type="text" id="nova-emp-cnpj" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">CNPJ (Opcional)</label><input type="text" id="nova-emp-cnpj" oninput="formatarCNPJ(this)" maxlength="18" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="00.000.000/0000-00"></div>
                     <div><label class="block text-xs font-bold text-slate-400 mb-1">Nome do Master (Usuário)</label><input type="text" id="nova-emp-master" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     <div><label class="block text-xs font-bold text-slate-400 mb-1">E-mail</label><input type="email" id="nova-emp-email" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
-                    <div><label class="block text-xs font-bold text-slate-400 mb-1">WhatsApp</label><input type="text" id="nova-emp-whatsapp" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="(00) 00000-0000"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">WhatsApp</label><input type="text" id="nova-emp-whatsapp" oninput="formatarCelular(this)" maxlength="15" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="(00) 00000-0000"></div>
                     <div>
                         <button onclick="criarNovaEmpresa()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">
                             Salvar Registro na Nuvem
@@ -151,6 +151,33 @@
         const authSecundario = appSecundario.auth();
 
         // ==================
+        // MÁSCARAS DE FORMATAÇÃO
+        // ==================
+        function formatarCNPJString(v) {
+            if(!v) return '';
+            v = v.replace(/\D/g, "");
+            if (v.length > 14) v = v.substring(0, 14);
+            v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+            v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+            v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+            v = v.replace(/(\d{4})(\d)/, "$1-$2");
+            return v;
+        }
+
+        function formatarCelularString(v) {
+            if(!v) return '';
+            v = v.replace(/\D/g, "");
+            if (v.length > 11) v = v.substring(0, 11);
+            if (v.length > 2) v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            if (v.length > 9) v = v.replace(/(\d{5})(\d)/, "$1-$2");
+            else if (v.length > 8) v = v.replace(/(\d{4})(\d)/, "$1-$2");
+            return v;
+        }
+
+        function formatarCNPJ(input) { input.value = formatarCNPJString(input.value); }
+        function formatarCelular(input) { input.value = formatarCelularString(input.value); }
+
+        // ==================
         // SISTEMA DE AVISOS (TOAST)
         // ==================
         function mostrarAviso(mensagem, tipo = 'sucesso') {
@@ -168,10 +195,7 @@
             
             container.appendChild(toast);
 
-            // Anima para entrar na tela
             setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
-
-            // Some e deleta após 4 segundos
             setTimeout(() => {
                 toast.classList.add('translate-x-full', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
@@ -293,10 +317,12 @@
                         ? `<button onclick="mudarStatus('${empresaId}', 'bloqueado')" class="bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors" title="Bloquear Empresa"><i class="fas fa-lock"></i></button>`
                         : `<button onclick="mudarStatus('${empresaId}', 'ativo')" class="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors" title="Ativar Empresa"><i class="fas fa-unlock"></i></button>`;
 
+                    const cnpjFormatado = formatarCNPJString(dados.cnpj);
+
                     tb.insertAdjacentHTML('beforeend', `
                         <tr class="border-b border-slate-800 hover:bg-slate-800/50">
                             <td class="py-4 font-bold text-white uppercase">${dados.nomeEmpresa || 'Sem Nome'}</td>
-                            <td class="py-4 text-slate-400">${dados.cnpj || '-'}</td>
+                            <td class="py-4 text-slate-400">${cnpjFormatado || '-'}</td>
                             <td class="py-4 text-blue-400 font-medium lowercase" id="email-${empresaId}">Buscando e-mail...</td>
                             <td class="py-4 text-center">${badgeStatus}</td>
                             <td class="py-4 text-right">
@@ -344,6 +370,10 @@
                 const sData = saasDoc.data() || {};
                 const uData = userDoc.exists ? userDoc.data() : {};
                 
+                // Formata os dados brutos do banco de dados para ficarem bonitos no modal
+                const cnpjLimpo = formatarCNPJString(sData.cnpj || '');
+                const zapLimpo = formatarCelularString(uData.whatsapp || '');
+
                 painel.innerHTML = `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
@@ -353,7 +383,7 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">CNPJ</label>
-                                <input type="text" id="edit-cnpj" value="${sData.cnpj || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
+                                <input type="text" id="edit-cnpj" value="${cnpjLimpo}" oninput="formatarCNPJ(this)" maxlength="18" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="00.000.000/0000-00">
                             </div>
                         </div>
                         <div>
@@ -367,7 +397,7 @@
                             </div>
                             <div>
                                 <label class="block text-[10px] text-slate-400 uppercase font-bold mb-1">WhatsApp</label>
-                                <input type="text" id="edit-whatsapp" value="${uData.whatsapp || ''}" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500">
+                                <input type="text" id="edit-whatsapp" value="${zapLimpo}" oninput="formatarCelular(this)" maxlength="15" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="(00) 00000-0000">
                             </div>
                         </div>
                         
