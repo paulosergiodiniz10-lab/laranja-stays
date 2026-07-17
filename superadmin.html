@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Control - Laranja Stays</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body class="bg-[#0b1120] text-slate-200 font-sans h-screen flex overflow-hidden">
+
+    <!-- TELA DE LOGIN (Oculta após logar) -->
+    <div id="tela-login" class="fixed inset-0 z-50 bg-[#0b1120] flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-black text-slate-800">Master<span class="text-orange-500">Control</span></h1>
+                <p class="text-slate-500 text-sm mt-1">Gestão Central de Franquias</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">E-mail do Proprietário</label>
+                    <input type="email" id="login-admin-email" class="w-full px-4 py-3 rounded-lg border border-slate-200 text-slate-800 outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Senha Mestra</label>
+                    <input type="password" id="login-admin-senha" class="w-full px-4 py-3 rounded-lg border border-slate-200 text-slate-800 outline-none focus:border-orange-500">
+                </div>
+                <button onclick="logarSuperAdmin()" class="w-full bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 rounded-lg mt-2 transition-colors">Acessar Plataforma</button>
+                <div id="login-erro" class="hidden text-center text-red-500 text-sm font-bold mt-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL MASTER (Mostrado após logar) -->
+    <div id="painel-master" class="hidden w-full h-full flex">
+        <!-- Sidebar -->
+        <div class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col">
+            <div class="p-6 border-b border-slate-800">
+                <h1 class="text-xl font-black text-white">Laranja<span class="text-orange-500">Stays</span></h1>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Master Control</p>
+            </div>
+            <div class="p-4 flex-1">
+                <button class="w-full flex items-center gap-3 bg-slate-800 text-white px-4 py-3 rounded-lg font-bold text-sm">
+                    <i class="fas fa-building text-orange-500"></i> Empresas Clientes
+                </button>
+            </div>
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="sairSuperAdmin()" class="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-bold transition-colors">
+                    <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="flex-1 p-8 overflow-y-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-white">Gestão de Empresas Parceiras</h2>
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
+                    <i class="fas fa-cloud"></i> Nuvem Sincronizada
+                </span>
+            </div>
+
+            <!-- Bloco de Criação -->
+            <div class="bg-[#0f172a] border border-slate-800 rounded-xl p-6 mb-8 shadow-lg">
+                <h3 class="text-orange-500 font-bold mb-4 flex items-center gap-2"><i class="fas fa-plus"></i> Registrar Empresa / Novo Administrador</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Nome da Empresa</label><input type="text" id="nova-emp-nome" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">CNPJ (Opcional)</label><input type="text" id="nova-emp-cnpj" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">E-mail do Gestor</label><input type="email" id="nova-emp-email" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Senha Provisória</label><input type="text" id="nova-emp-senha" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="criarNovaEmpresa()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">
+                        Salvar Registro na Nuvem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela de Empresas -->
+            <div class="bg-[#0f172a] border border-slate-800 rounded-xl p-6 shadow-lg">
+                <h3 class="text-white font-bold mb-4 flex items-center gap-2"><i class="fas fa-list-alt text-slate-400"></i> Contas Administrativas Ativas</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="text-xs text-slate-500 uppercase border-b border-slate-800">
+                            <tr><th class="py-3 font-bold">Empresa</th><th class="py-3 font-bold">CNPJ</th><th class="py-3 font-bold">E-mail do Admin</th><th class="py-3 font-bold text-center">Status</th></tr>
+                        </thead>
+                        <tbody id="tabela-empresas-tbody">
+                            <!-- JS preenche aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === COLOQUE AQUI A SUA CONFIGURAÇÃO DO FIREBASE (Igual ao do index.html) ===
+        const firebaseConfig = {
+            // apiKey: "...",
+            // authDomain: "...",
+            // projectId: "...",
+            // ... copie do seu index.html e cole aqui
+        };
+
+        // Inicializa o App Principal (Para você logar como Super Admin)
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Inicializa um App Secundário (Truque de Mestre: Permite criar contas de clientes sem deslogar você)
+        const appSecundario = firebase.initializeApp(firebaseConfig, "AppCriadorDeContas");
+        const authSecundario = appSecundario.auth();
+
+        // ==========================================
+        // LÓGICA DO SUPER ADMIN
+        // ==========================================
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('tela-login').style.display = 'none';
+                document.getElementById('painel-master').style.display = 'flex';
+                carregarEmpresas();
+            } else {
+                document.getElementById('tela-login').style.display = 'flex';
+                document.getElementById('painel-master').style.display = 'none';
+            }
+        });
+
+        function logarSuperAdmin() {
+            const e = document.getElementById('login-admin-email').value;
+            const s = document.getElementById('login-admin-senha').value;
+            auth.signInWithEmailAndPassword(e, s).catch(err => {
+                const erro = document.getElementById('login-erro');
+                erro.innerText = "Acesso Negado. Verifique suas credenciais.";
+                erro.style.display = 'block';
+            });
+        }
+
+        function sairSuperAdmin() { auth.signOut(); }
+
+        // Cria a conta do cliente usando o App Secundário
+        function criarNovaEmpresa() {
+            const nome = document.getElementById('nova-emp-nome').value;
+            const cnpj = document.getElementById('nova-emp-cnpj').value;
+            const email = document.getElementById('nova-emp-email').value.trim().toLowerCase();
+            const senha = document.getElementById('nova-emp-senha').value;
+
+            if(!nome || !email || !senha) { alert("Nome, E-mail e Senha são obrigatórios!"); return; }
+
+            authSecundario.createUserWithEmailAndPassword(email, senha)
+            .then(userCredential => {
+                const uid = userCredential.user.uid;
+                
+                // 1. Cria o perfil do Gestor
+                db.collection("usuarios").doc(uid).set({
+                    email: email, role: 'dono', agenciaId: uid, dataCriacao: new Date().toISOString()
+                });
+
+                // 2. Cria a gaveta (SaaS) da nova Empresa
+                db.collection("sistema_saas").doc(uid).set({
+                    nomeEmpresa: nome, cnpj: cnpj, dataCriacao: new Date().toISOString()
+                }).then(() => {
+                    alert("Empresa criada com sucesso!");
+                    document.getElementById('nova-emp-nome').value = '';
+                    document.getElementById('nova-emp-cnpj').value = '';
+                    document.getElementById('nova-emp-email').value = '';
+                    document.getElementById('nova-emp-senha').value = '';
+                    carregarEmpresas();
+                });
+            })
+            .catch(err => alert("Erro ao criar conta: " + err.message));
+        }
+
+        function carregarEmpresas() {
+            const tb = document.getElementById('tabela-empresas-tbody');
+            tb.innerHTML = '<tr><td colspan="4" class="text-center py-4">Carregando...</td></tr>';
+            
+            db.collection("sistema_saas").get().then(snap => {
+                tb.innerHTML = '';
+                if(snap.empty) { tb.innerHTML = '<tr><td colspan="4" class="text-center py-4">Nenhuma empresa registrada.</td></tr>'; return; }
+                
+                snap.forEach(doc => {
+                    const dados = doc.data();
+                    tb.insertAdjacentHTML('beforeend', `
+                        <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                            <td class="py-4 font-bold text-white uppercase">${dados.nomeEmpresa || 'Sem Nome'}</td>
+                            <td class="py-4">${dados.cnpj || '-'}</td>
+                            <td class="py-4 text-blue-400">ID: ${doc.id.substring(0,8)}...</td>
+                            <td class="py-4 text-center"><span class="bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded text-[10px] font-bold">ATIVO</span></td>
+                        </tr>
+                    `);
+                });
+            }).catch(e => console.error("Sem permissão para ler tudo."));
+        }
+    </script>
+</body>
+</html>
