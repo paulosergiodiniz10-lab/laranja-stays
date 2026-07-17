@@ -27,6 +27,21 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Senha Mestra</label>
+                    <div class="relative">
+                        <input type="password" id="login-admin-senha" class="w-full px-4 py-3 rounded-lg border border-slate-200 text-slate-800 outline-none focus:border-orange-500 pr-10">
+                        <button type="button" onclick="toggleSenhaAdmin()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-orange-500 transition-colors">
+                            <i id="icone-senha-admin" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="logarSuperAdmin()" class="w-full bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 rounded-lg mt-2 transition-colors">Acessar Plataforma</button>
+                <div class="text-center mt-3">
+                    <button onclick="recuperarSenhaAdmin()" class="text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors">Esqueci minha senha</button>
+                </div>
+                <div id="login-erro" class="hidden text-center text-red-500 text-sm font-bold mt-2"></div>
+                <div id="login-sucesso" class="hidden text-center text-emerald-500 text-sm font-bold mt-2"></div>
+            </div>                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Senha Mestra</label>
                     <input type="password" id="login-admin-senha" class="w-full px-4 py-3 rounded-lg border border-slate-200 text-slate-800 outline-none focus:border-orange-500">
                 </div>
                 <button onclick="logarSuperAdmin()" class="w-full bg-[#0f172a] hover:bg-slate-800 text-white font-bold py-3 rounded-lg mt-2 transition-colors">Acessar Plataforma</button>
