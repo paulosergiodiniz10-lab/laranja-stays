@@ -219,7 +219,7 @@ function toggleSenhaAdmin() {
 
         function carregarEmpresas() {
             const tb = document.getElementById('tabela-empresas-tbody');
-            tb.innerHTML = '<tr><td colspan="4" class="text-center py-4">Carregando...</td></tr>';
+            tb.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-400">Carregando empresas...</td></tr>';
             
             db.collection("sistema_saas").get().then(snap => {
                 tb.innerHTML = '';
@@ -227,16 +227,29 @@ function toggleSenhaAdmin() {
                 
                 snap.forEach(doc => {
                     const dados = doc.data();
+                    const empresaId = doc.id; // O código da gaveta
+                    
+                    // 1. Cria a linha na tabela primeiro (com um aviso de "Buscando...")
                     tb.insertAdjacentHTML('beforeend', `
-                        <tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                        <tr id="linha-${empresaId}" class="border-b border-slate-800 hover:bg-slate-800/50">
                             <td class="py-4 font-bold text-white uppercase">${dados.nomeEmpresa || 'Sem Nome'}</td>
-                            <td class="py-4">${dados.cnpj || '-'}</td>
-                            <td class="py-4 text-blue-400">ID: ${doc.id.substring(0,8)}...</td>
+                            <td class="py-4 text-slate-400">${dados.cnpj || '-'}</td>
+                            <td class="py-4 text-blue-400 font-medium lowercase" id="email-${empresaId}">Buscando e-mail...</td>
                             <td class="py-4 text-center"><span class="bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded text-[10px] font-bold">ATIVO</span></td>
                         </tr>
                     `);
+
+                    // 2. O sistema vai lá na pasta de "usuarios" e busca o e-mail do dono daquela gaveta
+                    db.collection("usuarios").doc(empresaId).get().then(userDoc => {
+                        const emailDaEmpresa = userDoc.exists ? userDoc.data().email : 'Sem e-mail cadastrado';
+                        document.getElementById('email-' + empresaId).innerText = emailDaEmpresa;
+                    }).catch(() => {
+                        document.getElementById('email-' + empresaId).innerText = "Erro ao ler e-mail";
+                    });
                 });
-            }).catch(e => console.error("Sem permissão para ler tudo."));
+            }).catch(e => {
+                tb.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar os dados. Verifique suas permissões.</td></tr>';
+            });
         }
     </script>
 </body>
