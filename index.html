@@ -136,7 +136,14 @@
                             <h4 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-3">Galeria (Máximo 10)</h4>
                             <div class="flex gap-2 mb-4"><input type="url" id="input-foto-url" placeholder="Cole o link (URL) da imagem aqui..." class="flex-1 px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium focus:border-orange-500"><button type="button" onclick="adicionarFotoPorLink()" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition-all whitespace-nowrap"><i class="fas fa-link mr-1"></i> Adicionar Link</button></div>
                             <div class="relative flex items-center py-2"><div class="flex-grow border-t border-slate-200"></div><span class="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">OU</span><div class="flex-grow border-t border-slate-200"></div></div>
-                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors mt-2" onclick="document.getElementById('input-fotos').click()"><i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i><p class="font-bold text-slate-600 text-sm">Enviar fotos do PC</p><input type="file" id="input-fotos" multiple accept="image/*" class="hidden" onchange="processarFotos(event)"></div>
+                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 cursor-pointer transition-colors mt-2" onclick="document.getElementById('input-fotos').click()">
+    <i class="fas fa-cloud-upload-alt text-3xl text-slate-400 mb-2"></i>
+    <p class="font-bold text-slate-600 text-sm mb-2">Enviar fotos do PC</p>
+    <span class="inline-block bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
+        <i class="fas fa-info-circle mr-1"></i> Tamanho Ideal: 600x400 • Formato: JPG / JPEG
+    </span>
+    <input type="file" id="input-fotos" multiple accept="image/*" class="hidden" onchange="processarFotos(event)">
+</div>
                             <div id="preview-fotos" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4"></div>
                         </div>
                     </div>
