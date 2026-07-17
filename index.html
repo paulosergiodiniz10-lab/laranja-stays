@@ -417,16 +417,7 @@
             if(errDiv) errDiv.classList.add('hidden-view');
             
             auth.signInWithEmailAndPassword(e, s).catch(err => { 
-                auth.createUserWithEmailAndPassword(e, s).catch(err2 => {
-                    if(err2.code === 'auth/email-already-in-use') {
-                        if(errDiv) { errDiv.innerText = "Senha incorreta para este e-mail."; errDiv.classList.remove('hidden-view'); }
-                    } else {
-                        if(errDiv) { errDiv.innerText = "A senha precisa ter 6 ou mais caracteres."; errDiv.classList.remove('hidden-view'); }
-                    }
-                });
-            }); 
-        }
-
+                
         function fazerLogout() { auth.signOut().then(() => { window.location.reload(); }); }
         
         function aplicarPermissoesDeAcesso() {
