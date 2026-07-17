@@ -6,14 +6,13 @@
     <title>Master Control - Laranja Stays</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body class="bg-[#0b1120] text-slate-200 font-sans h-screen flex overflow-hidden">
 
-    <!-- TELA DE LOGIN (Oculta após logar) -->
+    <!-- TELA DE LOGIN -->
     <div id="tela-login" class="fixed inset-0 z-50 bg-[#0b1120] flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
             <div class="text-center mb-6">
@@ -29,7 +28,7 @@
                     <label class="block text-xs font-bold text-slate-700 mb-1">Senha Mestra</label>
                     <div class="relative">
                         <input type="password" id="login-admin-senha" class="w-full px-4 py-3 rounded-lg border border-slate-200 text-slate-800 outline-none focus:border-orange-500 pr-10">
-                        <button type="button" onclick="toggleSenhaAdmin()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-orange-500 transition-colors">
+                        <button type="button" onclick="toggleSenhaAdmin()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-orange-500">
                             <i id="icone-senha-admin" class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -43,8 +42,9 @@
             </div>
         </div>
     </div>
-    <!-- PAINEL MASTER (Mostrado após logar) -->
-    <div id="painel-master" class="hidden w-full h-full flex">
+
+    <!-- PAINEL MASTER -->
+    <div id="painel-master" class="hidden w-full h-full flex relative">
         <!-- Sidebar -->
         <div class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col">
             <div class="p-6 border-b border-slate-800">
@@ -56,8 +56,11 @@
                     <i class="fas fa-building text-orange-500"></i> Empresas Clientes
                 </button>
             </div>
-            <div class="p-4 border-t border-slate-800">
-                <button onclick="sairSuperAdmin()" class="flex items-center gap-2 text-slate-400 hover:text-white text-sm font-bold transition-colors">
+            <div class="p-4 border-t border-slate-800 space-y-4">
+                <button onclick="copiarLinkAcesso()" class="w-full flex items-center gap-2 text-emerald-500 hover:text-emerald-400 text-sm font-bold transition-colors">
+                    <i class="fas fa-link"></i> Enviar Acesso (Link)
+                </button>
+                <button onclick="sairSuperAdmin()" class="w-full flex items-center gap-2 text-slate-400 hover:text-white text-sm font-bold transition-colors">
                     <i class="fas fa-sign-out-alt"></i> Sair do Sistema
                 </button>
             </div>
@@ -74,18 +77,24 @@
 
             <!-- Bloco de Criação -->
             <div class="bg-[#0f172a] border border-slate-800 rounded-xl p-6 mb-8 shadow-lg">
-                <h3 class="text-orange-500 font-bold mb-4 flex items-center gap-2"><i class="fas fa-plus"></i> Registrar Empresa / Novo Administrador</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <h3 class="text-orange-500 font-bold mb-4 flex items-center gap-2"><i class="fas fa-plus"></i> Registrar Nova Empresa</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-4">
                     <div><label class="block text-xs font-bold text-slate-400 mb-1">Nome da Empresa</label><input type="text" id="nova-emp-nome" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
                     <div><label class="block text-xs font-bold text-slate-400 mb-1">CNPJ (Opcional)</label><input type="text" id="nova-emp-cnpj" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
-                    <div><label class="block text-xs font-bold text-slate-400 mb-1">E-mail do Gestor</label><input type="email" id="nova-emp-email" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
-                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Senha Provisória</label><input type="text" id="nova-emp-senha" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">Nome do Master (Usuário)</label><input type="text" id="nova-emp-master" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
                 </div>
-                <div class="mt-4 flex justify-end">
-                    <button onclick="criarNovaEmpresa()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">
-                        Salvar Registro na Nuvem
-                    </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">E-mail</label><input type="email" id="nova-emp-email" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500"></div>
+                    <div><label class="block text-xs font-bold text-slate-400 mb-1">WhatsApp</label><input type="text" id="nova-emp-whatsapp" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2.5 text-white outline-none focus:border-orange-500" placeholder="(00) 00000-0000"></div>
+                    <div>
+                        <button onclick="criarNovaEmpresa()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-lg">
+                            Salvar Registro na Nuvem
+                        </button>
+                    </div>
                 </div>
+                <p class="text-[10px] text-slate-500 mt-3">* A senha não é mais digitada aqui. O sistema cria a conta e você envia o Link de Acesso para o cliente criar a própria senha oficial.</p>
             </div>
 
             <!-- Tabela de Empresas -->
@@ -94,36 +103,53 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-slate-300">
                         <thead class="text-xs text-slate-500 uppercase border-b border-slate-800">
-                            <tr><th class="py-3 font-bold">Empresa</th><th class="py-3 font-bold">CNPJ</th><th class="py-3 font-bold">E-mail do Admin</th><th class="py-3 font-bold text-center">Status</th></tr>
+                            <tr>
+                                <th class="py-3 font-bold">Empresa</th>
+                                <th class="py-3 font-bold">CNPJ</th>
+                                <th class="py-3 font-bold">E-mail do Admin</th>
+                                <th class="py-3 font-bold text-center">Status</th>
+                                <th class="py-3 font-bold text-right">Ações de Controle</th>
+                            </tr>
                         </thead>
                         <tbody id="tabela-empresas-tbody">
-                            <!-- JS preenche aqui -->
+                            <!-- Preenchido via JS -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE DETALHES DA EMPRESA -->
+        <div id="modal-detalhes" class="hidden absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+            <div class="bg-[#0f172a] border border-slate-700 rounded-2xl w-full max-w-lg shadow-2xl">
+                <div class="flex justify-between items-center p-6 border-b border-slate-800">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="fas fa-building text-orange-500"></i> Ficha da Empresa</h3>
+                    <button onclick="fecharModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="p-6 space-y-4 text-sm" id="conteudo-modal">
+                    <!-- Preenchido via JS -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // === COLOQUE AQUI A SUA CONFIGURAÇÃO DO FIREBASE (Igual ao do index.html) ===
+        // Suas chaves exatas do Firebase (Já embutidas!)
         const firebaseConfig = {
             apiKey: "AIzaSyAOj3ZTbFR9GjfjfKFzNv5pSuSFh8Wlx1c",
             authDomain: "ld-reservas.firebaseapp.com",
             projectId: "ld-reservas"
         };
-        // Inicializa o App Principal (Para você logar como Super Admin)
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-
-        // Inicializa um App Secundário (Truque de Mestre: Permite criar contas de clientes sem deslogar você)
         const appSecundario = firebase.initializeApp(firebaseConfig, "AppCriadorDeContas");
         const authSecundario = appSecundario.auth();
 
-        // ==========================================
-        // LÓGICA DO SUPER ADMIN
-        // ==========================================
+        // ==================
+        // CONTROLE DE LOGIN
+        // ==================
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('tela-login').style.display = 'none';
@@ -144,73 +170,70 @@
                 erro.style.display = 'block';
             });
         }
-
         function sairSuperAdmin() { auth.signOut(); }
-function toggleSenhaAdmin() {
+
+        function toggleSenhaAdmin() {
             const input = document.getElementById('login-admin-senha');
             const icone = document.getElementById('icone-senha-admin');
-            if (input && icone) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icone.classList.remove('fa-eye');
-                    icone.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    icone.classList.remove('fa-eye-slash');
-                    icone.classList.add('fa-eye');
-                }
+            if (input.type === 'password') {
+                input.type = 'text'; icone.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password'; icone.classList.replace('fa-eye-slash', 'fa-eye');
             }
         }
 
         function recuperarSenhaAdmin() {
             const email = document.getElementById('login-admin-email').value.trim();
-            const errDiv = document.getElementById('login-erro');
-            const sucDiv = document.getElementById('login-sucesso');
+            if (!email) { alert("Digite seu e-mail no campo acima."); return; }
+            auth.sendPasswordResetEmail(email).then(() => alert("E-mail de recuperação enviado!"))
+            .catch(err => alert("Erro: " + err.message));
+        }
+
+        // ==================
+        // BOTÃO COPIAR LINK
+        // ==================
+        function copiarLinkAcesso() {
+            const urlSistema = window.location.origin; // Pega o link raiz do site
+            const texto = `*Olá! A conta da sua empresa foi criada com sucesso na plataforma.*\n\n🔗 *Acesse o link:* ${urlSistema}\n\nPara o seu primeiro acesso e criação de senha oficial, clique em *"Esqueci minha senha"* na tela de login e digite o seu e-mail. Você receberá um link seguro para definir sua senha.`;
             
-            errDiv.style.display = 'none';
-            sucDiv.style.display = 'none';
-
-            if (!email) {
-                errDiv.innerText = "Digite seu e-mail no campo acima para recuperar a senha.";
-                errDiv.style.display = 'block';
-                return;
-            }
-
-            auth.sendPasswordResetEmail(email).then(() => {
-                sucDiv.innerText = "Link de recuperação enviado para seu e-mail!";
-                sucDiv.style.display = 'block';
-            }).catch(err => {
-                errDiv.innerText = "Erro: " + err.message;
-                errDiv.style.display = 'block';
+            navigator.clipboard.writeText(texto).then(() => {
+                alert("MENSAGEM COPIADA!\n\nAgora é só abrir o WhatsApp e colar (Ctrl+V) para enviar ao seu cliente. A mensagem já vai com o texto explicativo e o link do sistema.");
             });
         }
-        // Cria a conta do cliente usando o App Secundário
+
+        // ==================
+        // GESTÃO DE EMPRESAS
+        // ==================
         function criarNovaEmpresa() {
             const nome = document.getElementById('nova-emp-nome').value;
             const cnpj = document.getElementById('nova-emp-cnpj').value;
+            const master = document.getElementById('nova-emp-master').value;
             const email = document.getElementById('nova-emp-email').value.trim().toLowerCase();
-            const senha = document.getElementById('nova-emp-senha').value;
+            const zap = document.getElementById('nova-emp-whatsapp').value;
 
-            if(!nome || !email || !senha) { alert("Nome, E-mail e Senha são obrigatórios!"); return; }
+            if(!nome || !master || !email) { alert("Nome da Empresa, Nome do Master e E-mail são obrigatórios!"); return; }
 
-            authSecundario.createUserWithEmailAndPassword(email, senha)
+            // Gera uma senha aleatória super forte só para criar a gaveta
+            // O cliente nunca vai ver ela, ele vai redefinir pelo "Esqueci a Senha"
+            const senhaProvisoriaOculta = Math.random().toString(36).slice(-10) + "Aa1@";
+
+            authSecundario.createUserWithEmailAndPassword(email, senhaProvisoriaOculta)
             .then(userCredential => {
                 const uid = userCredential.user.uid;
                 
-                // 1. Cria o perfil do Gestor
                 db.collection("usuarios").doc(uid).set({
-                    email: email, role: 'dono', agenciaId: uid, dataCriacao: new Date().toISOString()
+                    email: email, role: 'dono', nomeMaster: master, whatsapp: zap, agenciaId: uid, dataCriacao: new Date().toISOString()
                 });
 
-                // 2. Cria a gaveta (SaaS) da nova Empresa
                 db.collection("sistema_saas").doc(uid).set({
-                    nomeEmpresa: nome, cnpj: cnpj, dataCriacao: new Date().toISOString()
+                    nomeEmpresa: nome, cnpj: cnpj, status: 'ativo', dataCriacao: new Date().toISOString()
                 }).then(() => {
-                    alert("Empresa criada com sucesso!");
+                    alert("Empresa criada com sucesso!\n\nUse o botão 'Enviar Acesso (Link)' no menu esquerdo para mandar as instruções para o cliente.");
                     document.getElementById('nova-emp-nome').value = '';
                     document.getElementById('nova-emp-cnpj').value = '';
+                    document.getElementById('nova-emp-master').value = '';
                     document.getElementById('nova-emp-email').value = '';
-                    document.getElementById('nova-emp-senha').value = '';
+                    document.getElementById('nova-emp-whatsapp').value = '';
                     carregarEmpresas();
                 });
             })
@@ -219,36 +242,105 @@ function toggleSenhaAdmin() {
 
         function carregarEmpresas() {
             const tb = document.getElementById('tabela-empresas-tbody');
-            tb.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-slate-400">Carregando empresas...</td></tr>';
+            tb.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-400">Carregando empresas...</td></tr>';
             
             db.collection("sistema_saas").get().then(snap => {
                 tb.innerHTML = '';
-                if(snap.empty) { tb.innerHTML = '<tr><td colspan="4" class="text-center py-4">Nenhuma empresa registrada.</td></tr>'; return; }
+                if(snap.empty) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-4">Nenhuma empresa registrada.</td></tr>'; return; }
                 
                 snap.forEach(doc => {
                     const dados = doc.data();
-                    const empresaId = doc.id; // O código da gaveta
+                    const empresaId = doc.id;
+                    const statusReal = dados.status || 'ativo'; // Se não tiver status, assume ativo
                     
-                    // 1. Cria a linha na tabela primeiro (com um aviso de "Buscando...")
+                    const badgeStatus = statusReal === 'ativo' 
+                        ? `<span class="bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded text-[10px] font-bold">ATIVO</span>`
+                        : `<span class="bg-red-500/20 text-red-500 px-2 py-1 rounded text-[10px] font-bold">BLOQUEADO</span>`;
+                    
+                    const btnStatus = statusReal === 'ativo'
+                        ? `<button onclick="mudarStatus('${empresaId}', 'bloqueado')" class="bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors" title="Bloquear Empresa"><i class="fas fa-lock"></i></button>`
+                        : `<button onclick="mudarStatus('${empresaId}', 'ativo')" class="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors" title="Ativar Empresa"><i class="fas fa-unlock"></i></button>`;
+
                     tb.insertAdjacentHTML('beforeend', `
-                        <tr id="linha-${empresaId}" class="border-b border-slate-800 hover:bg-slate-800/50">
+                        <tr class="border-b border-slate-800 hover:bg-slate-800/50">
                             <td class="py-4 font-bold text-white uppercase">${dados.nomeEmpresa || 'Sem Nome'}</td>
                             <td class="py-4 text-slate-400">${dados.cnpj || '-'}</td>
                             <td class="py-4 text-blue-400 font-medium lowercase" id="email-${empresaId}">Buscando e-mail...</td>
-                            <td class="py-4 text-center"><span class="bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded text-[10px] font-bold">ATIVO</span></td>
+                            <td class="py-4 text-center">${badgeStatus}</td>
+                            <td class="py-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <button onclick="abrirFicha('${empresaId}', '${dados.nomeEmpresa}')" class="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors"><i class="fas fa-eye"></i> Editar / Ver</button>
+                                    ${btnStatus}
+                                </div>
+                            </td>
                         </tr>
                     `);
 
-                    // 2. O sistema vai lá na pasta de "usuarios" e busca o e-mail do dono daquela gaveta
                     db.collection("usuarios").doc(empresaId).get().then(userDoc => {
-                        const emailDaEmpresa = userDoc.exists ? userDoc.data().email : 'Sem e-mail cadastrado';
+                        const emailDaEmpresa = userDoc.exists ? userDoc.data().email : 'Sem e-mail';
                         document.getElementById('email-' + empresaId).innerText = emailDaEmpresa;
-                    }).catch(() => {
-                        document.getElementById('email-' + empresaId).innerText = "Erro ao ler e-mail";
                     });
                 });
+            });
+        }
+
+        function mudarStatus(id, novoStatus) {
+            if(confirm(`Tem certeza que deseja marcar esta empresa como ${novoStatus.toUpperCase()}?`)) {
+                db.collection("sistema_saas").doc(id).update({ status: novoStatus })
+                .then(() => carregarEmpresas())
+                .catch(e => alert("Erro ao mudar status."));
+            }
+        }
+
+        // ==================
+        // MODAL DE FICHA
+        // ==================
+        function fecharModal() { document.getElementById('modal-detalhes').classList.add('hidden'); }
+        
+        function abrirFicha(id, nomeEmpresa) {
+            const painel = document.getElementById('conteudo-modal');
+            painel.innerHTML = '<p class="text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Buscando dados no cofre...</p>';
+            document.getElementById('modal-detalhes').classList.remove('hidden');
+
+            // Busca os dados da empresa e do gestor simultaneamente
+            Promise.all([
+                db.collection("sistema_saas").doc(id).get(),
+                db.collection("usuarios").doc(id).get()
+            ]).then(([saasDoc, userDoc]) => {
+                const sData = saasDoc.data() || {};
+                const uData = userDoc.exists ? userDoc.data() : {};
+                
+                painel.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="block text-[10px] text-slate-400 uppercase font-bold">Empresa</span>
+                            <span class="text-white font-bold">${sData.nomeEmpresa || 'Não informado'}</span>
+                        </div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="block text-[10px] text-slate-400 uppercase font-bold">CNPJ</span>
+                            <span class="text-white">${sData.cnpj || 'Não informado'}</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 mb-4">
+                        <span class="block text-[10px] text-slate-400 uppercase font-bold">Gestor (Master)</span>
+                        <span class="text-orange-400 font-bold">${uData.nomeMaster || 'Não informado'}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="block text-[10px] text-slate-400 uppercase font-bold">E-mail de Login</span>
+                            <span class="text-white">${uData.email || 'Não informado'}</span>
+                        </div>
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700">
+                            <span class="block text-[10px] text-slate-400 uppercase font-bold">WhatsApp</span>
+                            <span class="text-white">${uData.whatsapp || 'Não informado'}</span>
+                        </div>
+                    </div>
+                    <div class="text-center pt-2 border-t border-slate-700 mt-2">
+                        <span class="text-[10px] text-slate-500">ID Único de Banco de Dados: <br>${id}</span>
+                    </div>
+                `;
             }).catch(e => {
-                tb.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Erro ao carregar os dados. Verifique suas permissões.</td></tr>';
+                painel.innerHTML = '<p class="text-red-500 text-center">Erro ao carregar os dados.</p>';
             });
         }
     </script>
