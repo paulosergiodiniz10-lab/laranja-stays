@@ -777,34 +777,17 @@
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
-    const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
-    if(dr.includes(" a ")){ cIn=dr.split(" a ")[0].trim(); cOut=dr.split(" a ")[1].trim(); } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0].trim(); cOut=dr.split(" até ")[1].trim(); } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0].trim(); cOut=dr.split(" to ")[1].trim(); } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0].trim(); cOut=dr.split(" - ")[1].trim(); }
-    
-    let bk=false; let minNoitesSugestao = 0; let conflitoCap = false;
-    
-    let flt = imoveisDB.filter(im => { 
-        if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
-        
-        let cap = parseInt(im.capacidadeTotal); 
-        if(isNaN(cap) || cap === 0) cap = 10; 
-        if(cap < pes) { conflitoCap = true; return false; } 
-        
-        if(cIn && cOut) { 
-            let i = calcularPrecoDinamico(im, cIn, cOut); 
-            if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } 
-            if(!i.disponivel) return false; 
-        } 
-        return true; 
-    });
-    
-    if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
-    
-    renderizarVitrine(flt, cIn, cOut, pes, conflitoCap);
-}                
-                // RESTABELECENDO A TRAVA DE CAPACIDADE:
+            const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
+            if(dr.includes(" a ")){ cIn=dr.split(" a ")[0].trim(); cOut=dr.split(" a ")[1].trim(); } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0].trim(); cOut=dr.split(" até ")[1].trim(); } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0].trim(); cOut=dr.split(" to ")[1].trim(); } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0].trim(); cOut=dr.split(" - ")[1].trim(); }
+            
+            let bk=false; let minNoitesSugestao = 0; let conflitoCap = false;
+            
+            let flt = imoveisDB.filter(im => { 
+                if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
+                
                 let cap = parseInt(im.capacidadeTotal); 
-                if(isNaN(cap) || cap === 0) cap = 10; // Salva-vidas caso o banco esteja vazio
-                if(cap < pes) return false; // Se a capacidade for menor que a busca, esconde o imóvel!
+                if(isNaN(cap) || cap === 0) cap = 10; 
+                if(cap < pes) { conflitoCap = true; return false; } 
                 
                 if(cIn && cOut) { 
                     let i = calcularPrecoDinamico(im, cIn, cOut); 
@@ -816,20 +799,21 @@
             
             if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
             
-            renderizarVitrine(flt, cIn, cOut, pes);
+            renderizarVitrine(flt, cIn, cOut, pes, conflitoCap);
         }
+
         function renderizarVitrine(lista, ci, co, pes, conflitoCapacidade = false) {
-    const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
-    
-    if(!lista.length) { 
-        if (conflitoCapacidade) {
-            div.innerHTML = `<div class="bg-orange-50 p-8 rounded-xl border border-orange-200 text-center text-orange-700 font-bold"><i class="fas fa-user-times text-3xl mb-3 block opacity-70"></i>Capacidade Excedida!<br>Nenhuma acomodação atende a sua busca de ${pes} hóspedes. Tente reduzir o número de pessoas.</div>`;
-        } else {
-            div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Por favor, tente uma nova busca com outra data ou ajuste o número de hóspedes.</div>'; 
-        }
-        return; 
-    }
+            const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
             
+            if(!lista.length) { 
+                if (conflitoCapacidade) {
+                    div.innerHTML = `<div class="bg-orange-50 p-8 rounded-xl border border-orange-200 text-center text-orange-700 font-bold"><i class="fas fa-user-times text-3xl mb-3 block opacity-70"></i>Capacidade Excedida!<br>Nenhuma acomodação atende a sua busca de ${pes} hóspedes. Tente reduzir o número de pessoas.</div>`;
+                } else {
+                    div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Por favor, tente uma nova busca com outra data ou ajuste o número de hóspedes.</div>'; 
+                }
+                return; 
+            }
+                    
             lista.forEach(im => {
                 let info = calcularPrecoDinamico(im, ci, co); let fts = im.fotos?.length ? im.fotos : ['https://placehold.co/600x400'];
                 let imagensHtml = fts.map((f, i) => `<img src="${f}" id="img-${im.id}-${i}" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 ${i===0?'opacity-100 z-10':'opacity-0 z-0'}">`).join('');
@@ -847,9 +831,8 @@
                 let linkMapa = (im.endereco && im.endereco.linkMapa) ? `<a href="${im.endereco.linkMapa}" target="_blank" class="text-xs text-orange-500 hover:text-orange-600 font-bold flex items-center ml-3 transition-colors"><i class="fas fa-map-marker-alt mr-1"></i> Localização</a>` : '';
                 
                 div.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow"><div class="w-full sm:w-[35%]">${carHtml}</div><div class="flex-1 flex flex-col"> <h3 class="text-xl font-bold text-[#0071c2] hover:underline cursor-pointer mb-1">${nomeImovelDisplay}</h3> <div class="flex items-center mb-3"><p class="text-xs text-[#0071c2]">${im.cidade}</p>${linkMapa}</div> <div class="text-[13px] font-bold text-slate-800 mb-1">${im.tipo}</div> <div class="text-sm text-slate-700 mt-1 leading-relaxed max-h-[130px] overflow-y-auto custom-scroll pr-2 whitespace-pre-line">${im.estrutura||''}</div> ${im.pagamento ? `<div class="mt-auto pt-4 border-t border-slate-100"><div class="text-[10px] font-bold text-slate-800 uppercase tracking-wider">Formas de Pagamento:</div><div class="text-sm text-slate-700 font-medium mt-1">${im.pagamento}</div></div>` : ''} </div><div class="w-full sm:w-[200px] border-t sm:border-t-0 sm:border-l border-slate-100 pl-0 sm:pl-5 flex flex-col items-center justify-center text-center mt-4 sm:mt-0 pt-4 sm:pt-0">${prcHtml}${btnZ}</div></div>`);
-    });
-}
-
+            });
+        }
 
         function renderizarMapaDisponibilidade() {
             if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
