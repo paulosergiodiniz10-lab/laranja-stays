@@ -958,6 +958,14 @@
             if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
             if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
             const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
+            let cap = parseInt(im.capacidadeTotal) || 10;
+    let totalHospedesCadastrados = 1 + acompanhantesTemp.length; // 1 titular + acompanhantes
+    if (st !== 'bloqueio' && st !== 'proprietario' && st !== 'cancelada') {
+        if (totalHospedesCadastrados > cap) {
+            mostrarAlerta(`Atenção: A capacidade máxima do imóvel é de <b>${cap} pessoas</b>.<br><br>Você adicionou <b>${totalHospedesCadastrados} pessoas</b> na ficha (Titular + Acompanhantes). Remova o excesso para salvar.`);
+            return;
+        }
+    }
             let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
             if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
             let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
