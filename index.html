@@ -777,14 +777,30 @@
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
-            const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
-            if(dr.includes(" a ")){ cIn=dr.split(" a ")[0].trim(); cOut=dr.split(" a ")[1].trim(); } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0].trim(); cOut=dr.split(" até ")[1].trim(); } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0].trim(); cOut=dr.split(" to ")[1].trim(); } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0].trim(); cOut=dr.split(" - ")[1].trim(); }
-            
-            let bk=false; let minNoitesSugestao = 0;
-            
-            let flt = imoveisDB.filter(im => { 
-                if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
-                
+    const cid = val('busca-cidade').toLowerCase().trim(); const pes = parseInt(val('busca-pessoas'))||1; const dr = val('busca-datas-range'); let cIn=null; let cOut=null; 
+    if(dr.includes(" a ")){ cIn=dr.split(" a ")[0].trim(); cOut=dr.split(" a ")[1].trim(); } else if (dr.includes(" até ")) { cIn=dr.split(" até ")[0].trim(); cOut=dr.split(" até ")[1].trim(); } else if (dr.includes(" to ")) { cIn=dr.split(" to ")[0].trim(); cOut=dr.split(" to ")[1].trim(); } else if (dr.includes(" - ")) { cIn=dr.split(" - ")[0].trim(); cOut=dr.split(" - ")[1].trim(); }
+    
+    let bk=false; let minNoitesSugestao = 0; let conflitoCap = false;
+    
+    let flt = imoveisDB.filter(im => { 
+        if(cid && !(im.cidade||'').toLowerCase().includes(cid)) return false; 
+        
+        let cap = parseInt(im.capacidadeTotal); 
+        if(isNaN(cap) || cap === 0) cap = 10; 
+        if(cap < pes) { conflitoCap = true; return false; } 
+        
+        if(cIn && cOut) { 
+            let i = calcularPrecoDinamico(im, cIn, cOut); 
+            if(i.bloqueioMinNoites){ bk=true; if(i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; return false; } 
+            if(!i.disponivel) return false; 
+        } 
+        return true; 
+    });
+    
+    if(cIn && cOut && !flt.length && bk) { let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + minNoitesSugestao); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); }
+    
+    renderizarVitrine(flt, cIn, cOut, pes, conflitoCap);
+}                
                 // RESTABELECENDO A TRAVA DE CAPACIDADE:
                 let cap = parseInt(im.capacidadeTotal); 
                 if(isNaN(cap) || cap === 0) cap = 10; // Salva-vidas caso o banco esteja vazio
