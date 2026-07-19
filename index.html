@@ -1043,29 +1043,41 @@
         function mudarAbaOrcamento(a) { if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; if(a!=='novo') renderListaOrc(); }
 
         function buscarDisponibilidadeOrcamento() {
-            const ciRaw = val('busca-orc-checkin'); const coRaw = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
-            if(!ciRaw||!coRaw) { mostrarAlerta("Preencha as datas."); return; }
-            
-            let ci = ciRaw; if (ciRaw.includes('/')) { let p = ciRaw.split('/'); ci = `${p[2]}-${p[1]}-${p[0]}`; }
-            let co = coRaw; if (coRaw.includes('/')) { let p = coRaw.split('/'); co = `${p[2]}-${p[1]}-${p[0]}`; }
+    const ciRaw = val('busca-orc-checkin'); const coRaw = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
+    if(!ciRaw||!coRaw) { mostrarAlerta("Preencha as datas."); return; }
+    
+    let ci = ciRaw; if (ciRaw.includes('/')) { let p = ciRaw.split('/'); ci = `${p[2]}-${p[1]}-${p[0]}`; }
+    let co = coRaw; if (coRaw.includes('/')) { let p = coRaw.split('/'); co = `${p[2]}-${p[1]}-${p[0]}`; }
 
-            const div = el('lista-imoveis-orcamento'); if(div) div.innerHTML='';
-            let count=0; let minNoitesBloqueio = null; let conflitoReserva = false;
-            
-            imoveisDB.forEach(im => {
-                let inf = calcularPrecoDinamico(im, ci, co);
+    const div = el('lista-imoveis-orcamento'); if(div) div.innerHTML='';
+    let count=0; let minNoitesBloqueio = null; let conflitoReserva = false; let conflitoCap = false;
+    
+    imoveisDB.forEach(im => {
+        let cap = parseInt(im.capacidadeTotal) || 10;
+        if (cap < ps) { conflitoCap = true; return; }
 
-                if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
-                if(!inf.disponivel || inf.bloqueioMinNoites) { if(verificarChoqueDatas(im.id, ci, co)) conflitoReserva = true; return; }
-                
-                count++;
-                let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
-                if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
-            });
-            
-            if(count===0 && div) { if(minNoitesBloqueio) { div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`; } else if (conflitoReserva) { div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`; } else { div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`; } }
+        let inf = calcularPrecoDinamico(im, ci, co);
+
+        if(inf.bloqueioMinNoites) { if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; }
+        if(!inf.disponivel || inf.bloqueioMinNoites) { if(verificarChoqueDatas(im.id, ci, co)) conflitoReserva = true; return; }
+        
+        count++;
+        let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
+        if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${im.nome}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
+    });
+    
+    if(count===0 && div) {
+        if(conflitoCap) {
+            div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200"><i class="fas fa-user-times text-3xl mb-2 block opacity-70"></i>Capacidade Excedida.<br>As acomodações cadastradas não comportam ${ps} hóspedes.</div>`;
+        } else if(minNoitesBloqueio) {
+            div.innerHTML=`<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</div>`;
+        } else if (conflitoReserva) {
+            div.innerHTML=`<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`;
+        } else {
+            div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`;
         }
-
+    }
+}
         function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }        function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
         function editarOrcamento(id) { const o = orcamentosDB.find(x => x.id === id); if (!o) return; sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
         
