@@ -956,6 +956,11 @@
             mostrarAlerta(`Atenção: A capacidade máxima do imóvel é de <b>${cap} pessoas</b>.<br><br>Você adicionou <b>${totalHospedesCadastrados} pessoas</b> na ficha (Titular + Acompanhantes). Remova o excesso para salvar.`);
             return;
         }
+        // NOVA BARREIRA DE VALOR ZERO NA HORA DE SALVAR
+        if (vT <= 0) {
+            mostrarAlerta("Não é possível salvar uma locação com valor <b>R$ 0,00</b>.<br><br>Verifique se há tarifas cadastradas para este período no calendário.");
+            return;
+        }
     }
             let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
             if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
