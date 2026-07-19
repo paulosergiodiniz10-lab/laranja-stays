@@ -808,10 +808,9 @@
             if(!lista.length) { 
                 if (conflitoCapacidade) {
                     div.innerHTML = `<div class="bg-orange-50 p-8 rounded-xl border border-orange-200 text-center text-orange-700 font-bold"><i class="fas fa-user-times text-3xl mb-3 block opacity-70"></i>Capacidade Excedida!<br>Nenhuma acomodação atende a sua busca de ${pes} hóspedes. Tente reduzir o número de pessoas.</div>`;
-                } else {
-                    div.innerHTML = '<div class="bg-white p-8 rounded-xl border text-center font-bold text-slate-500">Por favor, tente uma nova busca com outra data ou ajuste o número de hóspedes.</div>'; 
-                }
-                return; 
+               } else {
+            div.innerHTML = `<div class="text-center p-8 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100 shadow-sm"><i class="fas fa-calendar-times text-4xl mb-3 block opacity-90"></i><span class="text-lg">Sem disponibilidade.</span><br><span class="text-sm text-red-400 font-medium mt-1 block">As acomodações que atendem aos seus critérios já possuem reservas nestas datas.<br>Por favor, tente alterar o período da viagem.</span></div>`; 
+        }                return; 
             }
                     
             lista.forEach(im => {
