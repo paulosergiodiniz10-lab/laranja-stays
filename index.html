@@ -859,15 +859,24 @@
         }
 
         function checarDisponibilidadeAoDigitar() { 
-            const imId=val('reserva-imovel-select'); const ci=val('reserva-checkin'); const co=val('reserva-checkout'); const resId=val('reserva-id'); 
-            if(!imId || !ci || !co) { mostrarAlerta("Por favor, selecione o imóvel e as datas de check-in e check-out antes de verificar."); return; }
-            if(imId&&ci&&co){ 
-                if(verificarChoqueDatas(imId, ci, co, resId)) { mostrarAlerta("Data ocupada por outra reserva ou bloqueio."); setVal('reserva-checkin',''); setVal('reserva-checkout',''); return; } 
-                const im = imoveisDB.find(i=>i.id==imId); let inf = calcularPrecoDinamico(im, ci, co, resId);
-                if (inf.bloqueioMinNoites) { let min = inf.minNoites; let dIn = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + min); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(co)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${min} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); setVal('reserva-checkout',''); setVal('reserva-valor', 0); return; }
-                calcularValorReservaAdmin(); mostrarNotificacao("Disponível! Valor calculado.");
-            } 
+    const imId=val('reserva-imovel-select'); const ci=val('reserva-checkin'); const co=val('reserva-checkout'); const resId=val('reserva-id'); 
+    if(!imId || !ci || !co) { mostrarAlerta("Por favor, selecione o imóvel e as datas de check-in e check-out antes de verificar."); return; }
+    if(imId&&ci&&co){ 
+        if(verificarChoqueDatas(imId, ci, co, resId)) { mostrarAlerta("Data ocupada por outra reserva ou bloqueio."); setVal('reserva-checkin',''); setVal('reserva-checkout',''); return; } 
+        const im = imoveisDB.find(i=>i.id==imId); let inf = calcularPrecoDinamico(im, ci, co, resId);
+        if (inf.bloqueioMinNoites) { let min = inf.minNoites; let dIn = new Date(parseInputDateSafe(ci)+'T12:00:00'); let dOutSugerido = new Date(dIn); dOutSugerido.setDate(dIn.getDate() + min); let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutDigitada = new Date(parseInputDateSafe(co)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); let dataOutCorreta = dOutSugerido.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${min} noites</b> para este período.<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInFormatada} a ${dataOutCorreta}</b>`); setVal('reserva-checkout',''); setVal('reserva-valor', 0); return; }
+        
+        // NOVO BLOQUEIO DE TARIFA ZERO
+        let st = val('reserva-status');
+        if (!inf.disponivel && st !== 'proprietario' && st !== 'bloqueio') {
+            mostrarAlerta("Não há tarifas cadastradas para todas as diárias deste período.<br><br><b>Atenção:</b> Não é possível realizar locações com valor R$ 0,00.");
+            setVal('reserva-valor', 0);
+            return;
         }
+
+        calcularValorReservaAdmin(); mostrarNotificacao("Disponível! Valor calculado.");
+    } 
+}
         
         function abrirNovaReservaManualLista() { povoarSelectImoveis(); resetarModalReserva(); if(el('titulo-modal-reserva')) el('titulo-modal-reserva').innerText="Nova Reserva"; hide('btn-excluir-reserva'); hide('btn-cancelar-reserva'); show('modal-reserva-manual'); }
         function abrirNovaReservaMapa(imId, dt) { abrirNovaReservaManualLista(); setVal('reserva-imovel-select', imId); let fpIn = el('reserva-checkin')?._flatpickr; let fpOut = el('reserva-checkout')?._flatpickr; if(fpIn) { fpIn.setDate(dt, true); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); let dtOut = formatarDataLocalISO(do_); if(fpOut) fpOut.setDate(dtOut, true); } else { setVal('reserva-checkin', dt); let do_ = new Date(dt+'T12:00:00'); do_.setDate(do_.getDate()+1); setVal('reserva-checkout', formatarDataLocalISO(do_)); } }
