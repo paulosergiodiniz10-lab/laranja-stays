@@ -888,8 +888,7 @@
             let pg = res.statusPagamento==='pago' ? (res.valorPago!==undefined?res.valorPago:res.valorTotal) : (res.valorPago||0); setVal('reserva-valor-pago', pg);
             if(res.statusPagamento==='pago') show('opt-status-pago'); if(res.statusPagamento==='cancelada') show('opt-status-cancelada');
             setVal('reserva-status', res.statusPagamento); hide('opt-status-devolucao');
-            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada') setVal('reserva-valor', 0);
-            if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
+            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada' || res.statusPagamento==='proprietario' || res.statusPagamento==='bloqueio') setVal('reserva-valor', 0);            if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
             acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva();
             
             // TRAVA DE SEGURANÇA: Corretor não pode mudar o status financeiro nem excluir/cancelar a ficha
