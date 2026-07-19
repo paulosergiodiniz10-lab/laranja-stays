@@ -290,7 +290,7 @@
     </div>
     <script>
         let firebaseConfig = { apiKey: "AIzaSyAOj3ZTbFR9GjfjfKFzNv5pSuSFh8Wlx1c", authDomain: "ld-reservas.firebaseapp.com", projectId: "ld-reservas", storageBucket: "ld-reservas.firebasestorage.app", messagingSenderId: "871798036063", appId: "1:871798036063:web:684906265705dbe8da6dea" };
-        firebase.initializeApp(firebaseConfig); const auth = firebase.auth(); const db = firebase.firestore(); const storage = firebase.storage();
+        firebase.initializeApp(firebaseConfig); const auth = firebase.auth(); auth.languageCode = 'pt-BR'; const db = firebase.firestore(); const storage = firebase.storage();
         const el=id=>document.getElementById(id); const hide=id=>el(id)?.classList.add('hidden-view'); const show=id=>el(id)?.classList.remove('hidden-view'); const val=id=>el(id)?.value||''; const sv=(id,v)=>{if(el(id))el(id).value=v;}; const setVal=sv; 
         const formatarDataLocalISO=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 
