@@ -378,15 +378,41 @@
             } catch (e) { console.error("Erro crítico de inicialização:", e); if (isPublicVitrine) mostrarTelaErro("Erro ao ler o banco de dados."); else { show('tela-login'); mostrarAlerta("Erro de conexão."); } }
         });
 
+        let nuvemCarregadaSegura = false; // NOSSA NOVA TRAVA MESTRA
+
         async function carregarDadosFirebase(uidEmpresa) {
-            try { const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); if (docSnap.exists) { const data = docSnap.data(); imoveisDB = data.imoveisDB || []; empresaDB = data.empresaDB || empresaDB; orcamentosDB = data.orcamentosDB || []; categoriasDB = data.categoriasDB || categoriasDB; } else if (!isPublicVitrine) { imoveisDB = dbMockInicial; await sincronizarNuvem(); }
-                imoveisDB.forEach(im => { if(!im.despesas) im.despesas=[]; if(!im.reservas) im.reservas=[]; if(!im.calendario) im.calendario=[]; if(im.proprietario && im.proprietario.comissao === undefined) im.proprietario.comissao=20; }); inicializarApp();
-            } catch(e) { throw e; }
+            try { 
+                const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); 
+                if (docSnap.exists) { 
+                    const data = docSnap.data(); 
+                    imoveisDB = data.imoveisDB || []; 
+                    empresaDB = data.empresaDB || empresaDB; 
+                    orcamentosDB = data.orcamentosDB || []; 
+                    categoriasDB = data.categoriasDB || categoriasDB; 
+                } else if (!isPublicVitrine) { 
+                    imoveisDB = dbMockInicial; 
+                }
+                
+                imoveisDB.forEach(im => { if(!im.despesas) im.despesas=[]; if(!im.reservas) im.reservas=[]; if(!im.calendario) im.calendario=[]; if(im.proprietario && im.proprietario.comissao === undefined) im.proprietario.comissao=20; }); 
+                
+                nuvemCarregadaSegura = true; // SUCESSO! A nuvem baixou tudo perfeitamente.
+                inicializarApp();
+            } catch(e) { 
+                mostrarAlerta("Falha grave de conexão com o banco de dados. Dê um F5 para tentar novamente.");
+                throw e; 
+            }
         }
 
         async function sincronizarNuvem() { 
-            if (isPublicVitrine || !currentAgenciaId) return; 
-            try { await db.collection("sistema_saas").doc(currentAgenciaId).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); } catch (e) { console.error("Erro ao salvar:", e); mostrarNotificacao("Erro ao salvar dados!"); } 
+            // SE A NUVEM NÃO CARREGOU ANTES, ELE É PROIBIDO DE SALVAR E APAGAR AS COISAS!
+            if (isPublicVitrine || !currentAgenciaId || !nuvemCarregadaSegura) return; 
+            
+            try { 
+                await db.collection("sistema_saas").doc(currentAgenciaId).set({ imoveisDB: imoveisDB, empresaDB: empresaDB, orcamentosDB: orcamentosDB, categoriasDB: categoriasDB }, { merge: true }); 
+            } catch (e) { 
+                console.error("Erro ao salvar:", e); 
+                mostrarAlerta("⚠️ Falha de comunicação com a internet! Suas últimas alterações NÃO foram salvas na nuvem. Aguarde e tente salvar de novo."); 
+            } 
         }        
         
         function salvarBancoNoStorage() { sincronizarNuvem(); }
