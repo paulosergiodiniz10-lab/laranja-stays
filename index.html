@@ -642,7 +642,7 @@
         function abrirModalCadastro() { 
             imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
             ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-link-loc','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
-            sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5');
+            sv('cad-prop-comissao', '20'); sv('cad-tipo', 'Apartamento'); sv('cad-checkin', '14:00'); sv('cad-checkout', '11:00'); sv('cad-capacidade', '5'); sv('cad-voucher-cancelamento', ''); sv('cad-voucher-info', '');
             fotosEmCriacao = []; renderizarPreviewFotos(); 
             calendarioEmCriacao = []; sv('lote-tarifa-nome', ''); sv('lote-tarifa-in', ''); sv('lote-tarifa-out', ''); sv('lote-tarifa-valor', ''); sv('lote-tarifa-min', '2'); sv('ajuste-lote-in', ''); sv('ajuste-lote-out', ''); sv('ajuste-lote-valor', ''); sv('ajuste-lote-tipo', 'aumento'); document.querySelectorAll('.btn-dia-semana').forEach(b => b.classList.add('ativo')); renderizarFiltrosCalendarioGestao();
             mudarAbaCadastro('proprietario'); show('modal-cadastro'); 
