@@ -751,7 +751,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             const limite = Math.min(f.length, 10 - fotosEmCriacao.length); 
             if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; } 
             
-            mostrarNotificacao("Otimizando fotos... Aguarde.");
+            mostrarNotificacao("Otimizando fotos (Modo Ultra Leve)...");
             
             for(let i=0; i<limite; i++) { 
                 const r = new FileReader(); 
@@ -759,22 +759,21 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                     const img = new Image(); 
                     img.onload = () => { 
                         const c = document.createElement('canvas'); 
-                        let w = img.width; 
-                        let h = img.height;
+                        let w = img.width; let h = img.height;
                         
-                        // Limita em 600x400 para ficar minúsculo
-                        const maxW = 600; const maxH = 400;
+                        // Ultra compressão: tamanho de miniatura (ideal para a vitrine)
+                        const maxW = 400; const maxH = 300;
                         if (w > h) { if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; } } 
                         else { if (h > maxH) { w = Math.round((w * maxH) / h); h = maxH; } }
                         
                         c.width = w; c.height = h; 
                         c.getContext('2d').drawImage(img, 0, 0, w, h); 
                         
-                        let qual = 0.5; // Começa com 50% de qualidade
+                        let qual = 0.4; 
                         let b64 = c.toDataURL('image/jpeg', qual);
                         
-                        // Trava absoluta de segurança: não deixa passar de ~70KB por foto!
-                        while(b64.length > 70000 && qual > 0.1) {
+                        // Trava de segurança agressiva: não deixa a foto passar de 30KB
+                        while(b64.length > 30000 && qual > 0.1) {
                             qual -= 0.1;
                             b64 = c.toDataURL('image/jpeg', qual);
                         }
@@ -787,7 +786,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 r.readAsDataURL(f[i]); 
             } 
             sv('input-fotos',''); 
-            mostrarNotificacao("Pronto! Fotos otimizadas com sucesso.");
+            setTimeout(() => mostrarNotificacao("Pronto! Fotos otimizadas."), 1000);
         }
         function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
         function definirCapa(i) { if(i===0)return; const foto = fotosEmCriacao.splice(i, 1)[0]; fotosEmCriacao.unshift(foto); renderizarPreviewFotos(); }
