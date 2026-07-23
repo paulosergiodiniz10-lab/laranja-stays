@@ -659,7 +659,7 @@
         }
 
         function fecharModalCadastro() { hide('modal-cadastro'); }
-        function mudarAbaCadastro(a) { ['proprietario','imovel','fotos','tarifas'].forEach(id => { let dContent = el('tab-content-'+id); let dBtn = el('tab-btn-'+id); if(dContent && dBtn) { if(id === a) { dContent.classList.remove('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] transition-colors border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none"; } else { dContent.classList.add('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap outline-none"; } } }); abaAtivaCadastro = a; }
+        function mudarAbaCadastro(a) { ['proprietario','imovel','fotos','tarifas','voucher'].forEach(id => { let dContent = el('tab-content-'+id); let dBtn = el('tab-btn-'+id); if(dContent && dBtn) { if(id === a) { dContent.classList.remove('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] transition-colors border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none"; } else { dContent.classList.add('hidden-view'); dBtn.className = "flex-shrink-0 px-5 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 transition-colors whitespace-nowrap outline-none"; } } }); abaAtivaCadastro = a; }
 
         function aplicarAjusteSazonalMassa() {
             const dtIn = parseInputDateSafe(val('ajuste-lote-in')); const dtOut = parseInputDateSafe(val('ajuste-lote-out')); const tipo = val('ajuste-lote-tipo'); const perc = parseFloat(val('ajuste-lote-valor'));
