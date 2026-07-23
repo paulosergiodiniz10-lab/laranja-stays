@@ -742,7 +742,37 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             if (listaFiltrada.length > 50) { tb.insertAdjacentHTML('beforeend', `<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400 font-bold bg-slate-50">Mostrando os primeiros 50 resultados. Use os filtros para refinar a busca.</td></tr>`); }
         }
 
-        function adicionarFotoPorLink() { const u = val('input-foto-url').trim(); if(!u) return; if(fotosEmCriacao.length >= 10) { mostrarAlerta("Limite máximo de 10 fotos."); return; } fotosEmCriacao.push(u); renderizarPreviewFotos(); sv('input-foto-url', ''); }
+        function adicionarFotoPorLink() { 
+            const input = document.getElementById('input-foto-url'); 
+            if(!input) return;
+            
+            const texto = input.value.trim();
+            if(!texto) { mostrarAlerta("Cole pelo menos um link."); return; }
+            
+            // O segredo: corta o texto toda vez que tiver uma quebra de linha, espaço ou vírgula
+            const links = texto.split(/[\n,\s]+/).filter(url => url.trim().startsWith('http'));
+            
+            if(links.length === 0) { 
+                mostrarAlerta("Nenhum link válido encontrado. Certifique-se de usar o 'Link Direto' (começa com http)."); 
+                return; 
+            }
+            
+            let adicionadas = 0;
+            links.forEach(url => {
+                if(fotosEmCriacao.length < 10) { // Respeita o limite máximo de fotos do sistema
+                    fotosEmCriacao.push(url.trim());
+                    adicionadas++;
+                }
+            });
+            
+            if(adicionadas > 0) {
+                input.value = ''; 
+                renderizarPreviewFotos(); 
+                mostrarNotificacao(`${adicionadas} foto(s) adicionada(s) com sucesso!`);
+            } else {
+                mostrarAlerta("Limite máximo de 10 fotos atingido.");
+            }
+        }
 
         function processarFotos(e) { 
             const f = e.target.files; 
