@@ -751,7 +751,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             const limite = Math.min(f.length, 10 - fotosEmCriacao.length); 
             if(limite <= 0){ mostrarAlerta("Limite máximo de 10 fotos."); return; } 
             
-            mostrarNotificacao("Otimizando fotos (Modo Ultra Leve)...");
+            mostrarNotificacao("Processando fotos com qualidade otimizada...");
             
             for(let i=0; i<limite; i++) { 
                 const r = new FileReader(); 
@@ -761,19 +761,20 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                         const c = document.createElement('canvas'); 
                         let w = img.width; let h = img.height;
                         
-                        // Ultra compressão: tamanho de miniatura (ideal para a vitrine)
-                        const maxW = 400; const maxH = 300;
+                        // Resolução excelente para vitrines (600x450)
+                        const maxW = 600; const maxH = 450;
                         if (w > h) { if (w > maxW) { h = Math.round((h * maxW) / w); w = maxW; } } 
                         else { if (h > maxH) { w = Math.round((w * maxH) / h); h = maxH; } }
                         
                         c.width = w; c.height = h; 
                         c.getContext('2d').drawImage(img, 0, 0, w, h); 
                         
-                        let qual = 0.4; 
+                        let qual = 0.7; // Começa com 70% de qualidade (nítida e bonita)
                         let b64 = c.toDataURL('image/jpeg', qual);
                         
-                        // Trava de segurança agressiva: não deixa a foto passar de 30KB
-                        while(b64.length > 30000 && qual > 0.1) {
+                        // O Equilíbrio: Tenta manter o peso em torno de 70KB, 
+                        // mas se precisar comprimir, NUNCA deixa a qualidade cair abaixo de 40% (0.4)
+                        while(b64.length > 70000 && qual > 0.4) {
                             qual -= 0.1;
                             b64 = c.toDataURL('image/jpeg', qual);
                         }
@@ -786,7 +787,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 r.readAsDataURL(f[i]); 
             } 
             sv('input-fotos',''); 
-            setTimeout(() => mostrarNotificacao("Pronto! Fotos otimizadas."), 1000);
+            setTimeout(() => mostrarNotificacao("Pronto! Fotos salvas com qualidade."), 1000);
         }
         function removerFoto(i) { fotosEmCriacao.splice(i,1); renderizarPreviewFotos(); }
         function definirCapa(i) { if(i===0)return; const foto = fotosEmCriacao.splice(i, 1)[0]; fotosEmCriacao.unshift(foto); renderizarPreviewFotos(); }
