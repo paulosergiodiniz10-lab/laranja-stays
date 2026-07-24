@@ -163,6 +163,18 @@
         const auth = firebase.auth();
         const appSecundario = firebase.initializeApp(firebaseConfig, "AppCriadorDeContas");
         const authSecundario = appSecundario.auth();
+        // ---------------------------------------------------------
+// TRAVA DE SEGURANÇA DA PÁGINA
+// ---------------------------------------------------------
+auth.onAuthStateChanged(function(user) {
+  if (!user) {
+    // Se a pessoa NÃO estiver logada, chuta para a tela de login
+    window.location.replace("index.html"); 
+  } else {
+    console.log("Acesso liberado no Painel Admin!");
+  }
+});
+// ---------------------------------------------------------
 
         // ==================
         // MÁSCARAS DE FORMATAÇÃO
