@@ -608,30 +608,32 @@ function copiarCodigoWidget() {
                 optionsCidades += `<option value="${c}">${c}</option>`;
             });
 
+            // O código agora inclui a biblioteca de calendário do seu sistema principal!
             const codigoHTML = `<!-- MOTOR DE BUSCA - TEMPORADA STAYS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <form action="${urlVitrine}" method="GET" target="_blank" style="display:flex; gap:10px; background:#004e82; padding:15px; border-radius:12px; font-family:sans-serif; flex-wrap:wrap; align-items:center;">
     <input type="hidden" name="link" value="${empresaDB.slug}">
     
     <div style="flex:1; min-width:150px;">
         <label style="display:block; color:#fff; font-size:10px; font-weight:bold; margin-bottom:3px;">DESTINO</label>
-        <select name="destino" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; background:#fff; color:#333;">
+        <select name="destino" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; background:#fff; color:#333; cursor:pointer;">
             ${optionsCidades}
         </select>
     </div>
     
     <div style="flex:1; min-width:120px;">
         <label style="display:block; color:#fff; font-size:10px; font-weight:bold; margin-bottom:3px;">CHECK-IN</label>
-        <input type="date" name="checkin" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; color:#333;">
+        <input type="text" id="widget-checkin" name="checkin" placeholder="Data de entrada" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; color:#333; cursor:pointer; background:#fff;">
     </div>
     
     <div style="flex:1; min-width:120px;">
         <label style="display:block; color:#fff; font-size:10px; font-weight:bold; margin-bottom:3px;">CHECK-OUT</label>
-        <input type="date" name="checkout" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; color:#333;">
+        <input type="text" id="widget-checkout" name="checkout" placeholder="Data de saída" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; color:#333; cursor:pointer; background:#fff;">
     </div>
     
     <div style="flex:0.8; min-width:100px;">
         <label style="display:block; color:#fff; font-size:10px; font-weight:bold; margin-bottom:3px;">HÓSPEDES</label>
-        <select name="hospedes" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; background:#fff; color:#333;">
+        <select name="hospedes" style="width:100%; padding:10px; border-radius:8px; border:none; outline:none; font-weight:bold; background:#fff; color:#333; cursor:pointer;">
             <option value="1">1 Hóspede</option>
             <option value="2" selected>2 Hóspedes</option>
             <option value="3">3 Hóspedes</option>
@@ -649,10 +651,29 @@ function copiarCodigoWidget() {
         </button>
     </div>
 </form>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"><\/script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"><\/script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var fpIn = flatpickr("#widget-checkin", { 
+            dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt",
+            onChange: function(selectedDates, dateStr, instance) {
+                var fpOut = document.getElementById("widget-checkout")._flatpickr;
+                if (selectedDates[0] && fpOut) {
+                    var minOut = new Date(selectedDates[0]);
+                    minOut.setDate(minOut.getDate() + 1);
+                    fpOut.set("minDate", minOut);
+                }
+            }
+        });
+        flatpickr("#widget-checkout", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
+    });
+<\/script>
 <!-- FIM MOTOR DE BUSCA -->`;
 
             navigator.clipboard.writeText(codigoHTML).then(() => {
-                mostrarNotificacao("Código do Motor de Busca copiado! As cidades foram atualizadas.");
+                mostrarNotificacao("Código com calendário bonito copiado! Substitua no seu site.");
             });
         }
         function inicializarApp() { 
