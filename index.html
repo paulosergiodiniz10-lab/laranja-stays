@@ -397,6 +397,10 @@
                         if (pData) {
                             currentAgenciaId = pData.agenciaId;
                             userRole = pData.role;
+                            // VERIFICAÇÃO DE PRIMEIRO ACESSO (TROCA DE SENHA OBRIGATÓRIA)
+                            if (pData.primeiroAcesso === true) {
+                                show('modal-trocar-senha-obrigatorio');
+                            }
                         } else {
                             currentAgenciaId = user.uid;
                             userRole = 'dono';
@@ -1772,6 +1776,65 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 </tr>`);
             });
         }
+async function salvarNovaSenhaOficial() {
+            const novaSenha = val('nova-senha-oficial').trim();
+            const confirmaSenha = val('confirma-nova-senha').trim();
+            const erroDiv = el('erro-troca-senha');
+            const btn = el('btn-salvar-nova-senha');
+
+            if (!novaSenha || !confirmaSenha) {
+                erroDiv.innerText = "Preencha os dois campos de senha.";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+
+            if (novaSenha.length < 6) {
+                erroDiv.innerText = "A nova senha precisa ter no mínimo 6 caracteres.";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+
+            if (novaSenha !== confirmaSenha) {
+                erroDiv.innerText = "As senhas não coincidem. Digite novamente.";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+
+            if (novaSenha === "mudar123") {
+                erroDiv.innerText = "A nova senha precisa ser diferente da senha padrão (mudar123).";
+                erroDiv.classList.remove('hidden-view');
+                return;
+            }
+
+            btn.innerText = "Atualizando...";
+            btn.disabled = true;
+            erroDiv.classList.add('hidden-view');
+
+            try {
+                const user = auth.currentUser;
+                
+                // 1. Atualiza a senha no Firebase Auth
+                await user.updatePassword(novaSenha);
+
+                // 2. Remove a flag de primeiroAcesso no Firestore
+                await db.collection("usuarios").doc(user.uid).update({
+                    primeiroAcesso: false
+                });
+
+                hide('modal-trocar-senha-obrigatorio');
+                mostrarNotificacao("Senha alterada com sucesso! Bem-vindo.");
+                
+            } catch (error) {
+                console.error("Erro ao atualizar senha:", error);
+                if (error.code === 'auth/requires-recent-login') {
+                    erroDiv.innerText = "Sua sessão expirou. Faça login novamente com a senha 'mudar123'.";
+                } else {
+                    erroDiv.innerText = "Erro ao atualizar a senha: " + error.message;
+                }
+                erroDiv.classList.remove('hidden-view');
+                btn.innerText = "Atualizar Senha e Entrar";
+                btn.disabled = false;
+            }
     </script>
 </body>
 </html>
