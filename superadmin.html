@@ -51,7 +51,7 @@
         <!-- Sidebar -->
         <div class="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col">
             <div class="p-6 border-b border-slate-800">
-               <h1 class="text-xl font-black text-white">Temporada <span class="text-orange-500">Stays</span></h1>
+                <h1 class="text-xl font-black text-white">Temporada <span class="text-orange-500">Stays</span></h1>
                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Master Control</p>
             </div>
             <div class="p-4 flex-1">
@@ -163,18 +163,6 @@
         const auth = firebase.auth();
         const appSecundario = firebase.initializeApp(firebaseConfig, "AppCriadorDeContas");
         const authSecundario = appSecundario.auth();
-        // ---------------------------------------------------------
-// TRAVA DE SEGURANÇA DA PÁGINA
-// ---------------------------------------------------------
-auth.onAuthStateChanged(function(user) {
-  if (!user) {
-    // Se a pessoa NÃO estiver logada, chuta para a tela de login
-    window.location.replace("index.html"); 
-  } else {
-    console.log("Acesso liberado no Painel Admin!");
-  }
-});
-// ---------------------------------------------------------
 
         // ==================
         // MÁSCARAS DE FORMATAÇÃO
@@ -421,7 +409,6 @@ auth.onAuthStateChanged(function(user) {
             btn.disabled = true;
 
             if(acaoPendente === 'excluir') {
-                // Exclui a empresa do banco de dados (sistema_saas e usuarios)
                 Promise.all([
                     db.collection("sistema_saas").doc(idPendente).delete(),
                     db.collection("usuarios").doc(idPendente).delete()
@@ -434,7 +421,6 @@ auth.onAuthStateChanged(function(user) {
                     fecharConfirmacao();
                 });
             } else {
-                // Apenas muda o status para bloqueado ou ativo
                 db.collection("sistema_saas").doc(idPendente).update({ status: acaoPendente })
                 .then(() => {
                     mostrarAviso(`Status alterado com sucesso!`, "info");
