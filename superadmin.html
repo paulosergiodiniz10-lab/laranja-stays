@@ -281,20 +281,31 @@
                 return; 
             }
 
-            const senhaProvisoriaOculta = Math.random().toString(36).slice(-10) + "Aa1@";
+            // Senha padrão inicial para o primeiro acesso do cliente
+            const senhaPadraoInicial = "mudar123";
 
-            authSecundario.createUserWithEmailAndPassword(email, senhaProvisoriaOculta)
+            authSecundario.createUserWithEmailAndPassword(email, senhaPadraoInicial)
             .then(userCredential => {
                 const uid = userCredential.user.uid;
                 
+                // Registra o usuário com a trava 'primeiroAcesso: true'
                 db.collection("usuarios").doc(uid).set({
-                    email: email, role: 'dono', nomeMaster: master, whatsapp: zap, agenciaId: uid, dataCriacao: new Date().toISOString()
+                    email: email, 
+                    role: 'dono', 
+                    nomeMaster: master, 
+                    whatsapp: zap, 
+                    agenciaId: uid, 
+                    primeiroAcesso: true, // << BANDEIRA QUE ATIVA O POP-UP NO INDEX
+                    dataCriacao: new Date().toISOString()
                 });
 
                 db.collection("sistema_saas").doc(uid).set({
-                    nomeEmpresa: nome, cnpj: cnpj, status: 'ativo', dataCriacao: new Date().toISOString()
+                    nomeEmpresa: nome, 
+                    cnpj: cnpj, 
+                    status: 'ativo', 
+                    dataCriacao: new Date().toISOString()
                 }).then(() => {
-                    mostrarAviso("Empresa criada com sucesso!", "sucesso");
+                    mostrarAviso(`Empresa criada com sucesso!\n\nLogin: ${email}\nSenha Padrão: mudar123`, "sucesso");
                     document.getElementById('nova-emp-nome').value = '';
                     document.getElementById('nova-emp-cnpj').value = '';
                     document.getElementById('nova-emp-master').value = '';
