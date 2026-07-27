@@ -1823,8 +1823,8 @@ async function salvarNovaSenhaOficial() {
 
                 hide('modal-trocar-senha-obrigatorio');
                 mostrarNotificacao("Senha alterada com sucesso! Bem-vindo.");
-            }
-            catch (error) {
+                
+            } catch (error) {
                 console.error("Erro ao atualizar senha:", error);
                 if (error.code === 'auth/requires-recent-login') {
                     erroDiv.innerText = "Sua sessão expirou. Faça login novamente com a senha 'mudar123'.";
@@ -1835,10 +1835,10 @@ async function salvarNovaSenhaOficial() {
                 btn.innerText = "Atualizar Senha e Entrar";
                 btn.disabled = false;
             }
+        }
     </script>
 </body>
 </html>
-
 
 
 
