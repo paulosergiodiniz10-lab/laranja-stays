@@ -805,11 +805,45 @@ function copiarCodigoWidget() {
         let isSidebarOpen = true;
         function toggleSidebar() { isSidebarOpen = !isSidebarOpen; const sidebar = el('admin-sidebar'); const inner = el('admin-sidebar-inner'); const icon = el('icon-toggle-sidebar'); const btn = el('btn-toggle-sidebar'); if (isSidebarOpen) { sidebar.classList.remove('md:w-0', 'md:-mr-6'); sidebar.classList.add('md:w-64'); inner.classList.remove('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-left'; btn.title = 'Recolher Menu'; } else { sidebar.classList.remove('md:w-64'); sidebar.classList.add('md:w-0', 'md:-mr-6'); inner.classList.add('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-right'; btn.title = 'Expandir Menu'; } }
 
-        function carregarEmpresa() {
-            sv('emp-nome', empresaDB.nome || ''); sv('emp-cnpj', empresaDB.cnpj || ''); sv('emp-zap', empresaDB.zap || ''); sv('emp-email', empresaDB.email || ''); sv('emp-creci', empresaDB.creci || ''); sv('emp-cep', empresaDB.endereco?.cep || ''); sv('emp-cidade', empresaDB.endereco?.cidade || ''); sv('emp-uf', empresaDB.endereco?.uf || ''); sv('emp-rua', empresaDB.endereco?.rua || ''); sv('emp-numero', empresaDB.endereco?.numero || ''); sv('emp-bairro', empresaDB.endereco?.bairro || ''); sv('emp-complemento', empresaDB.endereco?.complemento || '');
+        async function carregarEmpresa() {
+            // Busca dados de fallback caso a empresa ainda não tenha preenchido
+            let dadosSuperAdmin = {};
+            let dadosUsuario = {};
+
+            if (currentAgenciaId) {
+                try {
+                    const saasSnap = await db.collection("sistema_saas").doc(currentAgenciaId).get();
+                    if (saasSnap.exists) dadosSuperAdmin = saasSnap.data();
+
+                    const userSnap = await db.collection("usuarios").doc(currentAgenciaId).get();
+                    if (userSnap.exists) dadosUsuario = userSnap.data();
+                } catch(e) {
+                    console.warn("Não foi possível carregar o fallback do SuperAdmin:", e);
+                }
+            }
+
+            // Define os valores priorizando o que foi salvo no perfil da empresa, e usando o cadastro do SuperAdmin como plano B
+            const nomeFinal = empresaDB.nome || dadosSuperAdmin.nomeEmpresa || '';
+            const cnpjFinal = empresaDB.cnpj || dadosSuperAdmin.cnpj || '';
+            const zapFinal = empresaDB.zap || dadosUsuario.whatsapp || '';
+            const emailFinal = empresaDB.email || dadosUsuario.email || '';
+
+            sv('emp-nome', nomeFinal); 
+            sv('emp-cnpj', cnpjFinal); 
+            sv('emp-zap', zapFinal); 
+            sv('emp-email', emailFinal); 
+            sv('emp-creci', empresaDB.creci || ''); 
+            sv('emp-cep', empresaDB.endereco?.cep || ''); 
+            sv('emp-cidade', empresaDB.endereco?.cidade || ''); 
+            sv('emp-uf', empresaDB.endereco?.uf || ''); 
+            sv('emp-rua', empresaDB.endereco?.rua || ''); 
+            sv('emp-numero', empresaDB.endereco?.numero || ''); 
+            sv('emp-bairro', empresaDB.endereco?.bairro || ''); 
+            sv('emp-complemento', empresaDB.endereco?.complemento || '');
+
             if(el('preview-logo')) el('preview-logo').innerHTML = empresaDB.logo ? `<img src="${empresaDB.logo}" class="w-full h-full object-contain"><div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><button type="button" onclick="removerLogoEmpresa()" class="bg-red-500 text-white w-8 h-8 rounded-full shadow hover:bg-red-600"><i class="fas fa-trash-alt text-xs"></i></button></div>` : `<i class="fas fa-image text-slate-300 text-3xl"></i>`;
             const navBrand = document.querySelector('nav .flex.items-center.cursor-pointer');
-            if(navBrand) { if(empresaDB.nome || empresaDB.logo) { let lHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" class="h-10 w-10 object-contain rounded-md mr-3">` : `<div class="bg-orange-500 p-2.5 rounded-xl mr-3 flex items-center justify-center shadow-sm"><i class="fas fa-home text-white"></i></div>`; let nHtml = empresaDB.nome ? `<span class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">${empresaDB.nome}</span>` : `<span class="text-xl sm:text-2xl font-bold text-orange-500 tracking-tight">Temporada <span class="text-slate-800">Stays</span></span>`; navBrand.innerHTML = lHtml + nHtml; } else { navBrand.innerHTML = `<div class="bg-orange-500 p-2.5 rounded-xl mr-3 flex items-center justify-center shadow-sm"><i class="fas fa-home text-white"></i></div><span class="text-xl sm:text-2xl font-bold text-orange-500 tracking-tight">Temporada <span class="text-slate-800">Stays</span></span>`; } }
+            if(navBrand) { if(nomeFinal || empresaDB.logo) { let lHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" class="h-10 w-10 object-contain rounded-md mr-3">` : `<div class="bg-orange-500 p-2.5 rounded-xl mr-3 flex items-center justify-center shadow-sm"><i class="fas fa-home text-white"></i></div>`; let nHtml = nomeFinal ? `<span class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">${nomeFinal}</span>` : `<span class="text-xl sm:text-2xl font-bold text-orange-500 tracking-tight">Temporada <span class="text-slate-800">Stays</span></span>`; navBrand.innerHTML = lHtml + nHtml; } else { navBrand.innerHTML = `<div class="bg-orange-500 p-2.5 rounded-xl mr-3 flex items-center justify-center shadow-sm"><i class="fas fa-home text-white"></i></div><span class="text-xl sm:text-2xl font-bold text-orange-500 tracking-tight">Temporada <span class="text-slate-800">Stays</span></span>`; } }
             const bannerVitrine = document.querySelector('#tela-vitrine > div.bg-orange-500') || document.querySelector('#tela-vitrine > div[style*="background-color"]'); const btnBuscarVitrine = document.querySelector('#tela-vitrine button.bg-slate-900') || document.querySelector('#tela-vitrine button[style*="background-color"]');
             if (bannerVitrine) { if (empresaDB.corTema) { bannerVitrine.style.backgroundColor = empresaDB.corTema; bannerVitrine.classList.remove('bg-orange-500'); if (btnBuscarVitrine) { btnBuscarVitrine.style.backgroundColor = '#1e293b'; btnBuscarVitrine.classList.remove('bg-slate-900', 'hover:bg-black'); } } else { bannerVitrine.style.backgroundColor = ''; bannerVitrine.classList.add('bg-orange-500'); if (btnBuscarVitrine) { btnBuscarVitrine.style.backgroundColor = ''; btnBuscarVitrine.classList.add('bg-slate-900', 'hover:bg-black'); } } }
         }
