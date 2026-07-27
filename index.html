@@ -996,7 +996,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             const texto = input.value.trim();
             if(!texto) { mostrarAlerta("Cole pelo menos um link."); return; }
             
-            // O segredo: corta o texto toda vez que tiver uma quebra de linha, espaço ou vírgula
+            // Separa os links por linha, vírgula ou espaço
             const links = texto.split(/[\n,\s]+/).filter(url => url.trim().startsWith('http'));
             
             if(links.length === 0) { 
@@ -1006,7 +1006,7 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             
             let adicionadas = 0;
             links.forEach(url => {
-                if(fotosEmCriacao.length < 10) { // Respeita o limite máximo de fotos do sistema
+                if(fotosEmCriacao.length < 20) { // Trava atualizada para 20 fotos!
                     fotosEmCriacao.push(url.trim());
                     adicionadas++;
                 }
@@ -1017,10 +1017,9 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 renderizarPreviewFotos(); 
                 mostrarNotificacao(`${adicionadas} foto(s) adicionada(s) com sucesso!`);
             } else {
-                mostrarAlerta("Limite máximo de 10 fotos atingido.");
+                mostrarAlerta("Limite máximo de 20 fotos atingido.");
             }
         }
-
         function processarFotos(e) { 
             const f = e.target.files; 
             if(!f || !f.length) return; 
