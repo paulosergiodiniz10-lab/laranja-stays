@@ -1478,34 +1478,90 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
         function renderizarAcompanhantes() { const cont = el('container-lista-acompanhantes'); const msg = el('msg-sem-acompanhantes'); if(!cont) return; cont.innerHTML=''; if(!acompanhantesTemp.length){ if(msg) msg.classList.remove('hidden-view'); return; } if(msg) msg.classList.add('hidden-view'); acompanhantesTemp.forEach(a => cont.insertAdjacentHTML('beforeend', `<div class="bg-white p-3 rounded-lg border border-slate-200 relative pr-10 mb-2"><button type="button" onclick="removerAcompanhanteAdmin(${a.id})" class="absolute top-1/2 -translate-y-1/2 right-3 text-red-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><input type="text" placeholder="Nome" value="${a.nome}" oninput="atualizarAcompanhanteTemp(${a.id}, 'nome', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="text" placeholder="CPF" value="${a.cpf}" oninput="mascaraCpfCnpj(this);atualizarAcompanhanteTemp(${a.id}, 'cpf', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="date" value="${a.dataNasc}" onchange="atualizarAcompanhanteTemp(${a.id}, 'dataNasc', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium text-slate-500"></div></div></div>`)); }
 
         function salvarReservaManual() {
-            const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
-            if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
-            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
-            const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
+            const imId = parseInt(val('reserva-imovel-select')); 
+            const rId = val('reserva-id'); 
+            const ci = parseInputDateSafe(val('reserva-checkin')); 
+            const co = parseInputDateSafe(val('reserva-checkout')); 
+            const st = val('reserva-status'); 
+            const vT = parseFloat(val('reserva-valor')) || 0;
+            
+            if(!imId || !ci || !co) { mostrarAlerta("Preencha imóvel e datas."); return; } 
+            if(new Date(ci) >= new Date(co)){ mostrarAlerta("A data de saída deve ser maior que a data de entrada."); return; }
+            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado! Este período já está ocupado."); return; }
+            
+            const im = imoveisDB.find(i => i.id == imId); 
+            if(!im.reservas) im.reservas = [];
+            
             let cap = parseInt(im.capacidadeTotal) || 10;
-    let totalHospedesCadastrados = 1 + acompanhantesTemp.length; // 1 titular + acompanhantes
-    if (st !== 'bloqueio' && st !== 'proprietario' && st !== 'cancelada') {
-        if (totalHospedesCadastrados > cap) {
-            mostrarAlerta(`Atenção: A capacidade máxima do imóvel é de <b>${cap} pessoas</b>.<br><br>Você adicionou <b>${totalHospedesCadastrados} pessoas</b> na ficha (Titular + Acompanhantes). Remova o excesso para salvar.`);
-            return;
-        }
-        // NOVA BARREIRA DE VALOR ZERO NA HORA DE SALVAR
-        if (vT <= 0) {
-            mostrarAlerta("Não é possível salvar uma locação com valor <b>R$ 0,00</b>.<br><br>Verifique se há tarifas cadastradas para este período no calendário.");
-            return;
-        }
-    }
-            let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
-            if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
-            let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
-            let vPago = rOrig ? (rOrig.valorPago!==undefined?rOrig.valorPago:(rOrig.statusPagamento==='pago'?rOrig.valorTotal:0)) : 0;
-            let vTF = vT; if(st==='devolucao'||st==='cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada'))||0);
-            let sF = st; if(st==='cancelada') sF='cancelada'; else if(vTF>vPago && vPago>0) sF='pendente'; else if(vPago>vTF) sF='devolucao'; else if(st==='pago') vPago=vTF;
-            const obj = { id: rId?parseInt(rId):Date.now(), dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), numeroReserva: numRes, imovelId: imId, checkin: ci, checkout: co, statusPagamento: sF, formaPagamento: fP, valorTotal: vTF, valorPago: vPago, titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)) };
-            if(rId) { let idx = im.reservas.findIndex(x=>x.id==rId); if(idx>-1) im.reservas[idx]=obj; } else im.reservas.push(obj);
-            salvarBancoNoStorage(); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); renderizarVitrine(imoveisDB); fecharModalReserva(); mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
-        }
+            let totalHospedesCadastrados = 1 + acompanhantesTemp.length; 
+            
+            if (st !== 'bloqueio' && st !== 'proprietario' && st !== 'cancelada') {
+                if (totalHospedesCadastrados > cap) {
+                    mostrarAlerta(`Atenção: A capacidade máxima do imóvel é de <b>${cap} pessoas</b>.<br><br>Você adicionou <b>${totalHospedesCadastrados} pessoas</b> na ficha (Titular + Acompanhantes). Remova o excesso para salvar.`);
+                    return;
+                }
+                if (vT <= 0) {
+                    mostrarAlerta("Não é possível salvar uma locação com valor <b>R$ 0,00</b>.<br><br>Verifique se há tarifas cadastradas para este período no calendário.");
+                    return;
+                }
+            }
 
+            let numRes = null; 
+            if(rId) { let r = im.reservas.find(x => x.id == rId); if(r) numRes = r.numeroReserva; }
+            if(!numRes) { 
+                let mx = 100; 
+                imoveisDB.forEach(i => { if(i.reservas) i.reservas.forEach(r => { if(r.numeroReserva > mx) mx = r.numeroReserva; }); }); 
+                numRes = mx + 1; 
+            }
+            
+            let rOrig = rId ? im.reservas.find(x => x.id == rId) : null; 
+            let fP = rOrig?.formaPagamento || null;
+            let vPago = rOrig ? (rOrig.valorPago !== undefined ? rOrig.valorPago : (rOrig.statusPagamento === 'pago' ? rOrig.valorTotal : 0)) : 0;
+            let vTF = vT; 
+            
+            if(st === 'devolucao' || st === 'cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada')) || 0);
+            
+            let sF = st; 
+            if(st === 'cancelada') sF = 'cancelada'; 
+            else if(vTF > vPago && vPago > 0) sF = 'pendente'; 
+            else if(vPago > vTF) sF = 'devolucao'; 
+            else if(st === 'pago') vPago = vTF;
+            
+            // Lógica de Autoria (Mantém quem criou, ou grava o logado agora)
+            let criador = rOrig?.criadoPor || window.nomeUsuarioLogado || 'Gestor';
+            let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || 'admin';
+
+            const obj = { 
+                id: rId ? parseInt(rId) : Date.now(), 
+                dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), 
+                numeroReserva: numRes, 
+                imovelId: imId, 
+                checkin: ci, 
+                checkout: co, 
+                statusPagamento: sF, 
+                formaPagamento: fP, 
+                valorTotal: vTF, 
+                valorPago: vPago, 
+                titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, 
+                acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)),
+                criadoPor: criador, 
+                criadoPorUid: criadorUid 
+            };
+            
+            if(rId) { 
+                let idx = im.reservas.findIndex(x => x.id == rId); 
+                if(idx > -1) im.reservas[idx] = obj; 
+            } else {
+                im.reservas.push(obj);
+            }
+            
+            salvarBancoNoStorage(); 
+            if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); 
+            if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); 
+            renderizarVitrine(imoveisDB); 
+            fecharModalReserva(); 
+            mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
+        }
         function excluirReservaConfirmacao() { const imId = val('reserva-imovel-select'); const rId = val('reserva-id'); const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas){ im.reservas=im.reservas.filter(r=>r.id!=rId); salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalReserva(); mostrarNotificacao("Ficha Apagada!"); } }
 
         function abrirModalPagamento(imId, rId) {
