@@ -1618,7 +1618,34 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             let primeiroNome = nome.split(' ')[0]; let ap = im.numeroApto ? `\n👉 Apto ${im.numeroApto}` : ''; let pg = im.pagamento ? `\n\n👉 Regras de pagamento:\n- ${im.pagamento}` : '';
             let txt = `Olá, *${primeiroNome}*! Tudo bem?\n\nSegue seu orçamento\n\n*${im.nome}*${ap}\n👉 Entrada: ${ci}\n👉 Saída: ${co}\n👉 Hóspedes: ${formatarNumero(val('orc-hospedes'))}\n✅ Valor do pacote: R$ ${parseFloat(val('orc-valor')).toLocaleString('pt-BR',{minimumFractionDigits:2})}${pg}\n\n*Orçamento sujeito a disponibilidade.*\n\nQualquer dúvida estou à disposição.\n*${empresaDB.nome||'Temporada Stays'}*\nAtendimento Comercial\n${empresaDB.zap||''}`;
             const idEdit = val('orc-id');
-            if (idEdit) { const idx = orcamentosDB.findIndex(x => x.id == idEdit); if (idx > -1) { orcamentosDB[idx].clienteNome = nome; orcamentosDB[idx].clienteZap = zap; orcamentosDB[idx].txtCopia = txt; } } else { orcamentosDB.unshift({ id:Date.now(), dataCriacao:new Date().toISOString(), clienteNome:nome, clienteZap:zap, imovelId:im.id, nomeImovel:im.nome, checkin:parseInputDateSafe(val('orc-checkin')), checkout:parseInputDateSafe(val('orc-checkout')), hospedes:val('orc-hospedes'), valorTotal:val('orc-valor'), txtCopia: txt }); }
+            
+            let criadorUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
+            let criadorNome = window.nomeUsuarioLogado || 'Gestor';
+
+            if (idEdit) { 
+                const idx = orcamentosDB.findIndex(x => x.id == idEdit); 
+                if (idx > -1) { 
+                    orcamentosDB[idx].clienteNome = nome; 
+                    orcamentosDB[idx].clienteZap = zap; 
+                    orcamentosDB[idx].txtCopia = txt; 
+                } 
+            } else { 
+                orcamentosDB.unshift({ 
+                    id: Date.now(), 
+                    dataCriacao: new Date().toISOString(), 
+                    clienteNome: nome, 
+                    clienteZap: zap, 
+                    imovelId: im.id, 
+                    nomeImovel: im.nome, 
+                    checkin: parseInputDateSafe(val('orc-checkin')), 
+                    checkout: parseInputDateSafe(val('orc-checkout')), 
+                    hospedes: val('orc-hospedes'), 
+                    valorTotal: val('orc-valor'), 
+                    txtCopia: txt,
+                    criadoPorUid: criadorUid,
+                    criadoPorNome: criadorNome
+                }); 
+            }
             salvarBancoNoStorage(); fecharModalGerarOrcamento(); if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = ''; mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
         }
 
@@ -1627,7 +1654,20 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
         function renderListaOrc() {
             const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
             if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
-            orcamentosDB.forEach(o => {
+            
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
+
+            let listaFiltrada = orcamentosDB.filter(o => {
+                if (ehParceiro) {
+                    return o.criadoPorUid === meuUid;
+                }
+                return true;
+            });
+
+            if(!listaFiltrada.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Nenhum orçamento encontrado no seu histórico.</td></tr>'; return; }
+
+            listaFiltrada.forEach(o => {
                 let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
                 tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="orcamentosDB=orcamentosDB.filter(x=>x.id!==${o.id});salvarBancoNoStorage();renderListaOrc();" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
             });
