@@ -1634,7 +1634,16 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
         }
 
         // ================= DESPESAS E DRE =================
-        function povoarFiltrosDespesas() { const s = el('filtro-imovel-despesas'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
+        function povoarFiltrosDespesas() { 
+            const s = el('filtro-imovel-despesas'); 
+            if(s){ 
+                s.innerHTML='<option value="">Selecione...</option>'; 
+                imoveisDB.forEach(i=>{ 
+                    let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
+                    s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); 
+                }); 
+            } 
+        }
         function carregarListaDespesas() {
             if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; const iId=parseInt(val('filtro-imovel-despesas')); const tb=el('tbody-aba-despesas');
             if(!iId) { show('placeholder-despesas'); hide('tabela-container-despesas'); return; }
@@ -1645,7 +1654,21 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="imoveisDB.find(i=>i.id==${im.id}).despesas=imoveisDB.find(i=>i.id==${im.id}).despesas.filter(x=>x.id!=${d.id});salvarBancoNoStorage();carregarListaDespesas()" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
         }
         function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
-        function abrirModalDespesa() { sv('despesa-id',''); sv('despesa-data',''); sv('despesa-valor',''); povoarSelectCategorias(); sv('despesa-categoria',categoriasDB[0]); toggleCampoOutrosDespesa(); const s=el('despesa-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend',`<option value="${i.id}">${i.nome}</option>`)); if(val('filtro-imovel-despesas')) s.value=val('filtro-imovel-despesas'); } show('modal-nova-despesa'); }
+        function abrirModalDespesa() { 
+            sv('despesa-id',''); sv('despesa-data',''); sv('despesa-valor',''); 
+            povoarSelectCategorias(); sv('despesa-categoria',categoriasDB[0]); 
+            toggleCampoOutrosDespesa(); 
+            const s=el('despesa-imovel-select'); 
+            if(s){ 
+                s.innerHTML='<option value="">Selecione...</option>'; 
+                imoveisDB.forEach(i=>{ 
+                    let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
+                    s.insertAdjacentHTML('beforeend',`<option value="${i.id}">${nm}</option>`); 
+                }); 
+                if(val('filtro-imovel-despesas')) s.value=val('filtro-imovel-despesas'); 
+            } 
+            show('modal-nova-despesa'); 
+        }
         function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id',d.id); sv('despesa-imovel-select',imId); sv('despesa-data',d.data); sv('despesa-categoria',d.categoria||'Outros'); toggleCampoOutrosDespesa(); if(d.categoria==='Outros') sv('despesa-desc-outros',d.descricao); sv('despesa-valor',d.valor); }
         function fecharModalDespesa() { hide('modal-nova-despesa'); }
         function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-desc-outros'), vl=parseFloat(val('despesa-valor')), id=val('despesa-id'); if(!im||!dt||!vl){mostrarAlerta("Preencha os dados básicos.");return;} const imov = imoveisDB.find(i=>i.id==im); if(!imov.despesas)imov.despesas=[]; const obj={id:id?parseInt(id):Date.now(), data:dt, categoria:ct, descricao:ct==='Outros'?ds:ct, valor:vl}; if(id){let ix=imov.despesas.findIndex(x=>x.id==id); if(ix>-1)imov.despesas[ix]=obj;} else imov.despesas.push(obj); salvarBancoNoStorage(); fecharModalDespesa(); carregarListaDespesas(); mostrarNotificacao("Despesa Salva!"); }
@@ -1658,7 +1681,16 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
         function editarNomeCategoria(i) { const novoNome = prompt("Editar categoria:", categoriasDB[i]); if(novoNome && novoNome.trim() !== "" && !categoriasDB.includes(novoNome.trim())) { categoriasDB[i] = novoNome.trim(); salvarBancoNoStorage(); renderizarListaCategorias(); povoarSelectCategorias(); } }
         function toggleCampoOutrosDespesa() { if(el('bloco-despesa-outros')) el('bloco-despesa-outros').classList[val('despesa-categoria')==='Outros'?'remove':'add']('hidden-view'); }
 
-        function povoarFiltrosResultados() { const s = el('fin-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i=>s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${i.nome}</option>`)); } }
+        function povoarFiltrosResultados() { 
+            const s = el('fin-imovel-select'); 
+            if(s){ 
+                s.innerHTML='<option value="">Selecione...</option>'; 
+                imoveisDB.forEach(i=>{ 
+                    let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
+                    s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); 
+                }); 
+            } 
+        }
         
         function gerarRelatorioFinanceiro() {
             const iId = val('fin-imovel-select'); const mSt = val('fin-mes-select'); if(!iId || !mSt) return;
