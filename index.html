@@ -357,8 +357,8 @@
                         </div>
                         <div class="p-6 overflow-y-auto custom-scroll flex-1">
                             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
-                                    <div class="col-span-1">
+                                <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4">
+                                    <div class="col-span-1 sm:col-span-2 md:col-span-1">
                                         <label class="block text-xs font-bold text-slate-600 mb-1">Nome Completo</label>
                                         <input type="text" id="novo-equipe-nome" placeholder="Nome do parceiro" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
                                     </div>
@@ -367,18 +367,21 @@
                                         <input type="text" id="novo-equipe-zap" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
                                     </div>
                                     <div class="col-span-1">
-                                        <label class="block text-xs font-bold text-slate-600 mb-1">E-mail do Parceiro</label>
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">E-mail</label>
                                         <input type="email" id="novo-equipe-email" placeholder="corretor@email.com" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label class="block text-xs font-bold text-slate-600 mb-1">CRECI (Opcional)</label>
+                                        <input type="text" id="novo-equipe-creci" placeholder="Ex: 1345212" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
                                     </div>
                                     <div class="col-span-1">
                                         <label class="block text-xs font-bold text-slate-600 mb-1">Perfil</label>
                                        <select id="novo-equipe-perfil" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-white">
-    <option value="parceiro">Corretor / Parceiro</option>
-    <option value="dono">Gestor / Admin</option>
-</select>
+                                            <option value="parceiro">Corretor / Parceiro</option>
+                                            <option value="dono">Gestor / Admin</option>
+                                        </select>
                                     </div>
-                                </div>
-                                <div class="flex justify-end gap-2">
+                                </div>                                <div class="flex justify-end gap-2">
                                     <button id="btn-cancelar-edicao-equipe" onclick="cancelarEdicaoEquipe()" class="hidden-view bg-slate-200 text-slate-700 hover:bg-slate-300 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-all">Cancelar</button>
                                     <button id="btn-salvar-equipe" onclick="salvarMembroEquipe()" class="bg-slate-800 text-white hover:bg-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 transition-all"><i class="fas fa-plus mr-2"></i> Adicionar</button>
                                 </div>
@@ -673,6 +676,7 @@
             const zap = val('novo-equipe-zap').trim();
             const email = val('novo-equipe-email').trim().toLowerCase();
             const role = val('novo-equipe-perfil');
+            const creci = val('novo-equipe-creci').trim();
             
             if(!nome || !email) { mostrarAlerta("Nome e E-mail são obrigatórios."); return; }
             if(!empresaDB.equipe) empresaDB.equipe = [];
@@ -682,11 +686,11 @@
             
             if (editandoMembroIndex !== null) {
                 let emailAntigo = empresaDB.equipe[editandoMembroIndex].email;
-                empresaDB.equipe[editandoMembroIndex] = { nome: nome, zap: zap, email: email, role: role };
+                empresaDB.equipe[editandoMembroIndex] = { nome: nome, zap: zap, email: email, role: role, creci: creci };
                 if(email !== emailAntigo) { try { await db.collection("usuarios_pendentes").doc(emailAntigo).delete(); } catch(e){} }
                 mostrarNotificacao("Parceiro atualizado!");
             } else {
-                empresaDB.equipe.push({ nome: nome, zap: zap, email: email, role: role });
+                empresaDB.equipe.push({ nome: nome, zap: zap, email: email, role: role, creci: creci });
                 mostrarNotificacao("Parceiro adicionado com sucesso!");
             }
             
@@ -702,6 +706,7 @@
             const membro = empresaDB.equipe[index];
             sv('novo-equipe-nome', membro.nome || ''); sv('novo-equipe-zap', membro.zap || '');
             sv('novo-equipe-email', membro.email || ''); sv('novo-equipe-perfil', membro.role || 'parceiro');
+            sv('novo-equipe-creci', membro.creci || '');
             
             el('btn-salvar-equipe').innerHTML = '<i class="fas fa-save mr-2"></i> Salvar';
             el('btn-salvar-equipe').classList.replace('bg-slate-800', 'bg-blue-600');
@@ -711,13 +716,12 @@
 
         function cancelarEdicaoEquipe() {
             editandoMembroIndex = null;
-            sv('novo-equipe-nome', ''); sv('novo-equipe-zap', ''); sv('novo-equipe-email', ''); sv('novo-equipe-perfil', 'parceiro');
+            sv('novo-equipe-nome', ''); sv('novo-equipe-zap', ''); sv('novo-equipe-email', ''); sv('novo-equipe-perfil', 'parceiro'); sv('novo-equipe-creci', '');
             el('btn-salvar-equipe').innerHTML = '<i class="fas fa-plus mr-2"></i> Adicionar';
             el('btn-salvar-equipe').classList.replace('bg-blue-600', 'bg-slate-800');
             el('btn-salvar-equipe').classList.replace('hover:bg-blue-700', 'hover:bg-slate-900');
             hide('btn-cancelar-edicao-equipe');
         }
-
         async function removerMembroEquipe(index) {
             if(!confirm("Tem certeza que deseja remover o acesso deste parceiro? Ele não poderá mais acessar o sistema.")) return;
             
@@ -998,15 +1002,16 @@ function montarDropdownHospedesOrcamento() {
                 const corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
                 if (corretor) {
                     nEmp = corretor.nome; // Nome do corretor no topo
-                    docEmp = "Corretor(a) Parceiro(a)"; // Substitui CNPJ/CRECI da empresa
-                    endEmp = ""; // Esconde o endereço da empresa para não ir cliente lá
+                    
+                    // Se o corretor tiver CRECI cadastrado, mostra ele. Senão, mostra apenas que é Parceiro.
+                    docEmp = corretor.creci ? `Corretor(a) Parceiro(a) - CRECI: ${corretor.creci}` : "Corretor(a) Parceiro(a)";
+                    
+                    endEmp = ""; // Esconde o endereço da empresa
                     cidEmp = corretor.zap ? `WhatsApp: ${corretor.zap}` : ''; // Apenas Zap do corretor
                     
-                    // Remove o logo da empresa e coloca as iniciais do corretor com uma cor bacana
                     let iniciais = corretor.nome.substring(0, 2).toUpperCase();
                     lgHtml = `<div style="width:80px; height:80px; background:#fbd38d; display:flex; align-items:center; justify-content:center; color:#9a3412; font-size:24px; border-radius:8px; font-weight:bold; text-transform:uppercase;">${iniciais}</div>`;
                     
-                    // Assinatura do rodapé exclusiva dele
                     assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
                 }
             }
