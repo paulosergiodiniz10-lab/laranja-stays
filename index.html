@@ -1204,19 +1204,23 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
             if (diaCheckinTarifa) {
                 maiorRegraMinNoites = diaCheckinTarifa.minNoites || 1;
                 
-                // Checa se os dias anteriores eram o início do mesmo pacote
+                // Só aplica a verificação retroativa se o próprio dia do check-in exigir mais de 1 noite
+                let minNoitesDiaCheckin = diaCheckinTarifa.minNoites || 1;
+                
                 let inicioSugerido = new Date(dI);
-                for (let retro = 1; retro < 7; retro++) {
-                    let dRetro = new Date(dI);
-                    dRetro.setDate(dRetro.getDate() - retro);
-                    let strRetro = formatarDataLocalISO(dRetro);
-                    let tarifaRetro = im.calendario.find(x => x.data === strRetro);
-                    
-                    if (tarifaRetro && tarifaRetro.nome === diaCheckinTarifa.nome && tarifaRetro.minNoites > retro) {
-                        inicioSugerido = dRetro;
-                        maiorRegraMinNoites = tarifaRetro.minNoites;
-                    } else {
-                        break;
+                if (minNoitesDiaCheckin > 1) {
+                    for (let retro = 1; retro < 7; retro++) {
+                        let dRetro = new Date(dI);
+                        dRetro.setDate(dRetro.getDate() - retro);
+                        let strRetro = formatarDataLocalISO(dRetro);
+                        let tarifaRetro = im.calendario.find(x => x.data === strRetro);
+                        
+                        if (tarifaRetro && tarifaRetro.nome === diaCheckinTarifa.nome && tarifaRetro.minNoites > retro) {
+                            inicioSugerido = dRetro;
+                            maiorRegraMinNoites = tarifaRetro.minNoites;
+                        } else {
+                            break;
+                        }
                     }
                 }
 
@@ -1258,7 +1262,6 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 bloqueioMinNoites: quebrouMinNoites 
             };
         }
-
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
