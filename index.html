@@ -2012,33 +2012,6 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 mudarAbaInternaAdmin('imoveis');
             }
         }
-        // ASSINAR RESERVA COM NOME DO CORRETOR
-        function salvarReservaManual() {
-            const imId=parseInt(val('reserva-imovel-select')); const rId=val('reserva-id'); const ci=parseInputDateSafe(val('reserva-checkin')); const co=parseInputDateSafe(val('reserva-checkout')); const st=val('reserva-status'); const vT=parseFloat(val('reserva-valor'))||0;
-            if(!imId||!ci||!co) { mostrarAlerta("Preencha imóvel e datas."); return; } if(new Date(ci)>=new Date(co)){ mostrarAlerta("Saída > Entrada."); return; }
-            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado."); return; }
-            const im = imoveisDB.find(i=>i.id==imId); if(!im.reservas) im.reservas=[];
-            let numRes = null; if(rId) { let r = im.reservas.find(x=>x.id==rId); if(r) numRes=r.numeroReserva; }
-            if(!numRes) { let mx=100; imoveisDB.forEach(i=>{if(i.reservas) i.reservas.forEach(r=>{if(r.numeroReserva>mx)mx=r.numeroReserva;});}); numRes=mx+1; }
-            let rOrig = rId ? im.reservas.find(x=>x.id==rId) : null; let fP = rOrig?.formaPagamento||null;
-            let vPago = rOrig ? (rOrig.valorPago!==undefined?rOrig.valorPago:(rOrig.statusPagamento==='pago'?rOrig.valorTotal:0)) : 0;
-            let vTF = vT; if(st==='devolucao'||st==='cancelada') vTF = vT + (parseFloat(val('reserva-valor-multa-calculada'))||0);
-            let sF = st; if(st==='cancelada') sF='cancelada'; else if(vTF>vPago && vPago>0) sF='pendente'; else if(vPago>vTF) sF='devolucao'; else if(st==='pago') vPago=vTF;
-            
-            // Mantém o autor original se for edição, senão usa o atual
-            let criador = rOrig?.criadoPor || window.nomeUsuarioLogado || 'Gestor';
-            let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || 'admin';
-
-            const obj = { 
-                id: rId?parseInt(rId):Date.now(), dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), numeroReserva: numRes, imovelId: imId, checkin: ci, checkout: co, statusPagamento: sF, formaPagamento: fP, valorTotal: vTF, valorPago: vPago, 
-                titular: { nome: val('reserva-titular-nome'), cpf: val('reserva-titular-cpf'), dataNasc: val('reserva-titular-nasc'), zap: val('reserva-titular-zap'), email: val('reserva-titular-email') }, 
-                acompanhantes: JSON.parse(JSON.stringify(acompanhantesTemp)),
-                criadoPor: criador, criadoPorUid: criadorUid // SALVA A AUTORIA
-            };
-            if(rId) { let idx = im.reservas.findIndex(x=>x.id==rId); if(idx>-1) im.reservas[idx]=obj; } else im.reservas.push(obj);
-            salvarBancoNoStorage(); if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); renderizarVitrine(imoveisDB); fecharModalReserva(); mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
-        }
-
         // TABELA E FILTROS DE CORRETOR (EXCEL INTEGRADAS)
         function renderizarListaReservasAdmin() {
             const tb = el('lista-reservas-tbody'); if(!tb) return; tb.innerHTML=''; let lista=[];
