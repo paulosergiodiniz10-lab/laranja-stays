@@ -1330,9 +1330,6 @@ let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-i
                 return; 
             }
 
-            // -----------------------------------------------------------
-            // MAGIA DA ALEATORIEDADE: Embaralha os imóveis a cada acesso!
-            // -----------------------------------------------------------
             let listaEmbaralhada = [...lista].sort(() => Math.random() - 0.5);
                     
             listaEmbaralhada.forEach(im => {
