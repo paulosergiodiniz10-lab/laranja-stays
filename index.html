@@ -2464,41 +2464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
             }
-        // ================= CONTROLE DE VISIBILIDADE DO CORRETOR / PARCEIRO =================
-function aplicarPermissoesParceiro() {
-    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-
-    // 1. Oculta o botão "Meus Imóveis" no menu lateral para o corretor
-    const menus = document.querySelectorAll('button, a, div, li');
-    menus.forEach(el => {
-        if (el.textContent && el.textContent.trim().includes('Meus Imóveis')) {
-            let container = el.closest('li') || el.closest('a') || el;
-            if (container) container.style.display = ehParceiro ? 'none' : 'flex';
-        }
-    });
-
-    // 2. Garante que a aba "Orçamentos" esteja visível
-    menus.forEach(el => {
-        if (el.textContent && el.textContent.trim().includes('Orçamentos')) {
-            let container = el.closest('li') || el.closest('a') || el;
-            if (container) container.style.display = 'flex';
-        }
-    });
-
-    // 3. Se o corretor tentar abrir a tela de imóveis, redireciona para o Mapa de Reservas
-    if (ehParceiro) {
-        const blocoImoveis = el('view-imoveis') || el('sec-imoveis');
-        if (blocoImoveis && !blocoImoveis.classList.contains('hidden')) {
-            if (typeof mudarAbaPainel === 'function') mudarAbaPainel('mapa');
-        }
-    }
-}
-
-// Executa automaticamente ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(aplicarPermissoesParceiro, 500);
-});
-        // ================= FIX GLOBAL PARA IDENTIFICAÇÃO DO CORRETOR =================
+       // ================= FIX GLOBAL PARA IDENTIFICAÇÃO DO CORRETOR =================
 function capturarDadosCriadorReserva() {
     let cUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : 'admin');
     let cNome = 'Gestor';
@@ -2510,15 +2476,40 @@ function capturarDadosCriadorReserva() {
     }
 
     return { criadoPorUid: cUid, criadoPor: cNome };
-}// ================= CONTROLE DE VISIBILIDADE DO CORRETOR =================
-function aplicarEstiloParceiroCSS() {
-    if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-        document.body.classList.add('role-parceiro');
-    } else {
-        document.body.classList.remove('role-parceiro');
+}
+
+// ================= CONTROLE DEFINITIVO DO PARCEIRO / CORRETOR =================
+function aplicarRegrasVisaoParceiro() {
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+
+    if (!ehParceiro) return;
+
+    // 1. Procura e oculta botões do menu que dizem "Meus Imóveis"
+    const elementosMenu = document.querySelectorAll('a, button, div, li, span');
+    elementosMenu.forEach(el => {
+        if (el.children.length === 0 && el.textContent && el.textContent.trim() === 'Meus Imóveis') {
+            let containerBtn = el.closest('button') || el.closest('a') || el.closest('li') || el.parentElement;
+            if (containerBtn) {
+                containerBtn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    });
+
+    // 2. Se a tela atual for de imóveis, redireciona o parceiro para o Mapa de Reservas
+    const painelImoveis = document.getElementById('view-imoveis') || document.getElementById('sec-imoveis');
+    if (typeof mudarAbaPainel === 'function') {
+        if (painelImoveis && !painelImoveis.classList.contains('hidden')) {
+            mudarAbaPainel('mapa');
+        }
     }
 }
-document.addEventListener('DOMContentLoaded', aplicarEstiloParceiroCSS);
+
+// Executa para garantir carregamento dinâmico
+document.addEventListener('DOMContentLoaded', () => {
+    aplicarRegrasVisaoParceiro();
+    setTimeout(aplicarRegrasVisaoParceiro, 300);
+    setTimeout(aplicarRegrasVisaoParceiro, 800);
+});
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
