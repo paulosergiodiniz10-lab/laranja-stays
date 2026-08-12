@@ -1074,12 +1074,12 @@ function montarDropdownHospedesOrcamento() {
     // Mapeamento dinâmico para Regras e Políticas específicas do Imóvel
     // Busca inteligente de regras e políticas em qualquer chave do imóvel ou da empresa
     let polCanc = im.voucherPolCancelamento || im.politicaCancelamento || im.polCancelamento || im.voucherPolCanc || im.cancelamento || im.politica || empresaDB.voucherPolCancelamento || empresaDB.politicaCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
-    let polInfo = im.voucherPolInfo || im.regrasCasa || im.regrasImovel || im.regras || im.voucherRegras || im.informacoes || im.info || empresaDB.regrasImovel || empresaDB.voucherPolInfo || empresaDB.regrasCasa || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+    let polInfo = im.voucherPolInfo || im.voucherRegrasCasa || im.regrasCasa || im.regrasImovel || im.regras || im.voucherRegras || im.observacoes || im.informacoes || im.info || empresaDB.regrasImovel || empresaDB.voucherPolInfo || empresaDB.regrasCasa || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
 
     // Se o imóvel possuir um sub-objeto "voucher" ou "regras"
     if (im.voucher) {
         polCanc = im.voucher.polCancelamento || im.voucher.politicaCancelamento || im.voucher.cancelamento || polCanc;
-        polInfo = im.voucher.polInfo || im.voucher.regrasCasa || im.voucher.regras || im.voucher.info || polInfo;
+        polInfo = im.voucher.polInfo || im.voucher.regrasCasa || im.voucher.voucherRegrasCasa || im.voucher.regras || im.voucher.info || polInfo;
     }
 
     if (typeof polCanc === 'string') polCanc = polCanc.replace(/\r?\n/g, '<br>');
