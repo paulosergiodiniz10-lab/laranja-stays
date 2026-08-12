@@ -1918,13 +1918,13 @@ function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopi
         }
         function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id',d.id); sv('despesa-imovel-select',imId); sv('despesa-data',d.data); sv('despesa-categoria',d.categoria||'Outros'); toggleCampoOutrosDespesa(); if(d.categoria==='Outros') sv('despesa-desc-outros',d.descricao); sv('despesa-valor',d.valor); }
         function fecharModalDespesa() { hide('modal-nova-despesa'); }
-        function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-desc-outros'), vl=parseFloat(val('despesa-valor')), id=val('despesa-id'); if(!im||!dt||!vl){mostrarAlerta("Preencha os dados básicos.");return;} const imov = imoveisDB.find(i=>i.id==im); if(!imov.despesas)imov.despesas=[]; const obj={id:id?parseInt(id):Date.now(), data:dt, categoria:ct, descricao:ct==='Outros'?ds:ct, valor:vl}; if(id){let ix=imov.despesas.findIndex(x=>x.id==id); if(ix>-1)imov.despesas[ix]=obj;} else imov.despesas.push(obj); salvarBancoNoStorage(); fecharModalDespesa(); carregarListaDespesas(); mostrarNotificacao("Despesa Salva!"); }
+        function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-descricao'), vl=parseFloat(val('despesa-valor')); if(!im||!dt||!vl){alert('Preencha os campos obrigatórios!');return;} let objIm=imoveisDB.find(i=>i.id==im); if(!objIm)return; let id=val('despesa-id'); if(id){ let d=objIm.despesas.find(x=>x.id==id); if(d){d.data=dt; d.categoria=ct; d.descricao=ds; d.valor=vl;} } else { objIm.despesas.push({id:Date.now().toString(), data:dt, categoria:ct, descricao:ds, valor:vl}); } salvarBancoNoStorage(); fecharModalDespesa(); renderizarDespesas(); mostrarNotificacao("Despesa salva!"); }
 
-        function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(categoriasDB.includes(v))s.value=v; }
-        function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
-        function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
-        function deletarCategoria(index) {
-            confirmarExclusao(() => {
+function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(v)s.value=v; }
+function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
+function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
+function deletarCategoria(index) {
+    confirmarExclusao(() => {
                 categoriasDB.splice(index, 1);
                 salvarBancoNoStorage();
                 renderizarListaCategorias();
