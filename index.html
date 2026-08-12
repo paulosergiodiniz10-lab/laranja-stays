@@ -1103,7 +1103,14 @@ function montarDropdownHospedesOrcamento() {
             sv('lote-tarifa-nome', ''); sv('lote-tarifa-valor', ''); renderizarFiltrosCalendarioGestao(); mostrarNotificacao(`${diasGerados} diárias aplicadas/atualizadas com sucesso!`);
         }
 
-        function apagarDiaCalendario(dataStr) { calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); renderizarFiltrosCalendarioGestao(); }
+        function apagarDiaCalendario(dataStr) { 
+    let dataFormatada = dataStr.split('-').reverse().join('/');
+    confirmarExclusao(() => {
+        calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); 
+        renderizarFiltrosCalendarioGestao(); 
+        mostrarNotificacao("Tarifa removida!");
+    }, "Remover Tarifa", `Deseja apagar a tarifa configurada para o dia ${dataFormatada}?`);
+}
         function editarPrecoDiaCalendario(dataStr) { let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dataStr); if (diaIdx > -1) { let precoAtual = calendarioEmCriacao[diaIdx].valor; let dataFormatada = dataStr.split('-').reverse().join('/'); let novoPreco = prompt(`Editar preço para o dia ${dataFormatada}:\n\nDigite apenas números (ex: 150):`, precoAtual); if (novoPreco !== null && novoPreco.trim() !== "") { let v = parseFloat(novoPreco); if (!isNaN(v) && v > 0) { calendarioEmCriacao[diaIdx].valor = v; renderizarFiltrosCalendarioGestao(); } else { alert("Valor inválido. Digite apenas números."); } } } }
         function limparFiltrosCalendario() { sv('filtro-mes-calendario', 'todos'); sv('filtro-nome-calendario', 'todas'); renderizarCalendarioGestao(); }
 
@@ -1869,7 +1876,18 @@ function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopi
                     s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); 
                 }); 
             } 
+        function deletarDespesa(id, imId) {
+            confirmarExclusao(() => {
+                const imov = imoveisDB.find(i => i.id == imId);
+                if(imov && imov.despesas) {
+                    imov.despesas = imov.despesas.filter(x => x.id != id);
+                    salvarBancoNoStorage();
+                    carregarListaDespesas();
+                    mostrarNotificacao("Despesa removida!");
+                }
+            }, "Excluir Despesa", "Deseja realmente apagar este lançamento financeiro?");
         }
+
         function carregarListaDespesas() {
             if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; const iId=parseInt(val('filtro-imovel-despesas')); const tb=el('tbody-aba-despesas');
             if(!iId) { show('placeholder-despesas'); hide('tabela-container-despesas'); return; }
@@ -1877,7 +1895,7 @@ function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopi
             const im = imoveisDB.find(i=>i.id===iId); let f = `${despesaAno}-${String(despesaMes).padStart(2,'0')}`; 
             let ls = im?.despesas?.filter(d => parseInputDateSafe(d.data).startsWith(f)).sort((a,b)=>new Date(parseInputDateSafe(b.data))-new Date(parseInputDateSafe(a.data))) || [];
             if(!ls.length) { if(tb) tb.innerHTML=`<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Vazio.</td></tr>`; return; }
-            ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="imoveisDB.find(i=>i.id==${im.id}).despesas=imoveisDB.find(i=>i.id==${im.id}).despesas.filter(x=>x.id!=${d.id});salvarBancoNoStorage();carregarListaDespesas()" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
+            ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="deletarDespesa(${d.id}, ${im.id})" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
         }
         function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
         function abrirModalDespesa() { 
@@ -1902,7 +1920,22 @@ function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopi
         function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); if(categoriasDB.includes(v))s.value=v; }
         function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
         function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
-        function renderizarListaCategorias() { const u=el('lista-gerenciar-categorias'); if(!u)return; u.innerHTML=''; categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="categoriasDB.splice(${i},1);salvarBancoNoStorage();renderizarListaCategorias()" title="Excluir Categoria" class="text-red-500 px-2"><i class="fas fa-trash"></i></button>`:'Fixo'}</div></li>`)); }
+        function deletarCategoria(index) {
+            confirmarExclusao(() => {
+                categoriasDB.splice(index, 1);
+                salvarBancoNoStorage();
+                renderizarListaCategorias();
+                povoarSelectCategorias();
+                mostrarNotificacao("Categoria removida!");
+            }, "Excluir Categoria", "Deseja realmente apagar esta categoria?");
+        }
+
+        function renderizarListaCategorias() { 
+            const u=el('lista-gerenciar-categorias'); 
+            if(!u)return; 
+            u.innerHTML=''; 
+            categoriasDB.forEach((c,i)=>u.insertAdjacentHTML('beforeend', `<li class="flex justify-between items-center bg-white border border-slate-100 shadow-sm p-2 rounded-xl mb-2"><span class="text-sm font-bold text-slate-700">${c}</span><div>${c!=='Outros'?`<button onclick="editarNomeCategoria(${i})" title="Editar Categoria" class="text-slate-400 hover:text-blue-500 px-2 transition-colors"><i class="fas fa-pencil-alt"></i></button><button onclick="deletarCategoria(${i})" title="Excluir Categoria" class="text-red-500 px-2"><i class="fas fa-trash"></i></button>`:'Fixo'}</div></li>`)); 
+        }
         function adicionarCategoria() { const n=val('nova-categoria-nome').trim(); if(!n || categoriasDB.includes(n)) return; categoriasDB.push(n); salvarBancoNoStorage(); sv('nova-categoria-nome',''); renderizarListaCategorias(); }
         function editarNomeCategoria(i) { const novoNome = prompt("Editar categoria:", categoriasDB[i]); if(novoNome && novoNome.trim() !== "" && !categoriasDB.includes(novoNome.trim())) { categoriasDB[i] = novoNome.trim(); salvarBancoNoStorage(); renderizarListaCategorias(); povoarSelectCategorias(); } }
         function toggleCampoOutrosDespesa() { if(el('bloco-despesa-outros')) el('bloco-despesa-outros').classList[val('despesa-categoria')==='Outros'?'remove':'add']('hidden-view'); }
