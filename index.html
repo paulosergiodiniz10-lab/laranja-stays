@@ -14,12 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
-/* Esconde Meus Imóveis apenas se for Parceiro/Corretor */
-body.role-parceiro [data-aba="imoveis"],
-body.role-parceiro #btn-menu-imoveis,
-body.role-parceiro .menu-item-imoveis {
-    display: none !important;
-}
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -556,15 +550,7 @@ function povoarSelectCategorias() {
         });
 
         let nuvemCarregadaSegura = false; // NOSSA NOVA TRAVA MESTRA
-if (typeof inicializarApp !== 'function') {
-    window.inicializarApp = function() {
-        show('tela-app');
-        if (typeof inicializarCalendarios === 'function') inicializarCalendarios();
-        if (typeof renderizarVitrine === 'function') renderizarVitrine(imoveisDB);
-        if (typeof renderizarAdmin === 'function') renderizarAdmin();
-        if (typeof aplicarPermissoesDeAcesso === 'function') aplicarPermissoesDeAcesso();
-    };
-    }
+
         async function carregarDadosFirebase(uidEmpresa) {
             try { 
                 const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); 
@@ -662,20 +648,17 @@ if (typeof inicializarApp !== 'function') {
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
             if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
 
-            // Esconde as abas administrativas se for corretor
-        const displayValor = ehParceiro ? 'none' : '';
+            // Esconde as abas forçadamente se for corretor
+            const displayValor = ehParceiro ? 'none' : '';
 
-        if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
-        if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
-        if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
-        if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
-        
-        // Esconde Imóveis para o parceiro e mantém Orçamentos visível
-        if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
-        if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
+            if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+            if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+            if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+            if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
+            if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = displayValor;
 
-        // Se for parceiro, abre direto no Mapa de Reservas em vez de Imóveis
-        if (ehParceiro) mudarAbaInternaAdmin('mapa');
+            if (ehParceiro) mudarAbaInternaAdmin('imoveis');
+        }
 
         // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
@@ -893,8 +876,45 @@ function montarDropdownHospedesOrcamento() {
         };
         ul.appendChild(li);
     }
-} 
-            function inicializarCalendarios() {
+}
+        function inicializarApp() { 
+            show('tela-app'); inicializarCalendarios(); renderizarVitrine(imoveisDB); renderizarAdmin(); montarDropdownHospedes();montarDropdownHospedesOrcamento(); povoarSelectCategorias(); carregarEmpresa(); 
+            if(el('link-vitrine-display') && currentUserUid && empresaDB.slug) { let urlBase = window.location.origin + window.location.pathname; if(urlBase.includes('?')) urlBase = urlBase.split('?')[0]; el('link-vitrine-display').innerText = urlBase + '?link=' + empresaDB.slug; } else if (el('link-vitrine-display') && currentUserUid) { el('link-vitrine-display').innerText = "Salve o Nome da Empresa primeiro."; }
+            
+            if (isPublicVitrine) { 
+                mudarAba('vitrine'); 
+                hide('btn-admin'); 
+                hide('btn-logout'); 
+
+                // --- LEITURA DE PARÂMETROS DE BUSCA EXTERNA ---
+                const urlBusca = new URLSearchParams(window.location.search);
+                const destinoParam = urlBusca.get('destino');
+                const checkinParam = urlBusca.get('checkin');
+                const checkoutParam = urlBusca.get('checkout');
+                const hospedesParam = urlBusca.get('hospedes');
+
+                if (destinoParam) sv('busca-cidade', destinoParam);
+                if (hospedesParam) {
+                    sv('busca-pessoas', hospedesParam);
+                    sv('busca-pessoas-display', `${hospedesParam} Hóspedes`);
+                }
+                if (checkinParam && checkoutParam) {
+                    sv('busca-datas-range', `${checkinParam} até ${checkoutParam}`);
+                    let fp = el('busca-datas-range')?._flatpickr;
+                    if(fp) fp.setDate([checkinParam, checkoutParam]);
+                }
+
+                // Dispara a busca automática se a pessoa veio do site externo com filtros
+                if (checkinParam || destinoParam) {
+                    setTimeout(() => { realizarBusca(); }, 600);
+                }
+            } else { 
+                mudarAba('admin'); 
+                mudarAbaInternaAdmin('imoveis'); 
+                aplicarPermissoesDeAcesso();
+            }
+        }
+        function inicializarCalendarios() {
             if(el('busca-datas-range') && !el('busca-datas-range')._flatpickr) flatpickr("#busca-datas-range", { mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" }); 
             if(el('reserva-checkin') && !el('reserva-checkin')._flatpickr) flatpickr("#reserva-checkin", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('reserva-checkout')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); fpOut.setDate(n); } } });            if(el('reserva-checkout') && !el('reserva-checkout')._flatpickr) flatpickr("#reserva-checkout", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
             if(el('filtro-reserva-inicio') && !el('filtro-reserva-inicio')._flatpickr) flatpickr("#filtro-reserva-inicio", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('filtro-reserva-fim')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); } } });
@@ -2438,40 +2458,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
             }
-       // ================= FIX GLOBAL PARA IDENTIFICAÇÃO DO CORRETOR =================
-function capturarDadosCriadorReserva() {
-    let cUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : 'admin');
-    let cNome = 'Gestor';
-
-    if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-        cNome = window.nomeUsuarioLogado || (typeof userData !== 'undefined' && userData.nome ? userData.nome : 'Corretor/Parceiro');
-    } else if (window.nomeUsuarioLogado && window.nomeUsuarioLogado !== 'Admin') {
-        cNome = window.nomeUsuarioLogado;
-    }
-
-  return { criadoPorUid: cUid, criadoPor: cNome };
-}
-// ================= REGRA DEFINITIVA DO PARCEIRO =================
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            // Oculta botão Meus Imóveis no menu
-            const btnImoveis = document.getElementById('btn-admin-imoveis');
-            if (btnImoveis) btnImoveis.style.display = 'none';
-
-            // Garante Orçamentos visível
-            const btnOrcamentos = document.getElementById('btn-admin-orcamentos');
-            if (btnOrcamentos) btnOrcamentos.style.display = '';
-
-            // Se estiver na tela de imóveis, vai para o mapa
-            if (typeof mudarAbaInternaAdmin === 'function') {
-                mudarAbaInternaAdmin('mapa');
-            }
-        }
-    }, 500);
-});
-}
-</script>
+</script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full mx-4 p-6 transform scale-95 transition-transform duration-300 id-modal-box">
