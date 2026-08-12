@@ -14,6 +14,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
+/* Esconde Meus Imóveis apenas se for Parceiro/Corretor */
+body.role-parceiro [data-aba="imoveis"],
+body.role-parceiro #btn-menu-imoveis,
+body.role-parceiro .menu-item-imoveis {
+    display: none !important;
+}
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -2504,29 +2510,15 @@ function capturarDadosCriadorReserva() {
     }
 
     return { criadoPorUid: cUid, criadoPor: cNome };
+}// ================= CONTROLE DE VISIBILIDADE DO CORRETOR =================
+function aplicarEstiloParceiroCSS() {
+    if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+        document.body.classList.add('role-parceiro');
+    } else {
+        document.body.classList.remove('role-parceiro');
+    }
 }
-        // ================= PASSO 3: FORÇA ABA ORÇAMENTOS NO MENU DO PARCEIRO =================
-function exibirMenuOrcamentoParceiro() {
-    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-
-    const linksMenu = document.querySelectorAll('nav a, nav button, aside a, aside button, .sidebar a, .sidebar button');
-    
-    linksMenu.forEach(item => {
-        const texto = item.textContent ? item.textContent.trim().toLowerCase() : '';
-
-        if (texto.includes('meus imóveis') || texto.includes('meus imoveis')) {
-            if (ehParceiro) item.style.display = 'none';
-        }
-
-        if (texto.includes('orçamentos') || texto.includes('orcamentos')) {
-            item.style.display = 'flex';
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(exibirMenuOrcamentoParceiro, 800);
-});
+document.addEventListener('DOMContentLoaded', aplicarEstiloParceiroCSS);
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
