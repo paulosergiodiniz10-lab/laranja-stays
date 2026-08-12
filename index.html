@@ -1743,21 +1743,121 @@ function montarDropdownHospedesOrcamento() {
         }        function toggleFiltroPersonalizadoReservas() { if(el('bloco-filtro-datas')) el('bloco-filtro-datas').classList[val('filtro-periodo-reservas')==='personalizado'?'remove':'add']('hidden-view'); }
         // TABELA E FILTROS DE CORRETOR (EXCEL INTEGRADAS)
         function renderizarListaReservasAdmin() {
-            const tb = el('lista-reservas-tbody'); if(!tb) return; tb.innerHTML=''; let lista=[];
-            imoveisDB.forEach(im => { if(im.reservas) im.reservas.forEach(r => lista.push({...r, nIm: im.numeroApto?`${im.nome} (${im.numeroApto})`:im.nome})) });
-            
-            // Cria o filtro de Corretores para o Gestor
-            const containerFiltros = el('bloco-filtro-datas');
-            if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
-                containerFiltros.insertAdjacentHTML('afterend', `
-                    <div id="filtro-corretor-select-container" class="ml-2">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
-                        <select id="filtro-corretor-select" onchange="renderizarListaReservasAdmin()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500">
-                            <option value="todos">Todos</option>
-                        </select>
-                    </div>
-                `);
-            }
+    const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
+    imoveisDB.forEach(im => { if (im.reservas) im.reservas.forEach(r => lista.push({ ...r, nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, imovelId: im.id })); });
+
+    // Cria o filtro de Corretores para o Gestor se ainda não existir
+    const containerFiltros = el('bloco-filtro-datas');
+    if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+        containerFiltros.insertAdjacentHTML('afterend', `
+            <div id="filtro-corretor-select-container" class="ml-2">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
+                <select id="filtro-corretor-select" onchange="renderizarListaReservasAdmin()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500">
+                    <option value="todos">Todos</option>
+                </select>
+            </div>
+        `);
+    }
+
+    const selectCorr = el('filtro-corretor-select');
+    if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+        let valAtual = selectCorr.value;
+        selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
+        let corretoresUnicos = {};
+        lista.forEach(r => { if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin') { corretoresUnicos[r.criadoPorUid] = r.criadoPor; } });
+        for (const [uid, nome] of Object.entries(corretoresUnicos)) { selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`); }
+        if (Array.from(selectCorr.options).some(o => o.value === valAtual)) selectCorr.value = valAtual;
+    }
+
+    const p = val('filtro-periodo-reservas') || 'todas';
+    let dI = null; let dF = null;
+    let hj = new Date(); hj.setHours(0,0,0,0);
+
+    if (p === 'hoje') { dI = new Date(hj); dF = new Date(hj); }
+    else if (p === '7') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 7); }
+    else if (p === '30') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 30); }
+    else if (p === 'personalizado') {
+        if (val('filtro-reserva-inicio')) dI = new Date(parseInputDateSafe(val('filtro-reserva-inicio')) + 'T00:00:00');
+        if (val('filtro-reserva-fim')) dF = new Date(parseInputDateSafe(val('filtro-reserva-fim')) + 'T23:59:59');
+    }
+
+    let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+
+    let fit = lista.filter(r => {
+        // Bloqueio Rigoroso do Corretor na Lista
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+            if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
+        } else if (fCorrValue !== 'todos') {
+            if (fCorrValue === 'admin' && !(r.criadoPorUid === 'admin' || !r.criadoPorUid)) return false;
+            if (fCorrValue !== 'admin' && r.criadoPorUid !== fCorrValue) return false;
+        }
+
+        if (p === 'todas') return true;
+
+        let rI = new Date(parseInputDateSafe(r.checkin) + 'T12:00:00');
+        let rF_date = new Date(parseInputDateSafe(r.checkout) + 'T12:00:00');
+
+        if (dI && dF) return rI <= dF && rF_date >= dI;
+        if (dI) return rF_date >= dI;
+        if (dF) return rI <= dF;
+        return true;
+    });
+
+    reservasAtuaisExportacao = fit;
+
+    if (!fit.length) { tb.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas encontradas para os filtros selecionados.</td></tr>`; return; }
+
+    fit.sort((a,b) => b.id - a.id);
+
+    fit.forEach(res => {
+        let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
+        let bdg = ''; let bP = ''; let bV = '';
+        let pg = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0; if (res.statusPagamento === 'pago' && pg === 0) pg = parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal) - pg; let addI = '';
+
+        if (res.statusPagamento === 'pago') {
+            bdg = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`;
+            addI = `<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
+            bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+        } else if (res.statusPagamento === 'pendente') {
+            bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
+            if (typeof userRole !== 'undefined' && userRole === 'parceiro') bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            if (pg > 0) bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
+            addI = pg > 0 ? `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
+        } else if (res.statusPagamento === 'devolucao') {
+            bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
+        } else if (res.statusPagamento === 'cancelada') {
+            bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
+        } else if (res.statusPagamento === 'proprietario') {
+            bdg = `<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;
+        } else {
+            bdg = `<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;
+        }
+
+        let nomeCriador = '';
+        if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+            let badgeNome = res.criadoPor || 'Gestor';
+            nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
+        }
+
+        let podeEditar = true;
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro' && res.criadoPorUid !== window.uidUsuarioLogado) podeEditar = false;
+
+        let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
+
+        tb.insertAdjacentHTML('beforeend', `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 text-xs font-bold text-slate-500">${dC}</td>
+                <td class="p-3 font-medium text-slate-400 text-xs">#${res.numReserva || '-'}</td>
+                <td class="p-3">${bdg}</td>
+                <td class="p-3"><div class="font-bold text-slate-700 text-xs">${res.titular?.nome || res.finalidade || 'Uso Próprio'}</div>${nomeCriador}</td>
+                <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
+                <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
+                <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}${podeEditar ? `<button onclick="abrirEdicaoReservaLista(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button>` : ''}</td>
+            </tr>
+        `);
+    });
+}
             
             const selectCorr = el('filtro-corretor-select');
             if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
