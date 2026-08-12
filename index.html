@@ -1790,10 +1790,13 @@ function montarDropdownHospedesOrcamento() {
     }
 
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+    let meuUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : null);
 
     let fit = lista.filter(r => {
+        // Se o usuário logado for parceiro/corretor
         if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
+            // Exibe as reservas feitas por ele ou se for de teste
+            if (meuUid && r.criadoPorUid && r.criadoPorUid !== meuUid) return false;
         } else if (fCorrValue !== 'todos') {
             if (fCorrValue === 'admin') {
                 if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
@@ -1857,7 +1860,7 @@ function montarDropdownHospedesOrcamento() {
         }
 
         let podeEditar = true;
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro' && res.criadoPorUid !== window.uidUsuarioLogado) podeEditar = false;
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro' && res.criadoPorUid !== meuUid) podeEditar = false;
 
         let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
 
