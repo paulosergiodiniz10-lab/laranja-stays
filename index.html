@@ -1015,10 +1015,11 @@ function montarDropdownHospedesOrcamento() {
     let dOut = parseInputDateSafe(res.checkout).split('-').reverse().join('/'); 
     let noites = Math.round((new Date(parseInputDateSafe(res.checkout)+'T12:00:00') - new Date(parseInputDateSafe(res.checkin)+'T12:00:00')) / (1000*60*60*24));
 
-    // Inclui o número do apartamento no nome caso exista
+    // Busca o número do apartamento em todas as variações possíveis do objeto imóvel
+    const numeroApto = im.apto || im.apartamento || im.numeroApto || im.unidade || '';
     let nomeImovelExibicao = im.nome || '';
-    if (im.apto && !nomeImovelExibicao.includes(im.apto)) {
-        nomeImovelExibicao += ` - Apto ${im.apto}`;
+    if (numeroApto && !nomeImovelExibicao.toLowerCase().includes(String(numeroApto).toLowerCase())) {
+        nomeImovelExibicao += ` - Apto ${numeroApto}`;
     }
 
     let endIm = `${im.endereco?.rua || ''}, ${im.endereco?.numero || 'S/N'}`; 
@@ -1040,7 +1041,7 @@ function montarDropdownHospedesOrcamento() {
     let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9;"></div>`;
     let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap ? `WhatsApp: ${empresaDB.zap}<br>` : ''}${empresaDB.email ? `E-mail: ${empresaDB.email}` : ''}`;
 
-    // Oculta logo/dados da imobiliária se for criado por corretor
+    // Dados do Corretor (oculta logo e empresa se for reserva dele)
     let corretor = null;
     if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPor !== 'Painel Gestor') {
         corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
@@ -1057,7 +1058,6 @@ function montarDropdownHospedesOrcamento() {
 
     const calcIdade = (dNasc) => { if(!dNasc) return ''; let hoje = new Date(); let nasc = new Date(parseInputDateSafe(dNasc) + 'T12:00:00'); let idade = hoje.getFullYear() - nasc.getFullYear(); let m = hoje.getMonth() - nasc.getMonth(); if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--; return ` (${idade}a)`; };
     
-    // Lista de hóspedes com busca completa de documentos (CPF/RG/doc)
     let lh = ""; 
     if(res.titular && res.titular.nome){ 
         const docTitular = res.titular.cpf || res.titular.doc || res.titular.documento || '-';
@@ -1070,14 +1070,18 @@ function montarDropdownHospedesOrcamento() {
         });
     }
 
-    // Regras e políticas
-    let polCanc = im.voucherPolCancelamento || empresaDB.voucherPolCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
-    let polInfo = im.voucherPolInfo || empresaDB.regrasImovel || empresaDB.voucherPolInfo || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+    // Mapeamento correto dos campos da aba "Voucher" do cadastro do imóvel
+    let polCanc = im.politicaCancelamento || im.polCancelamento || im.voucherPolCancelamento || empresaDB.voucherPolCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
+    let polInfo = im.regrasCasa || im.regrasImovel || im.voucherPolInfo || empresaDB.regrasImovel || empresaDB.voucherPolInfo || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+
+    // Formata quebras de linha enviadas no formulário
+    polCanc = polCanc.replace(/\n/g, '<br>');
+    polInfo = polInfo.replace(/\n/g, '<br>');
 
     let tituloDocumento = isPreVoucher ? "PRÉ-VOUCHER" : "VOUCHER";
     let avisoPreVoucher = isPreVoucher ? `<div style="background-color: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>` : '';
 
-    let html = `<html><head><title>${tituloDocumento}</title><style>body{font-family:sans-serif;margin:0;padding:20px;color:#333;} .box{max-width:800px;margin:0 auto;} .hdr{background-color:#f8fafc;border:#e2e8f0;padding:20px;border-radius:8px;font-weight:bold;font-size:18px;text-transform:uppercase;} .bdr{border:2px solid #fa8c16;border-radius:8px;padding:20px;margin-bottom:20px;} .im-font{font-size:22px;font-weight:bold;color:#1e293b;margin:0 0 8px 0;} .tr-color{color:#64748b;margin-bottom:20px;font-size:15px;} .lg{display:flex;justify-content:space-between;margin-bottom:20px;} .btn{width:100%;}</style></head><body><div class="box"><div class="lg"><div>${lgHtml}<h2 style="font-size: 18px; margin: 5px 0;">${nEmp}</h2><p style="font-size: 12px; color: #666; margin: 0;">${docEmp}<br>${cidEmp}</p></div><div style="text-align: right;"><span style="background-color:#ffe7ba; color:#d46b08; padding: 6px 12px; border-radius: 6px; font-weight: bold;">RESERVA: ${res.numeroReserva || res.id}</span><h1 style="margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px;">${tituloDocumento}</h1></div></div>${avisoPreVoucher}<div class="bdr"><h3 class="im-font">${nomeImovelExibicao}</h3><p class="tr-color">${endIm}</p><table style="width: 100%; border-collapse: collapse; font-size: 14px;"><tr><td><strong>Check-in:</strong> ${dIn}</td><td><strong>Check-out:</strong> ${dOut}</td><td><strong>Diárias:</strong> ${noites} noite(s)</td></tr></table></div><h3 style="font-size: 16px; margin-top: 20px;">Hóspedes Cadastrados</h3><table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;"><thead style="background-color: #f1f5f9;"><tr><th style="padding: 8px; text-align: left;">Nome</th><th style="padding: 8px; text-align: center;">Documento</th><th style="padding: 8px; text-align: center;">Nascimento (Idade)</th><th style="padding: 8px; text-align: center;">Tipo</th></tr></thead><tbody>${lh}</tbody></table><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Política de Cancelamento</h3><p style="font-size: 12px; color: #666; margin: 0 0 15px 0; line-height: 1.4;">${polCanc}</p><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Informações Importantes & Regras</h3><p style="font-size: 12px; color: #666; margin: 0 0 20px 0; line-height: 1.4;">${polInfo}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="font-size: 13px; color: #333;">${assinaturaHtml}</p></div></body></html>`;
+    let html = `<html><head><title>${tituloDocumento}</title><style>body{font-family:sans-serif;margin:0;padding:20px;color:#333;} .box{max-width:800px;margin:0 auto;} .hdr{background-color:#f8fafc;border:#e2e8f0;padding:20px;border-radius:8px;font-weight:bold;font-size:18px;text-transform:uppercase;} .bdr{border:2px solid #fa8c16;border-radius:8px;padding:20px;margin-bottom:20px;} .im-font{font-size:22px;font-weight:bold;color:#1e293b;margin:0 0 8px 0;} .tr-color{color:#64748b;margin-bottom:20px;font-size:15px;} .lg{display:flex;justify-content:space-between;margin-bottom:20px;} .btn{width:100%;}</style></head><body><div class="box"><div class="lg"><div>${lgHtml}<h2 style="font-size: 18px; margin: 5px 0;">${nEmp}</h2><p style="font-size: 12px; color: #666; margin: 0;">${docEmp}<br>${cidEmp}</p></div><div style="text-align: right;"><span style="background-color:#ffe7ba; color:#d46b08; padding: 6px 12px; border-radius: 6px; font-weight: bold;">RESERVA: ${res.numeroReserva || res.id}</span><h1 style="margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px;">${tituloDocumento}</h1></div></div>${avisoPreVoucher}<div class="bdr"><h3 class="im-font">${nomeImovelExibicao}</h3><p class="tr-color">${endIm}</p><table style="width: 100%; border-collapse: collapse; font-size: 14px;"><tr><td><strong>Check-in:</strong> ${dIn}</td><td><strong>Check-out:</strong> ${dOut}</td><td><strong>Diárias:</strong> ${noites} noite(s)</td></tr></table></div><h3 style="font-size: 16px; margin-top: 20px;">Hóspedes Cadastrados</h3><table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;"><thead style="background-color: #f1f5f9;"><tr><th style="padding: 8px; text-align: left;">Nome</th><th style="padding: 8px; text-align: center;">Documento</th><th style="padding: 8px; text-align: center;">Nascimento (Idade)</th><th style="padding: 8px; text-align: center;">Tipo</th></tr></thead><tbody>${lh}</tbody></table><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Política de Cancelamento</h3><p style="font-size: 12px; color: #666; margin: 0 0 15px 0; line-height: 1.5;">${polCanc}</p><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Informações Importantes & Regras</h3><p style="font-size: 12px; color: #666; margin: 0 0 20px 0; line-height: 1.5;">${polInfo}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="font-size: 13px; color: #333;">${assinaturaHtml}</p></div></body></html>`;
 
     const w = window.open("", "_blank");
     w.document.write(html);
