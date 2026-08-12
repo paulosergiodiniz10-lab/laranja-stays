@@ -1072,12 +1072,18 @@ function montarDropdownHospedesOrcamento() {
     }
 
     // Mapeamento dinâmico para Regras e Políticas específicas do Imóvel
-    let polCanc = im.voucherPolCancelamento || im.politicaCancelamento || im.polCancelamento || empresaDB.voucherPolCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
-    let polInfo = im.voucherPolInfo || im.regrasCasa || im.regrasImovel || im.regras || empresaDB.regrasImovel || empresaDB.voucherPolInfo || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+    // Busca inteligente de regras e políticas em qualquer chave do imóvel ou da empresa
+    let polCanc = im.voucherPolCancelamento || im.politicaCancelamento || im.polCancelamento || im.voucherPolCanc || im.cancelamento || im.politica || empresaDB.voucherPolCancelamento || empresaDB.politicaCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
+    let polInfo = im.voucherPolInfo || im.regrasCasa || im.regrasImovel || im.regras || im.voucherRegras || im.informacoes || im.info || empresaDB.regrasImovel || empresaDB.voucherPolInfo || empresaDB.regrasCasa || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+
+    // Se o imóvel possuir um sub-objeto "voucher" ou "regras"
+    if (im.voucher) {
+        polCanc = im.voucher.polCancelamento || im.voucher.politicaCancelamento || im.voucher.cancelamento || polCanc;
+        polInfo = im.voucher.polInfo || im.voucher.regrasCasa || im.voucher.regras || im.voucher.info || polInfo;
+    }
 
     if (typeof polCanc === 'string') polCanc = polCanc.replace(/\r?\n/g, '<br>');
     if (typeof polInfo === 'string') polInfo = polInfo.replace(/\r?\n/g, '<br>');
-
     let tituloDocumento = isPreVoucher ? "PRÉ-VOUCHER" : "VOUCHER";
     let avisoPreVoucher = isPreVoucher ? `<div style="background-color: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>` : '';
 
