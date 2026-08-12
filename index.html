@@ -2482,37 +2482,6 @@ function capturarDadosCriadorReserva() {
 }
 
 // ================= CONTROLE DEFINITIVO DO PARCEIRO / CORRETOR =================
-function aplicarRegrasVisaoParceiro() {
-    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-
-    if (!ehParceiro) return;
-
-    // 1. Procura e oculta botões do menu que dizem "Meus Imóveis"
-    const elementosMenu = document.querySelectorAll('a, button, div, li, span');
-    elementosMenu.forEach(el => {
-        if (el.children.length === 0 && el.textContent && el.textContent.trim() === 'Meus Imóveis') {
-            let containerBtn = el.closest('button') || el.closest('a') || el.closest('li') || el.parentElement;
-            if (containerBtn) {
-                containerBtn.style.setProperty('display', 'none', 'important');
-            }
-        }
-    });
-
-    // 2. Se a tela atual for de imóveis, redireciona o parceiro para o Mapa de Reservas
-    const painelImoveis = document.getElementById('view-imoveis') || document.getElementById('sec-imoveis');
-    if (typeof mudarAbaPainel === 'function') {
-        if (painelImoveis && !painelImoveis.classList.contains('hidden')) {
-            mudarAbaPainel('mapa');
-        }
-    }
-}
-
-// Executa para garantir carregamento dinâmico
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro();
-    setTimeout(() => { if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro(); }, 300);
-    setTimeout(() => { if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro(); }, 800);
-});
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
