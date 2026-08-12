@@ -893,45 +893,8 @@ function montarDropdownHospedesOrcamento() {
         };
         ul.appendChild(li);
     }
-}
-        function inicializarApp() { 
-            show('tela-app'); inicializarCalendarios(); renderizarVitrine(imoveisDB); renderizarAdmin(); montarDropdownHospedes();montarDropdownHospedesOrcamento(); povoarSelectCategorias(); carregarEmpresa(); 
-            if(el('link-vitrine-display') && currentUserUid && empresaDB.slug) { let urlBase = window.location.origin + window.location.pathname; if(urlBase.includes('?')) urlBase = urlBase.split('?')[0]; el('link-vitrine-display').innerText = urlBase + '?link=' + empresaDB.slug; } else if (el('link-vitrine-display') && currentUserUid) { el('link-vitrine-display').innerText = "Salve o Nome da Empresa primeiro."; }
-            
-            if (isPublicVitrine) { 
-                mudarAba('vitrine'); 
-                hide('btn-admin'); 
-                hide('btn-logout'); 
-
-                // --- LEITURA DE PARÂMETROS DE BUSCA EXTERNA ---
-                const urlBusca = new URLSearchParams(window.location.search);
-                const destinoParam = urlBusca.get('destino');
-                const checkinParam = urlBusca.get('checkin');
-                const checkoutParam = urlBusca.get('checkout');
-                const hospedesParam = urlBusca.get('hospedes');
-
-                if (destinoParam) sv('busca-cidade', destinoParam);
-                if (hospedesParam) {
-                    sv('busca-pessoas', hospedesParam);
-                    sv('busca-pessoas-display', `${hospedesParam} Hóspedes`);
-                }
-                if (checkinParam && checkoutParam) {
-                    sv('busca-datas-range', `${checkinParam} até ${checkoutParam}`);
-                    let fp = el('busca-datas-range')?._flatpickr;
-                    if(fp) fp.setDate([checkinParam, checkoutParam]);
-                }
-
-                // Dispara a busca automática se a pessoa veio do site externo com filtros
-                if (checkinParam || destinoParam) {
-                    setTimeout(() => { realizarBusca(); }, 600);
-                }
-            } else { 
-                mudarAba('admin'); 
-                mudarAbaInternaAdmin('imoveis'); 
-                aplicarPermissoesDeAcesso();
-            }
-        }
-        function inicializarCalendarios() {
+} 
+            function inicializarCalendarios() {
             if(el('busca-datas-range') && !el('busca-datas-range')._flatpickr) flatpickr("#busca-datas-range", { mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" }); 
             if(el('reserva-checkin') && !el('reserva-checkin')._flatpickr) flatpickr("#reserva-checkin", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('reserva-checkout')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); fpOut.setDate(n); } } });            if(el('reserva-checkout') && !el('reserva-checkout')._flatpickr) flatpickr("#reserva-checkout", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
             if(el('filtro-reserva-inicio') && !el('filtro-reserva-inicio')._flatpickr) flatpickr("#filtro-reserva-inicio", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('filtro-reserva-fim')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); } } });
