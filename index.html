@@ -1827,38 +1827,38 @@ function montarDropdownHospedesOrcamento() {
             }
             salvarBancoNoStorage(); fecharModalGerarOrcamento(); if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = ''; mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
         }
+function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopia) { if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.txtCopia).then(()=>mostrarNotificacao("Copiado!")).catch(()=>{}); else { const a=document.createElement('textarea'); a.value=o.txtCopia; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Copiado!"); } } }
 
-        function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopia) { if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.txtCopia).then(()=>mostrarNotificacao("Copiado!")).catch(()=>{}); else { const a=document.createElement('textarea'); a.value=o.txtCopia; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Copiado!"); } } }
+        function deletarOrcamento(id) {
+            confirmarExclusao(() => {
+                orcamentosDB = orcamentosDB.filter(x => x.id !== id);
+                salvarBancoNoStorage();
+                renderListaOrc();
+                mostrarNotificacao("Orçamento excluído!");
+            }, "Excluir Orçamento", "Deseja realmente apagar este orçamento do histórico?");
+        }
 
         function renderListaOrc() {
-    const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
-    if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
-    
-    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-    let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
+            const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
+            if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
+            
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
 
-    let listaFiltrada = orcamentosDB.filter(o => {
-        if (ehParceiro) {
-            return o.criadoPorUid === meuUid;
-        }
-        return true;
-    });
+            let listaFiltrada = orcamentosDB.filter(o => {
+                if (ehParceiro) {
+                    return o.criadoPorUid === meuUid;
+                }
+                return true;
+            });
 
-    if(!listaFiltrada.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Nenhum orçamento encontrado no seu histórico.</td></tr>'; return; }
-
-    listaFiltrada.forEach(o => {
-        let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
-        tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deletarOrcamento(${o.id})" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
-    });
-}
             if(!listaFiltrada.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Nenhum orçamento encontrado no seu histórico.</td></tr>'; return; }
 
             listaFiltrada.forEach(o => {
                 let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
-                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="orcamentosDB=orcamentosDB.filter(x=>x.id!==${o.id});salvarBancoNoStorage();renderListaOrc();" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deletarOrcamento(${o.id})" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
             });
         }
-
         // ================= DESPESAS E DRE =================
         function povoarFiltrosDespesas() { 
             const s = el('filtro-imovel-despesas'); 
