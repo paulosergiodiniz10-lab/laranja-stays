@@ -2505,6 +2505,28 @@ function capturarDadosCriadorReserva() {
 
     return { criadoPorUid: cUid, criadoPor: cNome };
 }
+        // ================= PASSO 3: FORÇA ABA ORÇAMENTOS NO MENU DO PARCEIRO =================
+function exibirMenuOrcamentoParceiro() {
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+
+    const linksMenu = document.querySelectorAll('nav a, nav button, aside a, aside button, .sidebar a, .sidebar button');
+    
+    linksMenu.forEach(item => {
+        const texto = item.textContent ? item.textContent.trim().toLowerCase() : '';
+
+        if (texto.includes('meus imóveis') || texto.includes('meus imoveis')) {
+            if (ehParceiro) item.style.display = 'none';
+        }
+
+        if (texto.includes('orçamentos') || texto.includes('orcamentos')) {
+            item.style.display = 'flex';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(exibirMenuOrcamentoParceiro, 800);
+});
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
