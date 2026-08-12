@@ -1856,77 +1856,17 @@ function montarDropdownHospedesOrcamento() {
         `);
     });
 }
-            
-            const selectCorr = el('filtro-corretor-select');
-            if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
-                let valAtual = selectCorr.value;
-                selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
-                let corretoresUnicos = {};
-                lista.forEach(r => { if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin') { corretoresUnicos[r.criadoPorUid] = r.criadoPor; } });
-                for (const [uid, nome] of Object.entries(corretoresUnicos)) { selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`); }
-                if (Array.from(selectCorr.options).some(o => o.value === valAtual)) selectCorr.value = valAtual;
-            }
 
-            const p = val('filtro-periodo-reservas') || 'todas'; let hj = new Date(); hj.setHours(0,0,0,0); let dI=null; let dF=null;
-            if(p==='hoje'){dI=new Date(hj);dF=new Date(hj);} else if(p==='7'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+7);} else if(p==='30'){dI=new Date(hj);dF=new Date(hj);dF.setDate(dF.getDate()+30);} else if(p==='personalizado'){if(val('filtro-reserva-inicio')) dI=new Date(val('filtro-reserva-inicio')+'T12:00:00'); if(val('filtro-reserva-fim')) dF=new Date(val('filtro-reserva-fim')+'T12:00:00');}
-            
-            let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+function exportarExcelReservas() {
+    if(!reservasAtuaisExportacao.length) return; 
+    let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
+    reservasAtuaisExportacao.forEach(r => { let dC = r.dataCriacao ? new Date(r.dataCriacao).toLocaleDateString('pt-BR') : (r.id > 1000000000000 ? new Date(r.id).toLocaleDateString('pt-BR') : '-'); let pg = r.valorPago!==undefined?parseFloat(r.valorPago):0; if(r.statusPagamento==='pago'&&pg===0)pg=parseFloat(r.valorTotal||0); let d=parseFloat(r.valorTotal||0)-pg; let s=(r.statusPagamento==='pago')?'QUITADO':(r.statusPagamento==='pendente'?`FALTA R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:(r.statusPagamento==='devolucao'||r.statusPagamento==='cancelada'?'DEVOLVER/MULTA':'-')); h+=`<tr><td style="text-align:center">${dC}</td><td style="text-align:center">${r.statusPagamento.toUpperCase()}</td><td>${r.titular?.nome||'-'}</td><td style="text-align:center">${r.nIm||''}</td><td style="text-align:center">${parseInputDateSafe(r.checkin).split('-').reverse().join('/')}</td><td style="text-align:center">${parseInputDateSafe(r.checkout).split('-').reverse().join('/')}</td><td style="text-align:right">R$ ${parseFloat(r.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="text-align:center">${s}</td></tr>`; }); h += `</table></body></html>`;
+    const b = new Blob([h], {type:'application/vnd.ms-excel;charset=utf-8'}); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Reservas.xls"; l.click();
+}
 
-            let flt = lista.filter(r=>{ 
-                // Bloqueio Rigoroso do Corretor na Lista
-                if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-                    if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
-                } else if (fCorrValue !== 'todos') {
-                    if (r.criadoPorUid !== fCorrValue && !(fCorrValue==='admin' && (!r.criadoPorUid || r.criadoPorUid==='admin'))) return false;
-                }
+// ================= ORÇAMENTOS =================
+function mudarAbaOrcamento(a) { if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; if(a!=='novo') renderListaOrc(); }
 
-                if(p==='todas')return true; 
-                let ri=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let ro=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); 
-                if(dI&&dF)return ri<=dF&&ro>=dI; else if(dI)return ro>=dI; else if(dF)return ri<=dF; return true; 
-            });
-            flt.sort((a,b)=>b.id-a.id); reservasAtuaisExportacao = flt; // O Excel vai baixar exatamente o que o filtro mostrar!
-            if(!flt.length) { tb.innerHTML='<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas.</td></tr>'; return; }
-            
-            flt.forEach(res => {
-                let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : (res.id > 1000000000000 ? new Date(res.id).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'));
-                let bdg=''; let bP=''; let bV=''; 
-                let pg = res.valorPago!==undefined?parseFloat(res.valorPago):0; if(res.statusPagamento==='pago'&&pg===0) pg=parseFloat(res.valorTotal); let dif = parseFloat(res.valorTotal)-pg; let addI = '';
-                
-                if(res.statusPagamento==='pago'){ 
-                    bdg=`<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`; 
-                    addI=`<div class="text-[10px] font-bold text-green-600">Quitado</div>`; 
-                    bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`; 
-                }
-                else if(res.statusPagamento==='pendente'){ 
-                    bdg=`<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`; 
-                    if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; 
-                    if(pg > 0) bV=`<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
-                    addI=pg>0?`<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:`<div class="text-[10px] font-medium text-slate-400">A receber</div>`; 
-                }
-                else if(res.statusPagamento==='devolucao'){ bdg=`<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`; if(userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`; }
-                else if(res.statusPagamento==='cancelada'){ bdg=`<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`; if(pg>res.valorTotal && userRole !== 'parceiro') bP=`<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`; addI=pg>res.valorTotal?`<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`:'<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>'; }
-                else if(res.statusPagamento==='proprietario'){bdg=`<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;}
-                else {bdg=`<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;}
-                
-                // Mostra quem fez a reserva se for o Gestor olhando
-                let nomeCriador = '';
-                if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
-                    let badgeNome = res.criadoPor || 'Gestor';
-                    nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
-                }
-
-                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-xs font-bold text-slate-500">${dC}</td><td class="p-3 font-medium text-slate-400">${res.numeroReserva||'-'}</td><td class="p-3">${bdg}</td><td class="p-3 font-medium text-slate-700">${res.titular?.nome||'-'} ${nomeCriador}</td><td class="p-3 text-[#0071c2] font-medium text-xs">${res.nIm||'-'}</td><td class="p-3 text-xs text-slate-500">${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}</td><td class="p-3 leading-tight"><div class="font-bold text-slate-800 text-sm">R$ ${parseFloat(res.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td><td class="p-3 text-center whitespace-nowrap">${bV}${bP}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar Reserva" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button></td></tr>`);
-            });
-        }
-        function exportarExcelReservas() {
-            if(!reservasAtuaisExportacao.length) return; 
-            let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
-            reservasAtuaisExportacao.forEach(r => { let dC = r.dataCriacao ? new Date(r.dataCriacao).toLocaleDateString('pt-BR') : (r.id > 1000000000000 ? new Date(r.id).toLocaleDateString('pt-BR') : '-'); let pg = r.valorPago!==undefined?parseFloat(r.valorPago):0; if(r.statusPagamento==='pago'&&pg===0)pg=parseFloat(r.valorTotal||0); let d=parseFloat(r.valorTotal||0)-pg; let s=(r.statusPagamento==='pago')?'QUITADO':(r.statusPagamento==='pendente'?`FALTA R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`:(r.statusPagamento==='devolucao'||r.statusPagamento==='cancelada'?'DEVOLVER/MULTA':'-')); h+=`<tr><td style="text-align:center">${dC}</td><td style="text-align:center">${r.statusPagamento.toUpperCase()}</td><td>${r.titular?.nome||'-'}</td><td style="text-align:center">${r.nIm||''}</td><td style="text-align:center">${parseInputDateSafe(r.checkin).split('-').reverse().join('/')}</td><td style="text-align:center">${parseInputDateSafe(r.checkout).split('-').reverse().join('/')}</td><td style="text-align:right">R$ ${parseFloat(r.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="text-align:center">${s}</td></tr>`; }); h += `</table></body></html>`;
-            const b = new Blob([h], {type:'application/vnd.ms-excel;charset=utf-8'}); const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Reservas.xls"; l.click();
-        }
-
-        // ================= ORÇAMENTOS =================
-        function mudarAbaOrcamento(a) { if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; if(a!=='novo') renderListaOrc(); }
 function buscarDisponibilidadeOrcamento() {
     const ciRaw = val('busca-orc-checkin'); const coRaw = val('busca-orc-checkout'); const ps = parseInt(val('busca-orc-hospedes'))||2;
     if(!ciRaw||!coRaw) { mostrarAlerta("Preencha as datas."); return; }
@@ -1980,77 +1920,81 @@ function buscarDisponibilidadeOrcamento() {
             div.innerHTML=`<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`;
         }
     }
-}        function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }        function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
-        function editarOrcamento(id) { const o = orcamentosDB.find(x => x.id === id); if (!o) return; sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
-        
-        function salvarECopiarOrcamento() {
-            const nome = val('orc-cliente-nome'); const zap = val('orc-cliente-zap'); if(!nome||zap.length<14){ mostrarAlerta("Nome e WhatsApp (DDD) são obrigatórios."); return; }
-            const im = imoveisDB.find(i=>i.id==val('orc-imovel-id')); let ci=parseInputDateSafe(val('orc-checkin')).split('-').reverse().join('/'); let co=parseInputDateSafe(val('orc-checkout')).split('-').reverse().join('/');
-            let primeiroNome = nome.split(' ')[0]; let ap = im.numeroApto ? `\n👉 Apto ${im.numeroApto}` : ''; let pg = im.pagamento ? `\n\n👉 Regras de pagamento:\n- ${im.pagamento}` : '';
-            let txt = `Olá, *${primeiroNome}*! Tudo bem?\n\nSegue seu orçamento\n\n*${im.nome}*${ap}\n👉 Entrada: ${ci}\n👉 Saída: ${co}\n👉 Hóspedes: ${formatarNumero(val('orc-hospedes'))}\n✅ Valor do pacote: R$ ${parseFloat(val('orc-valor')).toLocaleString('pt-BR',{minimumFractionDigits:2})}${pg}\n\n*Orçamento sujeito a disponibilidade.*\n\nQualquer dúvida estou à disposição.\n*${empresaDB.nome||'Temporada Stays'}*\nAtendimento Comercial\n${empresaDB.zap||''}`;
-            const idEdit = val('orc-id');
-            
-            let criadorUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
-            let criadorNome = window.nomeUsuarioLogado || 'Gestor';
+}
 
-            if (idEdit) { 
-                const idx = orcamentosDB.findIndex(x => x.id == idEdit); 
-                if (idx > -1) { 
-                    orcamentosDB[idx].clienteNome = nome; 
-                    orcamentosDB[idx].clienteZap = zap; 
-                    orcamentosDB[idx].txtCopia = txt; 
-                } 
-            } else { 
-                orcamentosDB.unshift({ 
-                    id: Date.now(), 
-                    dataCriacao: new Date().toISOString(), 
-                    clienteNome: nome, 
-                    clienteZap: zap, 
-                    imovelId: im.id, 
-                    nomeImovel: im.nome, 
-                    checkin: parseInputDateSafe(val('orc-checkin')), 
-                    checkout: parseInputDateSafe(val('orc-checkout')), 
-                    hospedes: val('orc-hospedes'), 
-                    valorTotal: val('orc-valor'), 
-                    txtCopia: txt,
-                    criadoPorUid: criadorUid,
-                    criadoPorNome: criadorNome
-                }); 
-            }
-            salvarBancoNoStorage(); fecharModalGerarOrcamento(); if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = ''; mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
-        }
+function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
+function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
+function editarOrcamento(id) { const o = orcamentosDB.find(x => x.id === id); if (!o) return; sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
+
+function salvarECopiarOrcamento() {
+    const nome = val('orc-cliente-nome'); const zap = val('orc-cliente-zap'); if(!nome||zap.length<14){ mostrarAlerta("Nome e WhatsApp (DDD) são obrigatórios."); return; }
+    const im = imoveisDB.find(i=>i.id==val('orc-imovel-id')); let ci=parseInputDateSafe(val('orc-checkin')).split('-').reverse().join('/'); let co=parseInputDateSafe(val('orc-checkout')).split('-').reverse().join('/');
+    let primeiroNome = nome.split(' ')[0]; let ap = im.numeroApto ? `\n👉 Apto ${im.numeroApto}` : ''; let pg = im.pagamento ? `\n\n👉 Regras de pagamento:\n- ${im.pagamento}` : '';
+    let txt = `Olá, *${primeiroNome}*! Tudo bem?\n\nSegue seu orçamento\n\n*${im.nome}*${ap}\n👉 Entrada: ${ci}\n👉 Saída: ${co}\n👉 Hóspedes: ${formatarNumero(val('orc-hospedes'))}\n✅ Valor do pacote: R$ ${parseFloat(val('orc-valor')).toLocaleString('pt-BR',{minimumFractionDigits:2})}${pg}\n\n*Orçamento sujeito a disponibilidade.*\n\nQualquer dúvida estou à disposição.\n*${empresaDB.nome||'Temporada Stays'}*\nAtendimento Comercial\n${empresaDB.zap||''}`;
+    const idEdit = val('orc-id');
+    
+    let criadorUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
+    let criadorNome = window.nomeUsuarioLogado || 'Gestor';
+
+    if (idEdit) { 
+        const idx = orcamentosDB.findIndex(x => x.id == idEdit); 
+        if (idx > -1) { 
+            orcamentosDB[idx].clienteNome = nome; 
+            orcamentosDB[idx].clienteZap = zap; 
+            orcamentosDB[idx].txtCopia = txt; 
+        } 
+    } else { 
+        orcamentosDB.unshift({ 
+            id: Date.now(), 
+            dataCriacao: new Date().toISOString(), 
+            clienteNome: nome, 
+            clienteZap: zap, 
+            imovelId: im.id, 
+            nomeImovel: im.nome, 
+            checkin: parseInputDateSafe(val('orc-checkin')), 
+            checkout: parseInputDateSafe(val('orc-checkout')), 
+            hospedes: val('orc-hospedes'), 
+            valorTotal: val('orc-valor'), 
+            txtCopia: txt,
+            criadoPorUid: criadorUid,
+            criadoPorNome: criadorNome
+        }); 
+    }
+    salvarBancoNoStorage(); fecharModalGerarOrcamento(); if (el('lista-imoveis-orcamento')) el('lista-imoveis-orcamento').innerHTML = ''; mudarAbaOrcamento('historico'); mostrarNotificacao(idEdit ? "Orçamento atualizado." : "Salvo no histórico."); sv('orc-id', '');
+}
+
 function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopia) { if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.txtCopia).then(()=>mostrarNotificacao("Copiado!")).catch(()=>{}); else { const a=document.createElement('textarea'); a.value=o.txtCopia; document.body.appendChild(a); a.select(); document.execCommand('copy'); document.body.removeChild(a); mostrarNotificacao("Copiado!"); } } }
 
-        function deletarOrcamento(id) {
-            confirmarExclusao(() => {
-                orcamentosDB = orcamentosDB.filter(x => x.id !== id);
-                salvarBancoNoStorage();
-                renderListaOrc();
-                mostrarNotificacao("Orçamento excluído!");
-            }, "Excluir Orçamento", "Deseja realmente apagar este orçamento do histórico?");
+function deletarOrcamento(id) {
+    confirmarExclusao(() => {
+        orcamentosDB = orcamentosDB.filter(x => x.id !== id);
+        salvarBancoNoStorage();
+        renderListaOrc();
+        mostrarNotificacao("Orçamento excluído!");
+    }, "Excluir Orçamento", "Deseja realmente apagar este orçamento do histórico?");
+}
+
+function renderListaOrc() {
+    const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
+    if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
+    
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+    let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
+
+    let listaFiltrada = orcamentosDB.filter(o => {
+        if (ehParceiro) {
+            return o.criadoPorUid === meuUid;
         }
+        return true;
+    });
 
-        function renderListaOrc() {
-            const tb = el('lista-orcamentos-tbody'); if(!tb) return; tb.innerHTML=''; 
-            if(!orcamentosDB.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Sem orçamentos.</td></tr>'; return; }
-            
-            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-            let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
+    if(!listaFiltrada.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Nenhum orçamento encontrado no seu histórico.</td></tr>'; return; }
 
-            let listaFiltrada = orcamentosDB.filter(o => {
-                if (ehParceiro) {
-                    return o.criadoPorUid === meuUid;
-                }
-                return true;
-            });
-
-            if(!listaFiltrada.length) { tb.innerHTML='<tr><td colspan="5" class="text-center p-6 text-slate-400 font-bold">Nenhum orçamento encontrado no seu histórico.</td></tr>'; return; }
-
-            listaFiltrada.forEach(o => {
-                let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
-                tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deletarOrcamento(${o.id})" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
-            });
-        }
+    listaFiltrada.forEach(o => {
+        let zapL = o.clienteZap.replace(/\D/g,''); let nm = o.clienteNome.split(' ')[0]; let msgZ = encodeURIComponent(o.txtCopia || `Olá ${nm}, tudo bem? Aqui é do atendimento. Referente ao seu orçamento...`);
+        tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors"><td class="p-4 text-xs font-medium text-slate-500">${new Date(o.dataCriacao).toLocaleDateString('pt-BR')}</td><td class="p-4"><div class="font-bold text-slate-800">${o.clienteNome}</div><div class="text-[10px] text-slate-500">${o.clienteZap}</div></td><td class="p-4"><div class="font-bold text-[#0071c2] text-xs">${o.nomeImovel}</div><div class="text-[10px] text-slate-500">${parseInputDateSafe(o.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(o.checkout).split('-').reverse().join('/')}</div></td><td class="p-4 font-medium text-right text-slate-800">R$ ${parseFloat(o.valorTotal).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="window.open('https://wa.me/55${zapL}?text=${msgZ}','_blank')" title="Enviar WhatsApp" class="bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fab fa-whatsapp"></i></button><button onclick="cpTxt(${o.id})" title="Copiar Texto" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-copy"></i></button><button onclick="editarOrcamento(${o.id})" title="Editar Orçamento" class="bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-2 rounded-lg font-bold shadow-sm mr-1"><i class="fas fa-pencil-alt"></i></button><button onclick="deletarOrcamento(${o.id})" title="Excluir Orçamento" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-2 rounded-lg font-bold shadow-sm"><i class="fas fa-trash"></i></button></td></tr>`);
+    });
+}
         // ================= DESPESAS E DRE =================
         function povoarFiltrosDespesas() { 
             const s = el('filtro-imovel-despesas'); 
