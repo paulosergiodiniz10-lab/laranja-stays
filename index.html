@@ -1746,7 +1746,6 @@ function montarDropdownHospedesOrcamento() {
     const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
     imoveisDB.forEach(im => { if (im.reservas) im.reservas.forEach(r => lista.push({ ...r, nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, imovelId: im.id })); });
 
-    // Injeta container do filtro de corretor no HTML se ainda não existir
     const containerFiltros = el('bloco-filtro-datas');
     if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         containerFiltros.insertAdjacentHTML('afterend', `
@@ -1759,7 +1758,6 @@ function montarDropdownHospedesOrcamento() {
         `);
     }
 
-    // Povoa os corretores no select
     const selectCorr = el('filtro-corretor-select');
     if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         let valAtual = selectCorr.value || 'todos';
