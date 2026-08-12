@@ -1105,11 +1105,16 @@ function povoarSelectsFinanceiros() {
 
     if (selDespesas) {
         selDespesas.innerHTML = options;
-        if (imoveisDB.length > 0 && !selDespesas.value) selDespesas.value = imoveisDB[0].id;
+        if (imoveisDB && imoveisDB.length > 0) {
+            selDespesas.value = imoveisDB[0].id; // Força a seleção do 1º imóvel
+        }
     }
+
     if (selDRE) {
         selDRE.innerHTML = options;
-        if (imoveisDB.length > 0 && !selDRE.value) selDRE.value = imoveisDB[0].id;
+        if (imoveisDB && imoveisDB.length > 0) {
+            selDRE.value = imoveisDB[0].id; // Força a seleção do 1º imóvel
+        }
     }
 
     // Define mês atual no input month da DRE se estiver vazio
@@ -1123,7 +1128,6 @@ function povoarSelectsFinanceiros() {
 
     atualizarLabelMesDespesa();
 }
-
 // 2. CONTROLE DE MÊS DA TELA DE DESPESAS
 function atualizarLabelMesDespesa() {
     const label = el('label-mes-despesa');
