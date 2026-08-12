@@ -826,16 +826,6 @@ function copiarCodigoWidget() {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"><\/script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"><\/script>
 <script>
-function povoarSelectCategorias() {
-    const s = el('despesa-categoria');
-    if (!s) return;
-    let v = s.value;
-    s.innerHTML = '';
-    if (typeof categoriasDB !== 'undefined' && Array.isArray(categoriasDB)) {
-        categoriasDB.forEach(c => s.insertAdjacentHTML('beforeend', '<option value="' + c + '">' + c + '</option>'));
-    }
-    if (v) s.value = v;
-}
 document.addEventListener("DOMContentLoaded", function() {        var fpIn = flatpickr("#widget-checkin", { 
             dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", 
             altInputClass: "ts-widget-input", // << O Segredo está aqui: Força a caixinha do calendário ter o visual branco!
@@ -1925,13 +1915,22 @@ function cpTxt(id) { const o = orcamentosDB.find(x=>x.id==id); if(o && o.txtCopi
             } 
             show('modal-nova-despesa'); 
         }
-        function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id',d.id); sv('despesa-imovel-select',imId); sv('despesa-data',d.data); sv('despesa-categoria',d.categoria||'Outros'); toggleCampoOutrosDespesa(); if(d.categoria==='Outros') sv('despesa-desc-outros',d.descricao); sv('despesa-valor',d.valor); }
-        function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-descricao'), vl=parseFloat(val('despesa-valor')); if(!im||!dt||!vl){alert('Preencha os campos obrigatórios!');return;} let objIm=imoveisDB.find(i=>i.id==im); if(!objIm)return; let id=val('despesa-id'); if(id){ let d=objIm.despesas.find(x=>x.id==id); if(d){d.data=dt; d.categoria=ct; d.descricao=ds; d.valor=vl;} } else { objIm.despesas.push({id:Date.now().toString(), data:dt, categoria:ct, descricao:ds, valor:vl}); } salvarBancoNoStorage(); fecharModalDespesa(); renderizarDespesas(); mostrarNotificacao("Despesa salva!"); }
+        function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id', d.id); sv('despesa-imovel-select', im.id); sv('despesa-data', d.data); povoarSelectCategorias(); sv('despesa-categoria', d.categoria); sv('despesa-descricao', d.descricao); sv('despesa-valor', d.valor); }
+function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-descricao'), vl=parseFloat(val('despesa-valor')); if(!im||!dt||!vl){alert('Preencha os campos obrigatórios!');return;} let objIm=imoveisDB.find(i=>i.id==im); if(!objIm)return; let id=val('despesa-id'); if(id){ let d=objIm.despesas.find(x=>x.id==id); if(d){d.data=dt; d.categoria=ct; d.descricao=ds; d.valor=vl;} } else { objIm.despesas.push({id:Date.now().toString(), data:dt, categoria:ct, descricao:ds, valor:vl}); } salvarBancoNoStorage(); fecharModalDespesa(); renderizarDespesas(); mostrarNotificacao("Despesa salva!"); }
 
-function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s)return; let v=s.value; s.innerHTML=''; if(typeof categoriasDB !== 'undefined') { categoriasDB.forEach(c=>s.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`)); } if(v)s.value=v; }
+function povoarSelectCategorias() {
+    const s = el('despesa-categoria');
+    if (!s) return;
+    let v = s.value;
+    s.innerHTML = '';
+    if (typeof categoriasDB !== 'undefined' && Array.isArray(categoriasDB)) {
+        categoriasDB.forEach(c => s.insertAdjacentHTML('beforeend', '<option value="' + c + '">' + c + '</option>'));
+    }
+    if (v) s.value = v;
+}
+
 function abrirModalCategorias() { sv('nova-categoria-nome',''); categoriaEditandoIndex=null; renderizarListaCategorias(); show('modal-categorias'); }
-function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }
-function deletarCategoria(index) {
+function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategorias(); }function deletarCategoria(index) {
     confirmarExclusao(() => {
                 categoriasDB.splice(index, 1);
                 salvarBancoNoStorage();
