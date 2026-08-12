@@ -1699,14 +1699,14 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
     const im = imoveisDB.find(i => i.id == imId); 
     
     if(im && im.reservas){ 
-        if (confirm("Deseja realmente apagar esta ficha de reserva? Esta ação não pode ser desfeita.")) {
+        confirmarExclusao(() => {
             im.reservas = im.reservas.filter(r => r.id != rId); 
             salvarBancoNoStorage(); 
             if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); 
             if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); 
             fecharModalReserva(); 
             mostrarNotificacao("Reserva excluída com sucesso!");
-        }
+        }, "Excluir Reserva", "Deseja realmente apagar esta ficha de reserva?");
     } 
 }
 
