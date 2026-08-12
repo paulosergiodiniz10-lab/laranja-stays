@@ -1744,8 +1744,19 @@ function montarDropdownHospedesOrcamento() {
         // TABELA E FILTROS DE CORRETOR (EXCEL INTEGRADAS)
         function renderizarListaReservasAdmin() {
     const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
-    imoveisDB.forEach(im => { if (im.reservas) im.reservas.forEach(r => lista.push({ ...r, nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, imovelId: im.id })); });
+    
+    // Coleta todas as reservas cadastradas
+    imoveisDB.forEach(im => { 
+        if (im.reservas && im.reservas.length) { 
+            im.reservas.forEach(r => lista.push({ 
+                ...r, 
+                nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, 
+                imovelId: im.id 
+            })); 
+        } 
+    });
 
+    // Injeta container do filtro de corretor no HTML se for Gestor
     const containerFiltros = el('bloco-filtro-datas');
     if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         containerFiltros.insertAdjacentHTML('afterend', `
@@ -1791,12 +1802,15 @@ function montarDropdownHospedesOrcamento() {
 
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
     let meuUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : null);
+    let meuNome = window.nomeUsuarioLogado || '';
 
     let fit = lista.filter(r => {
-        // Se o usuário logado for parceiro/corretor
+        // Se for parceiro/corretor, valida pelo UID ou pelo Nome do Criador
         if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            // Exibe as reservas feitas por ele ou se for de teste
-            if (meuUid && r.criadoPorUid && r.criadoPorUid !== meuUid) return false;
+            let ehMinha = false;
+            if (meuUid && r.criadoPorUid === meuUid) ehMinha = true;
+            if (meuNome && r.criadoPor && r.criadoPor.toLowerCase().includes(meuNome.toLowerCase().split(' ')[0])) ehMinha = true;
+            if (!ehMinha) return false;
         } else if (fCorrValue !== 'todos') {
             if (fCorrValue === 'admin') {
                 if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
@@ -1860,7 +1874,9 @@ function montarDropdownHospedesOrcamento() {
         }
 
         let podeEditar = true;
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro' && res.criadoPorUid !== meuUid) podeEditar = false;
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+            if (res.criadoPorUid && res.criadoPorUid !== meuUid) podeEditar = false;
+        }
 
         let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
 
