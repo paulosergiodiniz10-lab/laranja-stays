@@ -1104,13 +1104,16 @@ function montarDropdownHospedesOrcamento() {
         }
 
         function apagarDiaCalendario(dataStr) { 
-    let dataFormatada = dataStr.split('-').reverse().join('/');
-    confirmarExclusao(() => {
-        calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); 
-        renderizarFiltrosCalendarioGestao(); 
-        mostrarNotificacao("Tarifa removida!");
-    }, "Remover Tarifa", `Deseja apagar a tarifa configurada para o dia ${dataFormatada}?`);
-}
+            let dataFormatada = dataStr.split('-').reverse().join('/');
+            confirmarExclusao(() => {
+                calendarioEmCriacao = calendarioEmCriacao.filter(x => x.data !== dataStr); 
+                renderizarFiltrosCalendarioGestao(); 
+                mostrarNotificacao("Tarifa removida!");
+            }, "Remover Tarifa", `Deseja apagar a tarifa configurada para o dia ${dataFormatada}?`);
+        }
+
+        function editarPrecoDiaCalendario(dataStr) { let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dataStr); if (diaIdx > -1) { let precoAtual = calendarioEmCriacao[diaIdx].valor; let dataFormatada = dataStr.split('-').reverse().join('/'); let novoPreco = prompt(`Editar preço para o dia ${dataFormatada}:\n\nDigite apenas números (ex: 150):`, precoAtual); if (novoPreco !== null && novoPreco.trim() !== "") { let v = parseFloat(novoPreco); if (!isNaN(v) && v > 0) { calendarioEmCriacao[diaIdx].valor = v; renderizarFiltrosCalendarioGestao(); } else { alert("Valor inválido. Digite apenas números."); } } } }
+        function limparFiltrosCalendario() { sv('filtro-mes-calendario', 'todos'); sv('filtro-nome-calendario', 'todas'); renderizarCalendarioGestao(); }
         function editarPrecoDiaCalendario(dataStr) { let diaIdx = calendarioEmCriacao.findIndex(x => x.data === dataStr); if (diaIdx > -1) { let precoAtual = calendarioEmCriacao[diaIdx].valor; let dataFormatada = dataStr.split('-').reverse().join('/'); let novoPreco = prompt(`Editar preço para o dia ${dataFormatada}:\n\nDigite apenas números (ex: 150):`, precoAtual); if (novoPreco !== null && novoPreco.trim() !== "") { let v = parseFloat(novoPreco); if (!isNaN(v) && v > 0) { calendarioEmCriacao[diaIdx].valor = v; renderizarFiltrosCalendarioGestao(); } else { alert("Valor inválido. Digite apenas números."); } } } }
         function limparFiltrosCalendario() { sv('filtro-mes-calendario', 'todos'); sv('filtro-nome-calendario', 'todas'); renderizarCalendarioGestao(); }
 
