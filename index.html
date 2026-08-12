@@ -2505,11 +2505,13 @@ function aplicarRegrasVisaoParceiro() {
             mudarAbaPainel('mapa');
         }
     }
+}
+
 // Executa para garantir carregamento dinâmico
 document.addEventListener('DOMContentLoaded', () => {
-    aplicarRegrasVisaoParceiro();
-    setTimeout(aplicarRegrasVisaoParceiro, 300);
-    setTimeout(aplicarRegrasVisaoParceiro, 800);
+    if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro();
+    setTimeout(() => { if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro(); }, 300);
+    setTimeout(() => { if (typeof aplicarRegrasVisaoParceiro === 'function') aplicarRegrasVisaoParceiro(); }, 800);
 });
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
