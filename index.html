@@ -1418,19 +1418,76 @@ function montarDropdownHospedesOrcamento() {
             });
         }
         function renderizarMapaDisponibilidade() {
-            if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
-            let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
-            if(!imoveisDB.length) { h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; } else {
-                imoveisDB.forEach(im => {
-                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome; h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
-                    for (let dia=1; dia<=dias; dia++) {
-                        let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; let dObj = new Date(dt+'T12:00:00'); let cls = 'status-livre'; let txt = '1'; let rF = null;
-                        if(im.reservas) { for(let r of im.reservas) { if(r.statusPagamento==='cancelada') continue; let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dObj>=di && dObj<do_) { cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; txt='0'; rF=r; if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); break; } } }
-                        let evt = rF ? `abrirEdicaoReservaMapa(${im.id}, ${rF.id})` : `abrirNovaReservaMapa(${im.id}, '${dt}')`; let tooltip = rF ? (rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`) : `Nova Reserva: ${dt.split('-').reverse().join('/')}`; h += `<div onclick="${evt}" class="mapa-celula ${cls} truncate px-1 text-[10px]" title="${tooltip}">${txt}</div>`;
-                    } h += `</div>`;
-                });
-            } cont.innerHTML = h;
-        }
+    if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; 
+    const cont = el('container-mapa-grid'); 
+    if(!cont) return; 
+    const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
+    
+    let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; 
+    for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; 
+    h += `</div>`;
+    
+    if(!imoveisDB.length) { 
+        h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; 
+    } else {
+        imoveisDB.forEach(im => {
+            let nomeSemApto = im.nome;
+            let subTexto = im.numeroApto ? `<span class="text-[10px] font-bold text-orange-600 block">Apto ${im.numeroApto} <span class="text-slate-400 font-normal">· ${im.cidade}</span></span>` : `<span class="text-[9px] text-slate-400 truncate block">${im.cidade}</span>`;
+            let tooltipCompleto = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto}) - ${im.cidade}` : `${im.nome} - ${im.cidade}`;
+
+            h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate block" title="${tooltipCompleto}">${nomeSemApto}</span>${subTexto}</div>`;
+            
+            for (let dia=1; dia<=dias; dia++) {
+                let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; 
+                let dObj = new Date(dt+'T12:00:00'); 
+                let cls = 'status-livre'; 
+                let txt = '1'; 
+                let rF = null;
+                
+                if(im.reservas) { 
+                    for(let r of im.reservas) { 
+                        if(r.statusPagamento==='cancelada') continue; 
+                        let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); 
+                        let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); 
+                        if(dObj>=di && dObj<do_) { 
+                            cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; 
+                            txt='0'; 
+                            rF=r; 
+                            if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); 
+                            break; 
+                        } 
+                    } 
+                }
+                
+                let podeEditar = true;
+                if (rF && typeof userRole !== 'undefined' && userRole === 'parceiro') {
+                    if (rF.criadoPorUid !== window.uidUsuarioLogado) { podeEditar = false; }
+                }
+
+                let evt = ''; 
+                let tooltip = '';
+                if (rF) {
+                    if (podeEditar) {
+                        evt = `abrirEdicaoReservaMapa(${im.id}, ${rF.id})`;
+                        tooltip = rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`;
+                    } else {
+                        evt = ''; 
+                        txt = 'Ocupado'; 
+                        cls = 'bg-slate-300 text-white border-r border-slate-400'; 
+                        tooltip = 'Reservado por Outro Corretor';
+                    }
+                } else {
+                    evt = `abrirNovaReservaMapa(${im.id}, '${dt}')`;
+                    tooltip = `Nova Reserva: ${dt.split('-').reverse().join('/')}`;
+                }
+
+                h += `<div ${evt ? `onclick="${evt}"` : ''} class="mapa-celula ${cls} truncate px-1 text-[10px] ${!evt?'cursor-not-allowed':''}" title="${tooltip}">${txt}</div>`;
+            } 
+            h += `</div>`;
+        });
+    } 
+    cont.innerHTML = h;
+}
 
         function mudarMesMapa(dir) { mapaMes += dir; if(mapaMes>12){mapaMes=1;mapaAno++;} if(mapaMes<1){mapaMes=12;mapaAno--;} renderizarMapaDisponibilidade(); }
         function povoarSelectImoveis() { const s = el('reserva-imovel-select'); if(s){ s.innerHTML='<option value="">Selecione...</option>'; imoveisDB.forEach(i => { let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome; s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`); }); } }
