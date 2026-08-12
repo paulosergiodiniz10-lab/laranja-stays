@@ -1746,6 +1746,7 @@ function montarDropdownHospedesOrcamento() {
     const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
     imoveisDB.forEach(im => { if (im.reservas) im.reservas.forEach(r => lista.push({ ...r, nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, imovelId: im.id })); });
 
+    // Injeta container do filtro de corretor no HTML se ainda não existir
     const containerFiltros = el('bloco-filtro-datas');
     if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         containerFiltros.insertAdjacentHTML('afterend', `
@@ -1758,14 +1759,21 @@ function montarDropdownHospedesOrcamento() {
         `);
     }
 
+    // Povoa os corretores no select
     const selectCorr = el('filtro-corretor-select');
     if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
-        let valAtual = selectCorr.value;
+        let valAtual = selectCorr.value || 'todos';
         selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
         let corretoresUnicos = {};
-        lista.forEach(r => { if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin') { corretoresUnicos[r.criadoPorUid] = r.criadoPor; } });
-        for (const [uid, nome] of Object.entries(corretoresUnicos)) { selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`); }
-        if (Array.from(selectCorr.options).some(o => o.value === valAtual)) selectCorr.value = valAtual;
+        lista.forEach(r => {
+            if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') {
+                corretoresUnicos[r.criadoPorUid] = r.criadoPor;
+            }
+        });
+        for (const [uid, nome] of Object.entries(corretoresUnicos)) {
+            selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`);
+        }
+        selectCorr.value = valAtual;
     }
 
     const p = val('filtro-periodo-reservas') || 'todas';
@@ -1786,8 +1794,11 @@ function montarDropdownHospedesOrcamento() {
         if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
             if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
         } else if (fCorrValue !== 'todos') {
-            if (fCorrValue === 'admin' && !(r.criadoPorUid === 'admin' || !r.criadoPorUid)) return false;
-            if (fCorrValue !== 'admin' && r.criadoPorUid !== fCorrValue) return false;
+            if (fCorrValue === 'admin') {
+                if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
+            } else {
+                if (r.criadoPorUid !== fCorrValue) return false;
+            }
         }
 
         if (p === 'todas') return true;
@@ -1803,7 +1814,10 @@ function montarDropdownHospedesOrcamento() {
 
     reservasAtuaisExportacao = fit;
 
-    if (!fit.length) { tb.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas encontradas para os filtros selecionados.</td></tr>`; return; }
+    if (!fit.length) { 
+        tb.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas encontradas para os filtros selecionados.</td></tr>`; 
+        return; 
+    }
 
     fit.sort((a,b) => b.id - a.id);
 
@@ -1818,13 +1832,17 @@ function montarDropdownHospedesOrcamento() {
             bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
         } else if (res.statusPagamento === 'pendente') {
             bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
-            if (typeof userRole !== 'undefined' && userRole === 'parceiro') bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
             if (pg > 0) bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
             addI = pg > 0 ? `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
         } else if (res.statusPagamento === 'devolucao') {
             bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
+            bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
         } else if (res.statusPagamento === 'cancelada') {
             bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
+            if (pg > res.valorTotal) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            addI = pg > res.valorTotal ? `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : '<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
         } else if (res.statusPagamento === 'proprietario') {
             bdg = `<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;
         } else {
@@ -1851,7 +1869,7 @@ function montarDropdownHospedesOrcamento() {
                 <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
                 <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
                 <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
-                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}${podeEditar ? `<button onclick="abrirEdicaoReservaLista(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button>` : ''}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}${podeEditar ? `<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-edit"></i></button>` : ''}</td>
             </tr>
         `);
     });
