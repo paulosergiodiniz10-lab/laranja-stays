@@ -2478,8 +2478,28 @@ function capturarDadosCriadorReserva() {
         cNome = window.nomeUsuarioLogado;
     }
 
-    return { criadoPorUid: cUid, criadoPor: cNome };
+  return { criadoPorUid: cUid, criadoPor: cNome };
 }
+
+// ================= REGRA DEFINITIVA DO PARCEIRO =================
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+            // Oculta botão Meus Imóveis no menu
+            const btnImoveis = document.getElementById('btn-admin-imoveis');
+            if (btnImoveis) btnImoveis.style.display = 'none';
+
+            // Garante Orçamentos visível
+            const btnOrcamentos = document.getElementById('btn-admin-orcamentos');
+            if (btnOrcamentos) btnOrcamentos.style.display = '';
+
+            // Se estiver na tela de imóveis, vai para o mapa
+            if (typeof mudarAbaInternaAdmin === 'function') {
+                mudarAbaInternaAdmin('mapa');
+            }
+        }
+    }, 500);
+});
 </script> 
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
