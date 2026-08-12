@@ -826,8 +826,9 @@ function copiarCodigoWidget() {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"><\/script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"><\/script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var fpIn = flatpickr("#widget-checkin", { 
+function povoarSelectCategorias() { const s = el('despesa-categoria'); if(!s) return; let v = s.value; s.innerHTML = ''; if(typeof categoriasDB !== 'undefined' && Array.isArray(categoriasDB)) { categoriasDB.forEach(c => s.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`)); } if(v) s.value = v; }
+
+document.addEventListener("DOMContentLoaded", function() {        var fpIn = flatpickr("#widget-checkin", { 
             dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", 
             altInputClass: "ts-widget-input", // << O Segredo está aqui: Força a caixinha do calendário ter o visual branco!
             onChange: function(selectedDates, dateStr, instance) {
