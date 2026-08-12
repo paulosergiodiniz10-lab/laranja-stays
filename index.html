@@ -832,11 +832,10 @@ function povoarSelectCategorias() {
     let v = s.value;
     s.innerHTML = '';
     if (typeof categoriasDB !== 'undefined' && Array.isArray(categoriasDB)) {
-        categoriasDB.forEach(c => s.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`));
+        categoriasDB.forEach(c => s.insertAdjacentHTML('beforeend', '<option value="' + c + '">' + c + '</option>'));
     }
     if (v) s.value = v;
 }
-
 document.addEventListener("DOMContentLoaded", function() {        var fpIn = flatpickr("#widget-checkin", { 
             dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", 
             altInputClass: "ts-widget-input", // << O Segredo está aqui: Força a caixinha do calendário ter o visual branco!
