@@ -1658,7 +1658,8 @@ function montarDropdownHospedesOrcamento() {
             else if(st === 'pago') vPago = vTF;
             
             // Lógica de Autoria (Mantém quem criou, ou grava o logado agora)
-            let criador = rOrig?.criadoPor || window.nomeUsuarioLogado || 'Gestor';
+         let nomeNaTela = el('perfil-nome-usuario')?.innerText;
+let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' ? nomeNaTela : (window.nomeUsuarioLogado || 'Gestor'));
             let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || 'admin';
 
             const obj = { 
