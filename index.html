@@ -654,13 +654,16 @@ if (ehParceiro) {
             // Esconde as abas forçadamente se for corretor
             const displayValor = ehParceiro ? 'none' : '';
 
-            if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
-            if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
-            if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
-            if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
-            if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = displayValor;
+if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
 
-            if (ehParceiro) mudarAbaInternaAdmin('imoveis');
+// Esconde Meus Imóveis para o parceiro
+if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
+
+// Abre direto no Mapa de Reservas para o parceiro
+if (ehParceiro) mudarAbaInternaAdmin('mapa');
         }
 
         // ================= EQUIPE E ACESSOS =================
