@@ -1745,7 +1745,7 @@ function montarDropdownHospedesOrcamento() {
         function renderizarListaReservasAdmin() {
     const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
     
-    // Coleta todas as reservas cadastradas
+    // Coleta todas as reservas de todos os imóveis
     imoveisDB.forEach(im => { 
         if (im.reservas && im.reservas.length) { 
             im.reservas.forEach(r => lista.push({ 
@@ -1756,7 +1756,7 @@ function montarDropdownHospedesOrcamento() {
         } 
     });
 
-    // Injeta container do filtro de corretor no HTML se for Gestor
+    // Injeta container do filtro de corretor no HTML se for Gestor/Admin
     const containerFiltros = el('bloco-filtro-datas');
     if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         containerFiltros.insertAdjacentHTML('afterend', `
@@ -1801,17 +1801,10 @@ function montarDropdownHospedesOrcamento() {
     }
 
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
-    let meuUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : null);
-    let meuNome = window.nomeUsuarioLogado || '';
 
     let fit = lista.filter(r => {
-        // Se for parceiro/corretor, valida pelo UID ou pelo Nome do Criador
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            let ehMinha = false;
-            if (meuUid && r.criadoPorUid === meuUid) ehMinha = true;
-            if (meuNome && r.criadoPor && r.criadoPor.toLowerCase().includes(meuNome.toLowerCase().split(' ')[0])) ehMinha = true;
-            if (!ehMinha) return false;
-        } else if (fCorrValue !== 'todos') {
+        // Filtro de corretor exclusivo para visão Gestor
+        if (typeof userRole !== 'undefined' && userRole !== 'parceiro' && fCorrValue !== 'todos') {
             if (fCorrValue === 'admin') {
                 if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
             } else {
@@ -1867,16 +1860,8 @@ function montarDropdownHospedesOrcamento() {
             bdg = `<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;
         }
 
-        let nomeCriador = '';
-        if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
-            let badgeNome = res.criadoPor || 'Gestor';
-            nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
-        }
-
-        let podeEditar = true;
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            if (res.criadoPorUid && res.criadoPorUid !== meuUid) podeEditar = false;
-        }
+        let badgeNome = res.criadoPor || 'Gestor';
+        let nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
 
         let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
 
@@ -1889,7 +1874,7 @@ function montarDropdownHospedesOrcamento() {
                 <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
                 <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
                 <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
-                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}${podeEditar ? `<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-edit"></i></button>` : ''}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-edit"></i></button></td>
             </tr>
         `);
     });
