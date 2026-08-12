@@ -2492,6 +2492,19 @@ function aplicarPermissoesParceiro() {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(aplicarPermissoesParceiro, 500);
 });
+        // ================= FIX GLOBAL PARA IDENTIFICAÇÃO DO CORRETOR =================
+function capturarDadosCriadorReserva() {
+    let cUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : 'admin');
+    let cNome = 'Gestor';
+
+    if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
+        cNome = window.nomeUsuarioLogado || (typeof userData !== 'undefined' && userData.nome ? userData.nome : 'Corretor/Parceiro');
+    } else if (window.nomeUsuarioLogado && window.nomeUsuarioLogado !== 'Admin') {
+        cNome = window.nomeUsuarioLogado;
+    }
+
+    return { criadoPorUid: cUid, criadoPor: cNome };
+}
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
