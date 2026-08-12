@@ -1087,6 +1087,254 @@ function montarDropdownHospedesOrcamento() {
     w.document.write(html);
     w.document.close();
 }
+// Variable global para controle de mês da tela de Despesas
+let mesAtualDespesas = new Date();
+
+// 1. POVOAR SELETORES DE IMÓVEIS NAS DUAS TELAS
+function povoarSelectsFinanceiros() {
+    const selDespesas = el('filtro-imovel-despesas');
+    const selDRE = el('fin-imovel-select');
+
+    let options = '<option value="">Selecione o Imóvel...</option>';
+    if (typeof imoveisDB !== 'undefined' && Array.isArray(imoveisDB)) {
+        imoveisDB.forEach(im => {
+            const apto = im.numeroApto ? ` (Apto ${im.numeroApto})` : '';
+            options += `<option value="${im.id}">${im.nome}${apto}</option>`;
+        });
+    }
+
+    if (selDespesas) {
+        selDespesas.innerHTML = options;
+        if (imoveisDB.length > 0 && !selDespesas.value) selDespesas.value = imoveisDB[0].id;
+    }
+    if (selDRE) {
+        selDRE.innerHTML = options;
+        if (imoveisDB.length > 0 && !selDRE.value) selDRE.value = imoveisDB[0].id;
+    }
+
+    // Define mês atual no input month da DRE se estiver vazio
+    const inputMesDRE = el('fin-mes-select');
+    if (inputMesDRE && !inputMesDRE.value) {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        inputMesDRE.value = `${ano}-${mes}`;
+    }
+
+    atualizarLabelMesDespesa();
+}
+
+// 2. CONTROLE DE MÊS DA TELA DE DESPESAS
+function atualizarLabelMesDespesa() {
+    const label = el('label-mes-despesa');
+    if (label) {
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        label.innerText = `${meses[mesAtualDespesas.getMonth()]} ${mesAtualDespesas.getFullYear()}`;
+    }
+    carregarListaDespesas();
+}
+
+function mudarMesDespesa(delta) {
+    mesAtualDespesas.setMonth(mesAtualDespesas.getMonth() + delta);
+    atualizarLabelMesDespesa();
+}
+
+// 3. RENDERIZAR LISTA DE DESPESAS
+function carregarListaDespesas() {
+    const imovelId = val('filtro-imovel-despesas');
+    const tbody = el('tbody-aba-despesas');
+    const placeholder = el('placeholder-despesas');
+    const tabelaContainer = el('tabela-container-despesas');
+
+    if (!tbody) return;
+
+    if (!imovelId) {
+        if (placeholder) show(placeholder);
+        if (tabelaContainer) hide(tabelaContainer);
+        return;
+    }
+
+    const imovel = imoveisDB.find(i => i.id == imovelId);
+    if (!imovel || !imovel.despesas || imovel.despesas.length === 0) {
+        if (placeholder) show(placeholder);
+        if (tabelaContainer) hide(tabelaContainer);
+        return;
+    }
+
+    // Filtra pelo ano e mês selecionados
+    const anoSel = mesAtualDespesas.getFullYear();
+    const mesSel = mesAtualDespesas.getMonth();
+
+    const despesasFiltradas = imovel.despesas.filter(d => {
+        if (!d.data) return false;
+        const dt = new Date(parseInputDateSafe(d.data) + 'T12:00:00');
+        return dt.getFullYear() === anoSel && dt.getMonth() === mesSel;
+    });
+
+    if (despesasFiltradas.length === 0) {
+        if (placeholder) show(placeholder);
+        if (tabelaContainer) hide(tabelaContainer);
+        return;
+    }
+
+    if (placeholder) hide(placeholder);
+    if (tabelaContainer) show(tabelaContainer);
+
+    tbody.innerHTML = '';
+    despesasFiltradas.forEach((d, idx) => {
+        const dataFmt = d.data ? parseInputDateSafe(d.data).split('-').reverse().join('/') : '-';
+        const valorFmt = parseFloat(d.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+        tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-4 font-medium text-slate-700">${dataFmt}</td>
+                <td class="p-4 text-slate-600">${d.descricao || '-'}</td>
+                <td class="p-4 text-right font-bold text-red-600">R$ ${valorFmt}</td>
+                <td class="p-4 text-center">
+                    <button onclick="excluirDespesa(${imovel.id}, ${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50">Excluir</button>
+                </td>
+            </tr>`;
+    });
+}
+
+// 4. SALVAR NOVA DESPESA
+function salvarDespesa() {
+    const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
+    const imovel = imoveisDB.find(i => i.id == imovelId);
+
+    if (!imovel) {
+        mostrarAlerta("Selecione um imóvel para lançar a despesa.");
+        return;
+    }
+
+    const desc = val('despesa-descricao') || val('cad-despesa-desc');
+    const valor = parseFloat(val('despesa-valor') || val('cad-despesa-valor'));
+    const data = val('despesa-data') || val('cad-despesa-data');
+
+    if (!desc || isNaN(valor) || valor <= 0) {
+        mostrarAlerta("Informe a descrição e um valor válido.");
+        return;
+    }
+
+    if (!imovel.despesas) imovel.despesas = [];
+
+    imovel.despesas.push({
+        id: Date.now(),
+        descricao: desc,
+        valor: valor,
+        data: data || new Date().toISOString().split('T')[0]
+    });
+
+    salvarBancoNoStorage();
+    carregarListaDespesas();
+    if (typeof fecharModalDespesa === 'function') fecharModalDespesa();
+    mostrarNotificacao("Despesa cadastrada com sucesso!");
+}
+
+// 5. EXCLUIR DESPESA
+function excluirDespesa(imovelId, index) {
+    const imovel = imoveisDB.find(i => i.id == imovelId);
+    if (!imovel || !imovel.despesas) return;
+
+    imovel.despesas.splice(index, 1);
+    salvarBancoNoStorage();
+    carregarListaDespesas();
+    mostrarNotificacao("Despesa removida.");
+}
+
+// 6. RENDERIZAR DRE COMPLETA
+function gerarRelatorioFinanceiro() {
+    const iId = val('fin-imovel-select');
+    const mSt = val('fin-mes-select');
+
+    if (!iId) {
+        mostrarAlerta("Selecione um imóvel.");
+        return;
+    }
+
+    const im = imoveisDB.find(i => i.id == iId);
+    if (!im) return;
+
+    hide('fin-vazio');
+    show('fin-painel');
+
+    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome || '';
+    if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
+    if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+
+    let tx = im.proprietario?.comissao || 20;
+    if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+
+    let r = 0, d = 0;
+    const tR = el('fin-lista-receitas');
+    const tD = el('fin-lista-despesas');
+
+    if (tR) tR.innerHTML = '';
+    if (tD) tD.innerHTML = '';
+
+    // Receitas
+    if (im.reservas) {
+        im.reservas.forEach(x => {
+            let checkinSeguro = parseInputDateSafe(x.checkin);
+            if (!mSt || checkinSeguro.startsWith(mSt)) {
+                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                    let v = parseFloat(x.valorTotal) || 0;
+                    r += v;
+                    if (tR) {
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/');
+                        tR.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td><td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-right font-bold text-green-600">R$ ${(v * (1 - tx/100)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+                    }
+                }
+            }
+        });
+    }
+
+    // Despesas
+    if (im.despesas) {
+        im.despesas.forEach(x => {
+            let dataSegura = parseInputDateSafe(x.data);
+            if (!mSt || dataSegura.startsWith(mSt)) {
+                let v = parseFloat(x.valor) || 0;
+                d += v;
+                if (tD) {
+                    tD.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao || '-'}</td><td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+                }
+            }
+        });
+    }
+
+    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
+    if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
+
+    let c = r * (tx / 100);
+    let l = r - c - d;
+
+    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+}
+
+// 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
+function mudarAbaDRE(aba) {
+    const btnReceitas = el('btn-tab-dre-receitas');
+    const btnDespesas = el('btn-tab-dre-despesas');
+    const contentReceitas = el('dre-content-receitas');
+    const contentDespesas = el('dre-content-despesas');
+
+    if (aba === 'receitas') {
+        show(contentReceitas);
+        hide(contentDespesas);
+        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors";
+        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+    } else {
+        hide(contentReceitas);
+        show(contentDespesas);
+        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors";
+        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+    }
+}
         function renderizarAdmin() {
             const d = el('lista-imoveis-admin'); if(!d) return; d.innerHTML = '';
             if (imoveisDB.length === 0) { d.innerHTML = '<p class="text-center text-slate-500 py-4 font-bold">Nenhum imóvel cadastrado.</p>'; return; }
@@ -1097,7 +1345,8 @@ function montarDropdownHospedesOrcamento() {
                 let nm = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
                 d.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between hover:border-orange-200 transition-colors"><div class="flex items-center gap-4 w-full sm:w-auto"><img src="${tb}" class="w-16 h-16 rounded-lg object-cover bg-slate-100 shadow-sm"><div><h4 class="font-bold text-slate-800 text-lg">${nm}</h4><div class="flex flex-wrap items-center text-xs font-bold text-slate-500 mt-1 gap-3"><span><i class="fas fa-building mr-1 text-slate-400"></i>${im.tipo}</span><span><i class="fas fa-user-friends mr-1 text-slate-400"></i>Até ${im.capacidadeTotal}</span>${bgSt}</div></div></div><div class="flex gap-2 w-full sm:w-auto mt-3 sm:mt-0"><button onclick="editarImovel(${im.id})" title="Editar Imóvel" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-edit mr-1"></i> Editar</button><button onclick="abrirModalExclusao(${im.id})" title="Excluir Imóvel" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-trash-alt"></i></button></div></div>`);
             });
-        }
+        povoarSelectsFinanceiros();
+}
 
         function abrirModalExclusao(id) { 
     confirmarExclusao(() => {
