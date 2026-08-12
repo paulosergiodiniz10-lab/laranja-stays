@@ -556,7 +556,14 @@ function povoarSelectCategorias() {
         });
 
         let nuvemCarregadaSegura = false; // NOSSA NOVA TRAVA MESTRA
-
+if (typeof inicializarApp !== 'function') {
+    window.inicializarApp = function() {
+        show('tela-app');
+        if (typeof inicializarCalendarios === 'function') inicializarCalendarios();
+        if (typeof renderizarVitrine === 'function') renderizarVitrine(imoveisDB);
+        if (typeof renderizarAdmin === 'function') renderizarAdmin();
+        if (typeof aplicarPermissoesDeAcesso === 'function') aplicarPermissoesDeAcesso();
+    };
         async function carregarDadosFirebase(uidEmpresa) {
             try { 
                 const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); 
