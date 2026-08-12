@@ -1048,10 +1048,15 @@ function montarDropdownHospedesOrcamento() {
             });
         }
 
-        function abrirModalExclusao(id) { imovelExcluirId = id; show('modal-exclusao'); }
-        function fecharModalExclusao() { imovelExcluirId = null; hide('modal-exclusao'); }
-        function confirmarExclusao() { if (imovelExcluirId) { imoveisDB = imoveisDB.filter(i => i.id !== imovelExcluirId); salvarBancoNoStorage(); renderizarAdmin(); renderizarVitrine(imoveisDB); fecharModalExclusao(); mostrarNotificacao('Imóvel excluído com sucesso.'); } }
-
+        function abrirModalExclusao(id) { 
+    confirmarExclusao(() => {
+        imoveisDB = imoveisDB.filter(i => i.id !== id); 
+        salvarBancoNoStorage(); 
+        renderizarAdmin(); 
+        renderizarVitrine(imoveisDB); 
+        mostrarNotificacao('Imóvel excluído com sucesso.');
+    }, "Excluir Imóvel", "Deseja realmente apagar este imóvel do sistema?");
+}
         function abrirModalCadastro() { 
             imovelEditandoId = null; if(el('titulo-modal-cadastro')) el('titulo-modal-cadastro').innerText = "Novo Imóvel";
             ['cad-prop-nome','cad-prop-cpf','cad-prop-zap','cad-prop-email','cad-nome','cad-num-apto','cad-cep','cad-cidade','cad-uf','cad-rua','cad-bairro','cad-numero','cad-complemento','cad-link-loc','cad-estrutura','cad-pagamento'].forEach(i=>sv(i,''));
@@ -1602,7 +1607,22 @@ function montarDropdownHospedesOrcamento() {
             fecharModalReserva(); 
             mostrarNotificacao(`Salvo! Localizador: ${numRes}`);
         }
-        function excluirReservaConfirmacao() { const imId = val('reserva-imovel-select'); const rId = val('reserva-id'); const im = imoveisDB.find(i=>i.id==imId); if(im&&im.reservas){ im.reservas=im.reservas.filter(r=>r.id!=rId); salvarBancoNoStorage(); renderizarMapaDisponibilidade(); renderizarListaReservasAdmin(); fecharModalReserva(); mostrarNotificacao("Ficha Apagada!"); } }
+        function excluirReservaConfirmacao() { 
+    const imId = val('reserva-imovel-select'); 
+    const rId = val('reserva-id'); 
+    const im = imoveisDB.find(i => i.id == imId); 
+    
+    if(im && im.reservas){ 
+        confirmarExclusao(() => {
+            im.reservas = im.reservas.filter(r => r.id != rId); 
+            salvarBancoNoStorage(); 
+            renderizarMapaDisponibilidade(); 
+            renderizarListaReservasAdmin(); 
+            fecharModalReserva(); 
+            mostrarNotificacao("Ficha Apagada!");
+        }, "Excluir Reserva", "Deseja realmente apagar esta ficha de reserva?");
+    } 
+}
 
         function abrirModalPagamento(imId, rId) {
             if (userRole === 'parceiro') { mostrarAlerta("Apenas o Administrador pode registrar pagamentos."); return; }
