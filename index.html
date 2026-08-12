@@ -654,17 +654,20 @@ function povoarSelectCategorias() {
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
             if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
 
-            // Esconde as abas forçadamente se for corretor
-            const displayValor = ehParceiro ? 'none' : '';
+            // Esconde as abas administrativas se for corretor
+        const displayValor = ehParceiro ? 'none' : '';
 
-            if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
-            if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
-            if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
-            if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
-            if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = displayValor;
+        if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+        if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+        if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+        if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
+        
+        // Esconde Imóveis para o parceiro e mantém Orçamentos visível
+        if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
+        if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
 
-            if (ehParceiro) mudarAbaInternaAdmin('imoveis');
-        }
+        // Se for parceiro, abre direto no Mapa de Reservas em vez de Imóveis
+        if (ehParceiro) mudarAbaInternaAdmin('mapa');
 
         // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
