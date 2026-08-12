@@ -2152,37 +2152,79 @@ function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategor
         }
         
         function gerarRelatorioFinanceiro() {
-            const iId = val('fin-imovel-select'); const mSt = val('fin-mes-select'); if(!iId || !mSt) return;
-            const im = imoveisDB.find(i => i.id == iId); if(!im) return;
-            hide('fin-vazio'); show('fin-painel'); mudarAbaDRE('receitas');
-            if(el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome; if(el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`; if(el('fin-mes-label')) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
-            let tx = im.proprietario?.comissao || 20; if(el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
-            let r = 0, d = 0; const tR = el('fin-lista-receitas'); const tD = el('fin-lista-despesas'); 
-            if(tR) tR.innerHTML = ''; if(tD) tD.innerHTML = '';
-            if(im.reservas) {
-                im.reservas.forEach(x => { 
-                    let checkinSeguro = parseInputDateSafe(x.checkin);
-                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
-                        let v = parseFloat(x.valorTotal) || 0; r += v; 
-                        let din = checkinSeguro.split('-').reverse().join('/'); let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/'); let retido = v * (tx / 100);
-                        if(tR) { tR.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} até ${dout}</td><td class="p-3 text-right font-medium text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-right text-green-600 font-bold bg-green-50/30">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`); }
-                    } 
-                });
+    // Pega o imóvel selecionado (seja na aba DRE ou na aba Despesas)
+    const iId = val('fin-imovel-select') || val('select-despesa-imovel') || val('dre-imovel-select');
+    const mSt = val('fin-mes-select') || val('select-despesa-mes') || val('dre-mes-select');
+
+    if (!iId) return;
+    const im = imoveisDB.find(i => i.id == iId);
+    if (!im) return;
+
+    // Se houver painéis para mostrar/ocultar
+    if (el('fin-vazio')) hide('fin-vazio');
+    if (el('fin-painel')) show('fin-painel');
+
+    // Atualiza Labels da Tela
+    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome || '';
+    if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
+    if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+
+    let tx = im.proprietario?.comissao || 20;
+    if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+
+    let r = 0, d = 0;
+    const tR = el('fin-lista-receitas') || el('lista-receitas-dre');
+    const tD = el('fin-lista-despesas') || el('lista-despesas-dre') || el('container-lista-despesas');
+
+    if (tR) tR.innerHTML = '';
+    if (tD) tD.innerHTML = '';
+
+    // 1. Processa Receitas / Reservas
+    if (im.reservas) {
+        im.reservas.forEach(x => {
+            let checkinSeguro = parseInputDateSafe(x.checkin);
+            // Se mSt estiver preenchido filtra por mês, caso contrário traz todas
+            if (!mSt || checkinSeguro.startsWith(mSt)) {
+                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                    let v = parseFloat(x.valorTotal) || 0;
+                    r += v;
+                    if (tR) {
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/');
+                        tR.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td><td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
+                    }
+                }
             }
-            if(im.despesas) {
-                im.despesas.forEach(x => { 
-                    let dataSegura = parseInputDateSafe(x.data);
-                    if(dataSegura.startsWith(mSt)) { 
-                        let v = parseFloat(x.valor) || 0; d += v; 
-                        if(tD) { tD.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao}</td><td class="p-3 text-right text-red-600 font-bold">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`); }
-                    } 
-                });
+        });
+    }
+
+    // 2. Processa Despesas / Gastos
+    if (im.despesas) {
+        im.despesas.forEach(x => {
+            let dataSegura = parseInputDateSafe(x.data);
+            if (!mSt || dataSegura.startsWith(mSt)) {
+                let v = parseFloat(x.valor) || 0;
+                d += v;
+                if (tD) {
+                    tD.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xxs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao || '-'}</td><td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
+                }
             }
-            if(tR && tR.innerHTML === '') tR.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>`;
-            if(tD && tD.innerHTML === '') tD.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>`;
-            let c = r * (tx / 100); let l = r - c - d;
-            if(el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-        }
+        });
+    }
+
+    // Mensagens de lista vazia
+    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
+    if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
+
+    // Totais Financeiros
+    let c = r * (tx / 100);
+    let l = r - c - d; // Líquido
+
+    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+}
 
         function mudarAbaDRE(a) { if(el('dre-content-receitas')) el('dre-content-receitas').classList[a==='receitas'?'remove':'add']('hidden-view'); if(el('dre-content-despesas')) el('dre-content-despesas').classList[a==='despesas'?'remove':'add']('hidden-view'); if(el('btn-tab-dre-receitas')) el('btn-tab-dre-receitas').className=a==='receitas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-dre-despesas')) el('btn-tab-dre-despesas').className=a==='despesas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; }
         
