@@ -1778,9 +1778,12 @@ function montarDropdownHospedesOrcamento() {
     let dI = null; let dF = null;
     let hj = new Date(); hj.setHours(0,0,0,0);
 
-    if (p === 'hoje') { dI = new Date(hj); dF = new Date(hj); }
-    else if (p === '7') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 7); }
-    else if (p === '30') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 30); }
+    if (p === 'hoje') { 
+        dI = new Date(hj); dI.setHours(0,0,0,0); 
+        dF = new Date(hj); dF.setHours(23,59,59,999); 
+    }
+    else if (p === '7') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 7); dF.setHours(23,59,59,999); }
+    else if (p === '30') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 30); dF.setHours(23,59,59,999); }
     else if (p === 'personalizado') {
         if (val('filtro-reserva-inicio')) dI = new Date(parseInputDateSafe(val('filtro-reserva-inicio')) + 'T00:00:00');
         if (val('filtro-reserva-fim')) dF = new Date(parseInputDateSafe(val('filtro-reserva-fim')) + 'T23:59:59');
@@ -1801,8 +1804,8 @@ function montarDropdownHospedesOrcamento() {
 
         if (p === 'todas') return true;
 
-        let rI = new Date(parseInputDateSafe(r.checkin) + 'T12:00:00');
-        let rF_date = new Date(parseInputDateSafe(r.checkout) + 'T12:00:00');
+        let rI = new Date(parseInputDateSafe(r.checkin) + 'T00:00:00');
+        let rF_date = new Date(parseInputDateSafe(r.checkout) + 'T23:59:59');
 
         if (dI && dF) return rI <= dF && rF_date >= dI;
         if (dI) return rF_date >= dI;
@@ -1872,7 +1875,6 @@ function montarDropdownHospedesOrcamento() {
         `);
     });
 }
-
 function exportarExcelReservas() {
     if(!reservasAtuaisExportacao.length) return; 
     let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
