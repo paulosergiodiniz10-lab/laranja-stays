@@ -1746,7 +1746,6 @@ function montarDropdownHospedesOrcamento() {
     const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
     imoveisDB.forEach(im => { if (im.reservas) im.reservas.forEach(r => lista.push({ ...r, nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, imovelId: im.id })); });
 
-    // Cria o filtro de Corretores para o Gestor se ainda não existir
     const containerFiltros = el('bloco-filtro-datas');
     if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
         containerFiltros.insertAdjacentHTML('afterend', `
@@ -1784,7 +1783,6 @@ function montarDropdownHospedesOrcamento() {
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
 
     let fit = lista.filter(r => {
-        // Bloqueio Rigoroso do Corretor na Lista
         if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
             if (r.criadoPorUid !== window.uidUsuarioLogado) return false;
         } else if (fCorrValue !== 'todos') {
@@ -1832,6 +1830,32 @@ function montarDropdownHospedesOrcamento() {
         } else {
             bdg = `<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;
         }
+
+        let nomeCriador = '';
+        if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+            let badgeNome = res.criadoPor || 'Gestor';
+            nomeCriador = `<div class="text-[10px] mt-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</div>`;
+        }
+
+        let podeEditar = true;
+        if (typeof userRole !== 'undefined' && userRole === 'parceiro' && res.criadoPorUid !== window.uidUsuarioLogado) podeEditar = false;
+
+        let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
+
+        tb.insertAdjacentHTML('beforeend', `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 text-xs font-bold text-slate-500">${dC}</td>
+                <td class="p-3 font-medium text-slate-400 text-xs">#${res.numReserva || '-'}</td>
+                <td class="p-3">${bdg}</td>
+                <td class="p-3"><div class="font-bold text-slate-700 text-xs">${res.titular?.nome || res.finalidade || 'Uso Próprio'}</div>${nomeCriador}</td>
+                <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
+                <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
+                <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}${podeEditar ? `<button onclick="abrirEdicaoReservaLista(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg"><i class="fas fa-edit"></i></button>` : ''}</td>
+            </tr>
+        `);
+    });
+}
 
         let nomeCriador = '';
         if (typeof userRole !== 'undefined' && userRole !== 'parceiro') {
