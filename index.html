@@ -1010,36 +1010,37 @@ function montarDropdownHospedesOrcamento() {
             const im = imoveisDB.find(i => i.id == imovelId); const res = im?.reservas.find(r => r.id == reservaId); if(!im || !res) return;
             let dIn = parseInputDateSafe(res.checkin).split('-').reverse().join('/'); let dOut = parseInputDateSafe(res.checkout).split('-').reverse().join('/'); let noites = Math.round((new Date(parseInputDateSafe(res.checkout)+'T12:00:00') - new Date(parseInputDateSafe(res.checkin)+'T12:00:00')) / 86400000);
             
-            let nEmp = empresaDB.nome || "Temporada Stays PMS"; 
+           let nEmp = empresaDB.nome || "Temporada Stays PMS";
             let endIm = `${im.endereco?.rua || ''}, ${im.endereco?.numero || 'S/N'}`; if(im.endereco?.bairro) endIm += ` - ${im.endereco.bairro}`; if(im.cidade) endIm += `, ${im.cidade}`;
             
-            let endEmpArr = []; if(empresaDB.endereco?.rua) endEmpArr.push(empresaDB.endereco.rua); if(empresaDB.endereco?.numero) endEmpArr.push(empresaDB.endereco.numero); if(empresaDB.endereco?.complemento) endEmpArr.push(empresaDB.endereco.complemento); if(empresaDB.endereco?.bairro) endEmpArr.push(empresaDB.endereco.bairro); let endEmp = endEmpArr.length > 0 ? endEmpArr.join(', ') : '';
-            let cInfo = []; if(empresaDB.endereco?.cidade) cInfo.push(empresaDB.endereco.cidade); if(empresaDB.endereco?.uf) cInfo.push(empresaDB.endereco.uf); 
-            let cidEmp = cInfo.join(', ') + (empresaDB.zap ? ` / ${empresaDB.zap}` : ''); 
-            let docEmp = `CNPJ/CPF: ${empresaDB.cnpj || '-'}` + (empresaDB.creci ? ` - CRECI: ${empresaDB.creci}` : '');
-            let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:10px; border-radius:4px; font-weight:bold;">LOGO</div>`;
-            
-            let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap?`WhatsApp: ${empresaDB.zap}<br>`:''}${empresaDB.email?`E-mail: ${empresaDB.email}`:''}`;
+            let endEmpArr = [];
+    if(empresaDB.endereco?.rua) endEmpArr.push(empresaDB.endereco.rua);
+    if(empresaDB.endereco?.numero) endEmpArr.push(empresaDB.endereco.numero);
+    if(empresaDB.endereco?.complemento) endEmpArr.push(empresaDB.endereco.complemento);
+    
+    let cInfo = [];
+    if(empresaDB.endereco?.cidade) cInfo.push(empresaDB.endereco.cidade);
+    if(empresaDB.endereco?.uf) cInfo.push(empresaDB.endereco.uf);
+    
+    let cidEmp = cInfo.join(', ') + (empresaDB.zap ? ` / ${empresaDB.zap}` : '');
+    let docEmp = `CNPJ/CPF: ${empresaDB.cnpj || '-'}` + (empresaDB.creci ? ` - CRECI: ${empresaDB.creci}` : '');
+    let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9;"></div>`;
+    let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap ? `WhatsApp: ${empresaDB.zap}<br>` : ''}${empresaDB.email ? `E-mail: ${empresaDB.email}` : ''}`;
 
-            // A MÁGICA ACONTECE AQUI: VERIFICA SE FOI FEITO POR CORRETOR (SIGILO)
-            if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPorUid !== 'admin') {
-                const corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
-                if (corretor) {
-                    nEmp = corretor.nome; // Nome do corretor no topo
-                    
-                    // Se o corretor tiver CRECI cadastrado, mostra ele. Senão, mostra apenas que é Parceiro.
-                    docEmp = corretor.creci ? `Corretor(a) Parceiro(a) - CRECI: ${corretor.creci}` : "Corretor(a) Parceiro(a)";
-                    
-                    endEmp = ""; // Esconde o endereço da empresa
-                    cidEmp = corretor.zap ? `WhatsApp: ${corretor.zap}` : ''; // Apenas Zap do corretor
-                    
-                    let iniciais = corretor.nome.substring(0, 2).toUpperCase();
-                    lgHtml = `<div style="width:80px; height:80px; background:#fbd38d; display:flex; align-items:center; justify-content:center; color:#9a3412; font-size:24px; border-radius:8px; font-weight:bold; text-transform:uppercase;">${iniciais}</div>`;
-                    
-                    assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
-                }
-            }
+    // Identifica se foi feito por corretor e ajusta os dados
+    let corretor = null;
+    if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPor !== 'Painel Gestor') {
+        corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
+    }
 
+    if (corretor) {
+        nEmp = corretor.nome;
+        docEmp = corretor.creci ? `CRECI: ${corretor.creci}` : 'Corretor / Parceiro';
+        endEmpArr = [];
+        cidEmp = corretor.zap ? `Contato: ${corretor.zap}` : '';
+        lgHtml = ''; // Oculta totalmente a logo da imobiliária
+        assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
+    }
             const calcIdade = (dNasc) => { if(!dNasc) return ''; let hoje = new Date(); let nasc = new Date(parseInputDateSafe(dNasc) + 'T12:00:00'); let idade = hoje.getFullYear() - nasc.getFullYear(); let m = hoje.getMonth() - nasc.getMonth(); if(m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--; return ` (${idade})`; };
             let lh = ``; if(res.titular?.nome) { let doc = res.titular.cpf || '-'; let nasc = res.titular.dataNasc ? parseInputDateSafe(res.titular.dataNasc).split('-').reverse().join('/') + calcIdade(res.titular.dataNasc) : '-'; lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${res.titular.nome} (Titular)</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${nasc}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${doc}</td></tr>`; }
             if(res.acompanhantes) { res.acompanhantes.forEach(a => { let doc = a.cpf || '-'; let nasc = a.dataNasc ? parseInputDateSafe(a.dataNasc).split('-').reverse().join('/') + calcIdade(a.dataNasc) : '-'; lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${a.nome}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${nasc}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${doc}</td></tr>`; }); }
