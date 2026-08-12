@@ -628,21 +628,24 @@ function povoarSelectCategorias() {
             let nomeExibicao = "Painel Gestor";
             let cargoExibicao = "Temporada Stays PMS";
             let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-
-            if (ehParceiro) {
-                cargoExibicao = "Corretor / Parceiro";
-                // Busca o nome do corretor na equipe
-                if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
-                    const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
-                    if (meuCadastro && meuCadastro.nome) {
-                        nomeExibicao = meuCadastro.nome;
-                    } else {
-                        nomeExibicao = auth.currentUser.email;
-                    }
-                } else if (auth.currentUser) {
+if (ehParceiro) {
+            cargoExibicao = "Corretor / Parceiro";
+            // Busca o nome do corretor na equipe
+            if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
+                if (meuCadastro && meuCadastro.nome) {
+                    nomeExibicao = meuCadastro.nome;
+                } else {
                     nomeExibicao = auth.currentUser.email;
                 }
+            } else if (auth.currentUser) {
+                nomeExibicao = auth.currentUser.email;
             }
+            if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-user mr-1.5 hidden sm:inline"></i> Painel';
+        } else {
+            cargoExibicao = "Gestor / Admin";
+            if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-cog mr-1.5 hidden sm:inline"></i> Admin';
+        }
 
             // Escreve no painel
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
