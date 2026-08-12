@@ -651,7 +651,7 @@ if (ehParceiro) {
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
             if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
 
-            // Esconde as abas forçadamente se for corretor
+                        // Esconde as abas forçadamente se for corretor
             const displayValor = ehParceiro ? 'none' : '';
 
 if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
@@ -661,7 +661,8 @@ if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displa
 
 // Esconde Meus Imóveis para o parceiro
 if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
-
+// Mantém Orçamentos visível para todos
+if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
 // Abre direto no Mapa de Reservas para o parceiro
 if (ehParceiro) mudarAbaInternaAdmin('mapa');
         }
