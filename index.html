@@ -1359,12 +1359,18 @@ function gerarRelatorioFinanceiro() {
     if (typeof hide === 'function') hide('fin-vazio');
     if (typeof show === 'function') show('fin-painel');
 
-    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome || '';
+    // Nome completo com número do Apto se existir
+    let nomeExibicao = im.nome || '';
+    if (im.numeroApto) {
+        nomeExibicao += ` (Apto ${im.numeroApto})`;
+    }
+
+    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = nomeExibicao;
     if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
     if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
 
     let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
-    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || 0;
+    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
 
     if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
 
@@ -1432,16 +1438,16 @@ function gerarRelatorioFinanceiro() {
         });
     }
 
-    // 3. Adiciona Taxas de Limpeza às Saídas/Despesas
+    // 3. Adiciona Taxas de Limpeza às Saídas
     if (taxaLimpezaUnit > 0 && qtdReservasPagasMes > 0) {
         const totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
         d += totalLimpezaAuto;
 
         if (tD) {
             tD.insertAdjacentHTML('beforeend', `
-                <tr class="border-b border-slate-100 bg-orange-50/60 font-bold">
+                <tr class="border-b border-slate-100 bg-orange-50/80 font-bold">
                     <td class="p-3 text-center text-orange-600 text-xs"><i class="fas fa-broom mr-1"></i> Auto</td>
-                    <td class="p-3 font-bold text-orange-800">
+                    <td class="p-3 font-bold text-orange-900">
                         Taxa de Limpeza (${qtdReservasPagasMes} ${qtdReservasPagasMes === 1 ? 'reserva' : 'reservas'} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})
                     </td>
                     <td class="p-3 text-right font-bold text-red-600">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
@@ -1461,8 +1467,97 @@ function gerarRelatorioFinanceiro() {
     if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
     if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
 }
-        // 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
-function mudarAbaDRE(a) { 
+
+// FUNÇÃO PARA EXPORTAR PARA EXCEL (PODE COLE LOGO ABAIXO DA LINHA 1463)
+function exportarExcelDRE() {
+    const iId = val('fin-imovel-select');
+    const mSt = val('fin-mes-select');
+
+    if (!iId) { if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel."); return; }
+
+    const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == iId) : null;
+    if (!im) return;
+
+    let nomeExibicao = im.nome || '';
+    if (im.numeroApto) nomeExibicao += ` (Apto ${im.numeroApto})`;
+
+    let propNome = im.proprietario?.nome || 'Não informado';
+    let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+
+    let r = 0, dManuais = 0, qtdReservasPagasMes = 0;
+    let linhasEntradas = [];
+    let linhasSaidas = [];
+
+    if (im.reservas) {
+        im.reservas.forEach(x => {
+            let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
+            if (!mSt || checkinSeguro.startsWith(mSt)) {
+                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                    let v = parseFloat(x.valorTotal) || 0;
+                    r += v;
+                    let comissaoReserva = v * (tx / 100);
+                    let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                    if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
+
+                    let din = checkinSeguro.split('-').reverse().join('/');
+                    let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+
+                    let detalheRetido = `R$ ${comissaoReserva.toFixed(2)}`;
+                    if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toFixed(2)} Limpeza)`;
+
+                    linhasEntradas.push([`"${x.titular?.nome || '-'} (${x.statusPagamento})"`, `"${din} a ${dout}"`, `"R$ ${v.toFixed(2)}"`, `"${detalheRetido}"`].join(';'));
+                }
+            }
+        });
+    }
+
+    if (im.despesas) {
+        im.despesas.forEach(x => {
+            let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
+            if (!mSt || dataSegura.startsWith(mSt)) {
+                let v = parseFloat(x.valor) || 0;
+                dManuais += v;
+                linhasSaidas.push([`"${dataSegura.split('-').reverse().join('/')}"`, `"${x.descricao || '-'}"`, `""`, `"R$ ${v.toFixed(2)}"`].join(';'));
+            }
+        });
+    }
+
+    let totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
+    let dTotal = dManuais + totalLimpezaAuto;
+    let comissaoTotal = r * (tx / 100);
+    let liquidoFinal = r - comissaoTotal - dTotal;
+
+    let csvContent = "\uFEFF";
+    csvContent += `"DRE - ${nomeExibicao.toUpperCase()}"\n`;
+    csvContent += `"Mês: ${mSt.split('-').reverse().join('/')} | Prop: ${propNome} | Com: ${tx}% | Limpeza/Reserva: R$ ${taxaLimpezaUnit.toFixed(2)}"\n\n`;
+
+    csvContent += `" RESUMO FINANCEIRO ";;;" VALORES "\n`;
+    csvContent += `"(+) Receitas Brutas";;;"R$ ${r.toFixed(2)}"\n`;
+    csvContent += `"(-) Comissão Agência (${tx}%)";;;"R$ ${comissaoTotal.toFixed(2)}"\n`;
+    csvContent += `"(-) Taxas de Limpeza (Reservas)";;;"R$ ${totalLimpezaAuto.toFixed(2)}"\n`;
+    csvContent += `"(-) Despesas do Imóvel";;;"R$ ${dManuais.toFixed(2)}"\n`;
+    csvContent += `"(=) LÍQUIDO PROPRIETÁRIO";;;"R$ ${liquidoFinal.toFixed(2)}"\n\n`;
+
+    csvContent += `"--- ENTRADAS ---";;;\n`;
+    csvContent += `"Hóspede";"Período";"Bruto";"Retido Agência"\n`;
+    csvContent += linhasEntradas.length > 0 ? linhasEntradas.join('\n') + '\n' : `"Nenhuma entrada registrada neste mês.";;;\n`;
+
+    csvContent += `\n"--- SAÍDAS ---";;;\n`;
+    csvContent += `"Data";"Descrição";"";"Valor"\n`;
+    if (totalLimpezaAuto > 0) {
+        csvContent += `"Auto";"Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toFixed(2)})";"";"R$ ${totalLimpezaAuto.toFixed(2)}"\n`;
+    }
+    csvContent += linhasSaidas.length > 0 ? linhasSaidas.join('\n') + '\n' : (totalLimpezaAuto === 0 ? `"Nenhuma despesa neste mês.";;;\n` : '');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `DRE_${nomeExibicao.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}function mudarAbaDRE(a) { 
     const contentReceitas = el('dre-content-receitas');
     const contentDespesas = el('dre-content-despesas');
     const btnReceitas = el('btn-tab-dre-receitas');
