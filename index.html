@@ -1473,7 +1473,10 @@ function exportarExcelDRE() {
     const iId = val('fin-imovel-select');
     const mSt = val('fin-mes-select');
 
-    if (!iId) { if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel."); return; }
+    if (!iId) { 
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel para exportar."); 
+        return; 
+    }
 
     const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == iId) : null;
     if (!im) return;
@@ -1486,9 +1489,10 @@ function exportarExcelDRE() {
     let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
 
     let r = 0, dManuais = 0, qtdReservasPagasMes = 0;
-    let linhasEntradas = [];
-    let linhasSaidas = [];
+    let linhasEntradasHTML = '';
+    let linhasSaidasHTML = '';
 
+    // Processa Entradas
     if (im.reservas) {
         im.reservas.forEach(x => {
             let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
@@ -1496,29 +1500,44 @@ function exportarExcelDRE() {
                 if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
                     let v = parseFloat(x.valorTotal) || 0;
                     r += v;
+
                     let comissaoReserva = v * (tx / 100);
                     let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+
                     if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
 
                     let din = checkinSeguro.split('-').reverse().join('/');
                     let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
 
-                    let detalheRetido = `R$ ${comissaoReserva.toFixed(2)}`;
-                    if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toFixed(2)} Limpeza)`;
+                    let detalheRetido = `R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                    if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})} Limpeza)`;
 
-                    linhasEntradas.push([`"${x.titular?.nome || '-'} (${x.statusPagamento})"`, `"${din} a ${dout}"`, `"R$ ${v.toFixed(2)}"`, `"${detalheRetido}"`].join(';'));
+                    linhasEntradasHTML += `
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px;">${x.titular?.nome || '-'} (${x.statusPagamento})</td>
+                            <td style="border: 1px solid #000; text-align: center; padding: 5px;">${din} a ${dout}</td>
+                            <td style="border: 1px solid #000; text-align: right; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                            <td style="border: 1px solid #000; text-align: right; color: #15803d; font-weight: bold; padding: 5px;">${detalheRetido}</td>
+                        </tr>`;
                 }
             }
         });
     }
 
+    // Processa Saídas Manuais
     if (im.despesas) {
         im.despesas.forEach(x => {
             let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
             if (!mSt || dataSegura.startsWith(mSt)) {
                 let v = parseFloat(x.valor) || 0;
                 dManuais += v;
-                linhasSaidas.push([`"${dataSegura.split('-').reverse().join('/')}"`, `"${x.descricao || '-'}"`, `""`, `"R$ ${v.toFixed(2)}"`].join(';'));
+                let dFmt = dataSegura.split('-').reverse().join('/');
+                linhasSaidasHTML += `
+                    <tr>
+                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${dFmt}</td>
+                        <td colspan="2" style="border: 1px solid #000; padding: 5px;">${x.descricao || '-'}</td>
+                        <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>`;
             }
         });
     }
@@ -1528,36 +1547,90 @@ function exportarExcelDRE() {
     let comissaoTotal = r * (tx / 100);
     let liquidoFinal = r - comissaoTotal - dTotal;
 
-    let csvContent = "\uFEFF";
-    csvContent += `"DRE - ${nomeExibicao.toUpperCase()}"\n`;
-    csvContent += `"Mês: ${mSt.split('-').reverse().join('/')} | Prop: ${propNome} | Com: ${tx}% | Limpeza/Reserva: R$ ${taxaLimpezaUnit.toFixed(2)}"\n\n`;
+    let mesFormatado = mSt ? mSt.split('-').reverse().join('/') : '';
 
-    csvContent += `" RESUMO FINANCEIRO ";;;" VALORES "\n`;
-    csvContent += `"(+) Receitas Brutas";;;"R$ ${r.toFixed(2)}"\n`;
-    csvContent += `"(-) Comissão Agência (${tx}%)";;;"R$ ${comissaoTotal.toFixed(2)}"\n`;
-    csvContent += `"(-) Taxas de Limpeza (Reservas)";;;"R$ ${totalLimpezaAuto.toFixed(2)}"\n`;
-    csvContent += `"(-) Despesas do Imóvel";;;"R$ ${dManuais.toFixed(2)}"\n`;
-    csvContent += `"(=) LÍQUIDO PROPRIETÁRIO";;;"R$ ${liquidoFinal.toFixed(2)}"\n\n`;
+    // Montagem do HTML Formatado com Cores
+    let excelHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"></head>
+        <body>
+            <table style="border-collapse: collapse; font-family: Arial, sans-serif; width: 100%;">
+                <tr>
+                    <td colspan="4" style="background-color: #f97316; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #000;">
+                        DRE - ${nomeExibicao.toUpperCase()}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="text-align: center; font-size: 11px; font-weight: bold; color: #b91c1c; padding: 5px; border: 1px solid #000;">
+                        Mês: ${mesFormatado} | Prop: ${propNome} | Com: ${tx}% | Limpeza/Reserva: R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                    </td>
+                </tr>
+                <tr><td colspan="4"></td></tr>
+                
+                <tr>
+                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(+) Receitas Brutas</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #16a34a; padding: 5px;">R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Comissão Agência (${tx}%)</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${comissaoTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Taxas de Limpeza (Reservas)</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Despesas do Imóvel</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dManuais.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr style="background-color: #f1f5f9;">
+                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 6px;">(=) LÍQUIDO PROPRIETÁRIO</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 6px;">R$ ${liquidoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                
+                <tr><td colspan="4"></td></tr>
 
-    csvContent += `"--- ENTRADAS ---";;;\n`;
-    csvContent += `"Hóspede";"Período";"Bruto";"Retido Agência"\n`;
-    csvContent += linhasEntradas.length > 0 ? linhasEntradas.join('\n') + '\n' : `"Nenhuma entrada registrada neste mês.";;;\n`;
+                <tr>
+                    <td colspan="4" style="background-color: #22c55e; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">ENTRADAS</td>
+                </tr>
+                <tr style="background-color: #f0fdf4; font-weight: bold;">
+                    <td style="border: 1px solid #000; padding: 5px;">Hóspede</td>
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Período</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Bruto</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Retido Agência</td>
+                </tr>
+                ${linhasEntradasHTML || '<tr><td colspan="4" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma entrada registrada neste mês.</td></tr>'}
 
-    csvContent += `\n"--- SAÍDAS ---";;;\n`;
-    csvContent += `"Data";"Descrição";"";"Valor"\n`;
-    if (totalLimpezaAuto > 0) {
-        csvContent += `"Auto";"Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toFixed(2)})";"";"R$ ${totalLimpezaAuto.toFixed(2)}"\n`;
-    }
-    csvContent += linhasSaidas.length > 0 ? linhasSaidas.join('\n') + '\n' : (totalLimpezaAuto === 0 ? `"Nenhuma despesa neste mês.";;;\n` : '');
+                <tr><td colspan="4"></td></tr>
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                <tr>
+                    <td colspan="4" style="background-color: #ef4444; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">SAÍDAS</td>
+                </tr>
+                <tr style="background-color: #fef2f2; font-weight: bold; color: #991b1b;">
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Data</td>
+                    <td colspan="2" style="border: 1px solid #000; padding: 5px;">Descrição</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Valor</td>
+                </tr>
+                ${totalLimpezaAuto > 0 ? `
+                <tr>
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Auto</td>
+                    <td colspan="2" style="border: 1px solid #000; padding: 5px;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
+                    <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>` : ''}
+                ${linhasSaidasHTML || (totalLimpezaAuto === 0 ? '<tr><td colspan="4" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma despesa neste mês.</td></tr>' : '')}
+            </table>
+        </body>
+        </html>`;
+
+    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `DRE_${nomeExibicao.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.csv`);
+    link.setAttribute('download', `DRE_${nomeExibicao.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}function mudarAbaDRE(a) { 
+}
+        function mudarAbaDRE(a) { 
     const contentReceitas = el('dre-content-receitas');
     const contentDespesas = el('dre-content-despesas');
     const btnReceitas = el('btn-tab-dre-receitas');
