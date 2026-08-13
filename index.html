@@ -437,7 +437,7 @@
         </div>
     </div>
 </div>
-                    <div id="admin-content-resultados" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1"><label class="block text-xs font-medium text-slate-500 mb-1">Selecione o Imóvel</label><select id="fin-imovel-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="w-48"><label class="block text-xs font-medium text-slate-500 mb-1">Mês/Ano</label><input type="month" id="fin-mes-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></div><button onclick="gerarRelatorioFinanceiro()" class="bg-slate-800 text-white hover:bg-slate-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-search mr-2"></i>Gerar</button></div><div id="fin-vazio" class="text-center py-20"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-file-invoice-dollar text-3xl text-slate-300"></i></div><h2 class="text-xl font-bold text-slate-800">Prestação de Contas (DRE)</h2></div><div id="fin-painel" class="hidden-view p-6 space-y-6"><div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div><h3 id="fin-nome-imovel" class="text-lg font-bold text-[#0071c2]">Nome</h3><p id="fin-nome-prop" class="text-sm font-medium text-slate-500">Proprietário</p></div><div class="flex items-center gap-3"><span id="fin-mes-label" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span><button onclick="exportarExcelDRE()" class="bg-[#107c41] text-white hover:bg-[#0b5c30] px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center"><i class="fas fa-file-excel mr-1.5"></i> Baixar Excel</button></div></div><div class="grid grid-cols-4 gap-4"><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-green-500"><h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receitas</h4><div id="fin-card-receitas" class="text-2xl font-bold text-green-600">0</div></div><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-orange-400"><h4 id="fin-label-comissao" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Comissão</h4><div id="fin-card-comissao" class="text-2xl font-bold text-orange-500">0</div></div><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-red-500"><h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Despesas</h4><div id="fin-card-despesas" class="text-2xl font-bold text-red-600">0</div></div><div class="bg-slate-800 p-5 rounded-xl shadow-md border-l-4 border-l-blue-400 relative overflow-hidden"><h4 class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1 relative z-10">Líquido Prop.</h4><div id="fin-card-liquido" class="text-3xl font-bold text-white relative z-10">0</div></div></div><div class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col"><div class="flex border-b border-slate-200 bg-slate-50"><button id="btn-tab-dre-receitas" onclick="mudarAbaDRE('receitas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors"><i class="fas fa-arrow-down mr-2"></i>Entradas</button><button id="btn-tab-dre-despesas" onclick="mudarAbaDRE('despesas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"><i class="fas fa-arrow-up mr-2"></i>Saídas</button></div><div class="p-0 overflow-y-auto max-h-[400px]"><div id="dre-content-receitas" class="fade-in"><table class="w-full text-left text-sm"><thead class="bg-white sticky top-0 border-b border-slate-100 z-10"><tr class="text-[10px] text-slate-500 uppercase tracking-wider"><th class="p-3">Hóspede/Status</th><th class="p-3 text-center">Período</th><th class="p-3 text-right">Bruto</th><th class="p-3 text-right text-green-600">Retido</th></tr></thead><tbody id="fin-lista-receitas"></tbody></table></div><div id="dre-content-despesas" class="hidden-view fade-in w-full"><div class="bg-white sticky top-0 border-b border-slate-100 z-10 flex justify-between items-center p-2 px-4"><span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0 mt-2">Lançamentos</span><button onclick="abrirModalDespesa()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded text-[10px] font-bold"><i class="fas fa-plus"></i> Despesa</button></div><table class="w-full text-left text-sm"><thead class="bg-white border-b border-slate-100"><tr class="text-[10px] text-slate-500 uppercase tracking-wider"><th class="p-3">Data</th><th class="p-3">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead><tbody id="fin-lista-despesas"></tbody></table></div></div></div></div></div>
+                    <div id="admin-content-resultados" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1"><label class="block text-xs font-medium text-slate-500 mb-1">Selecione o Imóvel</label><select id="fin-imovel-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="w-48"><label class="block text-xs font-medium text-slate-500 mb-1">Mês/Ano</label><input type="month" id="fin-mes-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></div><button onclick="gerarRelatorioFinanceiro()" class="bg-slate-800 text-white hover:bg-slate-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-search mr-2"></i>Gerar</button></div><div id="fin-vazio" class="text-center py-20"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-file-invoice-dollar text-3xl text-slate-300"></i></div><h2 class="text-xl font-bold text-slate-800">Prestação de Contas (DRE)</h2></div><div id="fin-painel" class="hidden-view p-6 space-y-6"><div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div><h3 id="fin-nome-imovel" class="text-lg font-bold text-[#0071c2]">Nome</h3><p id="fin-nome-prop" class="text-sm font-medium text-slate-500">Proprietário</p></div><div class="flex items-center gap-3"><span id="fin-mes-label" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"><</span><button onclick="exportarExcelDRE()" class="bg-[#107c41] text-white hover:bg-[#0b5c30] px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center mr-2"><i class="fas fa-file-excel mr-1.5"></i> Baixar Excel</button><button onclick="gerarPDFDRE()" class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center transition-all active:scale-95"><i class="fas fa-file-pdf mr-1.5"></i> Gerar PDF</button>
                 </div>
             </div>
         </div>
@@ -2760,18 +2760,437 @@ function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategor
         function mudarAbaDRE(a) { if(el('dre-content-receitas')) el('dre-content-receitas').classList[a==='receitas'?'remove':'add']('hidden-view'); if(el('dre-content-despesas')) el('dre-content-despesas').classList[a==='despesas'?'remove':'add']('hidden-view'); if(el('btn-tab-dre-receitas')) el('btn-tab-dre-receitas').className=a==='receitas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-dre-despesas')) el('btn-tab-dre-despesas').className=a==='despesas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; }
         
         function exportarExcelDRE() {
-            const iId=val('fin-imovel-select'); const mSt=val('fin-mes-select'); if(!iId||!mSt)return; const im = imoveisDB.find(i=>i.id==iId); if(!im)return; let tx = im.proprietario?.comissao||20;
-            let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="4" style="background-color:#f97316;color:white;font-size:18px;height:40px;">DRE - ${im.nome.toUpperCase()}</th></tr><tr><td colspan="4" style="background-color:#fff7ed;text-align:center;color:#ea580c;font-weight:bold;">Mês: ${mSt} | Prop: ${im.proprietario?.nome||'-'} | Com: ${tx}%</td></tr>`;
-            let r=0, d=0; let rH='', dH='';
-            if(im.reservas) { im.reservas.forEach(x => { let checkinSeguro = parseInputDateSafe(x.checkin); if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { let v = parseFloat(x.valorTotal) || 0; r += v; let p = `${checkinSeguro.split('-').reverse().join('/')} a ${parseInputDateSafe(x.checkout).split('-').reverse().join('/')}`; let retido = v * (tx / 100); rH += `<tr><td>${x.titular?.nome || '-'} (${x.statusPagamento})</td><td style="text-align:center;">${p}</td><td style="text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; } }); }
-            if(im.despesas) { im.despesas.forEach(x => { let dataSegura = parseInputDateSafe(x.data); if(dataSegura.startsWith(mSt)) { let v = parseFloat(x.valor) || 0; d += v; dH += `<tr><td style="text-align:center;">${dataSegura.split('-').reverse().join('/')}</td><td colspan="2">${x.descricao}</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`; } }); }
-            let c=r*(tx/100), l=r-c-d;
-            html += `<tr><td colspan="3">(+) Receitas Brutas</td><td style="color:#16a34a;font-weight:bold;text-align:right;">R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Comissão Agência</td><td style="color:#ea580c;font-weight:bold;text-align:right;">R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3">(-) Despesas</td><td style="color:#dc2626;font-weight:bold;text-align:right;">R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr><tr><td colspan="3" style="background:#f1f5f9;font-weight:bold;">(=) LÍQUIDO PROPRIETÁRIO</td><td style="background:#f1f5f9;font-weight:bold;text-align:right;">R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
-            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#22c55e;color:white;text-align:center;font-weight:bold;">ENTRADAS</th></tr><tr style="background-color:#dcfce7;color:#166534;font-weight:bold;text-align:center;"><td>Hóspede</td><td>Período</td><td>Bruto</td><td>Retido</td></tr>${rH || `<tr><td colspan="4" style="text-align:center;">Nenhuma entrada neste mês.</td></tr>`}`;
-            html += `<tr><td colspan="4"></td></tr><tr><th colspan="4" style="background-color:#ef4444;color:white;text-align:center;font-weight:bold;">SAÍDAS</th></tr><tr style="background-color:#fee2e2;color:#b91c1c;font-weight:bold;text-align:center;"><td>Data</td><td colspan="2">Descrição</td><td>Valor</td></tr>${dH || `<tr><td colspan="4" style="text-align:center;">Nenhuma despesa neste mês.</td></tr>`}`;
-            html += `</table></body></html>`;
-            const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'}); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `DRE_${im.nome.replace(/\s+/g,'_')}.xls`; link.click();
+    const iId = val('fin-imovel-select');
+    const mSt = val('fin-mes-select');
+
+    if (!iId) { 
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel para exportar."); 
+        return; 
+    }
+
+    const eTodos = (iId === 'TODOS');
+    const imoveisParaProcessar = eTodos ? imoveisDB : imoveisDB.filter(i => i.id == iId);
+
+    if (!imoveisParaProcessar.length) return;
+
+    let nomeRelatorio = eTodos ? "RELATÓRIO CONSOLIDADO (TODOS OS IMÓVEIS)" : (`DRE - ` + (imoveisParaProcessar[0].nome + (imoveisParaProcessar[0].numeroApto ? ` (Apto ${imoveisParaProcessar[0].numeroApto})` : '')).toUpperCase());
+
+    let rTotal = 0, cTotal = 0, dManuaisTotal = 0, dLimpezasTotal = 0;
+    let linhasEntradasHTML = '';
+    let linhasSaidasHTML = '';
+
+    imoveisParaProcessar.forEach(im => {
+        let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+        let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+        let qtdReservasPagasMes = 0;
+        let nomeAptoDisplay = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
+
+        if (im.reservas) {
+            im.reservas.forEach(x => {
+                let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
+                if (!mSt || checkinSeguro.startsWith(mSt)) {
+                    if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                        let v = parseFloat(x.valorTotal) || 0;
+                        rTotal += v;
+
+                        let comissaoReserva = v * (tx / 100);
+                        cTotal += comissaoReserva;
+
+                        let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                        if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
+
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+
+                        let detalheRetido = `R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                        if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})} Limpeza)`;
+
+                        let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+
+                        linhasEntradasHTML += `
+                            <tr>
+                                ${colImovel}
+                                <td style="border: 1px solid #000; padding: 5px;">${x.titular?.nome || '-'} (${x.statusPagamento})</td>
+                                <td style="border: 1px solid #000; text-align: center; padding: 5px;">${din} a ${dout}</td>
+                                <td style="border: 1px solid #000; text-align: right; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td style="border: 1px solid #000; text-align: right; color: #15803d; font-weight: bold; padding: 5px;">${detalheRetido}</td>
+                            </tr>`;
+                    }
+                }
+            });
         }
+
+        if (im.despesas) {
+            im.despesas.forEach(x => {
+                let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
+                if (!mSt || dataSegura.startsWith(mSt)) {
+                    let v = parseFloat(x.valor) || 0;
+                    dManuaisTotal += v;
+                    let dFmt = dataSegura.split('-').reverse().join('/');
+                    let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+
+                    linhasSaidasHTML += `
+                        <tr>
+                            ${colImovel}
+                            <td style="border: 1px solid #000; text-align: center; padding: 5px;">${dFmt}</td>
+                            <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px;">${x.descricao || '-'}</td>
+                            <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                        </tr>`;
+                }
+            });
+        }
+
+        let totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
+        dLimpezasTotal += totalLimpezaAuto;
+
+        if (totalLimpezaAuto > 0) {
+            let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+            linhasSaidasHTML += `
+                <tr style="background-color: #fff7ed;">
+                    ${colImovel}
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px; font-weight: bold; color: #c2410c;">Auto</td>
+                    <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px; font-weight: bold; color: #9a3412;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
+                    <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>`;
+        }
+    });
+
+    let dTotalGeral = dManuaisTotal + dLimpezasTotal;
+    let liquidoFinal = rTotal - cTotal - dTotalGeral;
+    let mesFormatado = mSt ? mSt.split('-').reverse().join('/') : '';
+    let totalCols = eTodos ? 5 : 4;
+
+    let headerTabelaHTML = eTodos ? `<td style="border: 1px solid #000; padding: 5px;">Acomodação</td>` : '';
+
+    let excelHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"></head>
+        <body>
+            <table style="border-collapse: collapse; font-family: Arial, sans-serif; width: 100%;">
+                <tr>
+                    <td colspan="${totalCols}" style="background-color: #f97316; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #000;">
+                        ${nomeRelatorio}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="${totalCols}" style="text-align: center; font-size: 11px; font-weight: bold; color: #b91c1c; padding: 5px; border: 1px solid #000;">
+                        Mês de Referência: ${mesFormatado}
+                    </td>
+                </tr>
+                <tr><td colspan="${totalCols}"></td></tr>
+                
+                <tr>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(+) Receitas Brutas</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #16a34a; padding: 5px;">R$ ${rTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Comissão Agência</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${cTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Taxas de Limpeza (Reservas)</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dLimpezasTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Despesas de Imóveis</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dManuaisTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                <tr style="background-color: #f1f5f9;">
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 6px;">(=) LÍQUIDO PROPRIETÁRIO / CONSOLIDADO</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 6px;">R$ ${liquidoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>
+                
+                <tr><td colspan="${totalCols}"></td></tr>
+
+                <tr>
+                    <td colspan="${totalCols}" style="background-color: #22c55e; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">ENTRADAS</td>
+                </tr>
+                <tr style="background-color: #f0fdf4; font-weight: bold;">
+                    ${headerTabelaHTML}
+                    <td style="border: 1px solid #000; padding: 5px;">Hóspede</td>
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Período</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Bruto</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Retido Agência</td>
+                </tr>
+                ${linhasEntradasHTML || `<tr><td colspan="${totalCols}" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma entrada registrada neste mês.</td></tr>`}
+
+                <tr><td colspan="${totalCols}"></td></tr>
+
+                <tr>
+                    <td colspan="${totalCols}" style="background-color: #ef4444; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">SAÍDAS</td>
+                </tr>
+                <tr style="background-color: #fef2f2; font-weight: bold; color: #991b1b;">
+                    ${headerTabelaHTML}
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Data</td>
+                    <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px;">Descrição</td>
+                    <td style="border: 1px solid #000; text-align: right; padding: 5px;">Valor</td>
+                </tr>
+                ${linhasSaidasHTML || `<tr><td colspan="${totalCols}" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma despesa neste mês.</td></tr>`}
+            </table>
+        </body>
+        </html>`;
+
+    const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `DRE_${eTodos ? 'CONSOLIDADO' : imoveisParaProcessar[0].nome.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// FUNÇÃO PARA GERAR RELATÓRIO PDF IMPECÁVEL DA DRE
+function gerarPDFDRE() {
+    const iId = val('fin-imovel-select');
+    const mSt = val('fin-mes-select');
+
+    if (!iId) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel ou 'Todos' para gerar o PDF.");
+        return;
+    }
+
+    const eTodos = (iId === 'TODOS');
+    const imoveisParaProcessar = eTodos ? imoveisDB : imoveisDB.filter(i => i.id == iId);
+
+    if (!imoveisParaProcessar.length) return;
+
+    // Dados da Empresa para o Cabeçalho
+    let nEmp = empresaDB.nome || "Maurilio Porto Temporada";
+    let docEmp = `CNPJ/CPF: ${empresaDB.cnpj || '-'}` + (empresaDB.creci ? ` | CRECI: ${empresaDB.creci}` : '');
+    let contatoEmp = `WhatsApp: ${empresaDB.zap || '-'} | E-mail: ${empresaDB.email || '-'}`;
+    
+    let endEmpArr = [];
+    if(empresaDB.endereco?.rua) endEmpArr.push(`${empresaDB.endereco.rua}, ${empresaDB.endereco.numero || 'S/N'}`);
+    if(empresaDB.endereco?.bairro) endEmpArr.push(empresaDB.endereco.bairro);
+    if(empresaDB.endereco?.cidade) endEmpArr.push(`${empresaDB.endereco.cidade}/${empresaDB.endereco.uf || ''}`);
+    let endEmpStr = endEmpArr.join(' - ');
+
+    let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-height: 70px; max-width: 180px; object-fit: contain;">` : `<div style="font-size:20px; font-weight:bold; color:#f97316;">${nEmp}</div>`;
+
+    let mesFormatado = mSt ? mSt.split('-').reverse().join('/') : '';
+    let tituloRelatorio = eTodos ? "RELATÓRIO FINANCEIRO CONSOLIDADO" : "PRESTAÇÃO DE CONTAS - DRE";
+    let subTitulo = eTodos ? `Todos os Imóveis (${imoveisParaProcessar.length} acomodações)` : (imoveisParaProcessar[0].nome + (imoveisParaProcessar[0].numeroApto ? ` (Apto ${imoveisParaProcessar[0].numeroApto})` : ''));
+    let propNome = eTodos ? "Gestão Geral" : (imoveisParaProcessar[0].proprietario?.nome || 'Não informado');
+
+    let rTotal = 0, cTotal = 0, dManuaisTotal = 0, dLimpezasTotal = 0;
+    let linhasEntradasHTML = '';
+    let linhasSaidasHTML = '';
+
+    imoveisParaProcessar.forEach(im => {
+        let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+        let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+        let qtdReservasPagasMes = 0;
+        let nomeAptoDisplay = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
+
+        if (im.reservas) {
+            im.reservas.forEach(x => {
+                let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
+                if (!mSt || checkinSeguro.startsWith(mSt)) {
+                    if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                        let v = parseFloat(x.valorTotal) || 0;
+                        rTotal += v;
+
+                        let comissaoReserva = v * (tx / 100);
+                        cTotal += comissaoReserva;
+
+                        let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                        if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
+
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+
+                        let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
+
+                        linhasEntradasHTML += `
+                            <tr>
+                                ${colImovel}
+                                <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    <strong>${x.titular?.nome || '-'}</strong>
+                                    <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 5px; border-radius:4px; font-weight:bold; margin-left:5px;">${x.statusPagamento.toUpperCase()}</span>
+                                </td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${din} a ${dout}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #16a34a; font-weight: bold;">R$ ${(comissaoReserva + limpezaReserva).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                            </tr>`;
+                    }
+                }
+            });
+        }
+
+        if (im.despesas) {
+            im.despesas.forEach(x => {
+                let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
+                if (!mSt || dataSegura.startsWith(mSt)) {
+                    let v = parseFloat(x.valor) || 0;
+                    dManuaisTotal += v;
+                    let dFmt = dataSegura.split('-').reverse().join('/');
+                    let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
+
+                    linhasSaidasHTML += `
+                        <tr>
+                            ${colImovel}
+                            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${dFmt}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${x.descricao || '-'}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                        </tr>`;
+                }
+            });
+        }
+
+        let totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
+        dLimpezasTotal += totalLimpezaAuto;
+
+        if (totalLimpezaAuto > 0) {
+            let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #c2410c;">${nomeAptoDisplay}</td>` : '';
+            linhasSaidasHTML += `
+                <tr style="background-color: #fff7ed;">
+                    ${colImovel}
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; font-weight: bold; color: #c2410c;">Auto</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #9a3412;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>`;
+        }
+    });
+
+    let dTotalGeral = dManuaisTotal + dLimpezasTotal;
+    let liquidoFinal = rTotal - cTotal - dTotalGeral;
+
+    let colImovelHeader = eTodos ? `<th style="padding: 8px; text-align: left;">Imóvel</th>` : '';
+
+    let htmlPDF = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${tituloRelatorio} - ${mesFormatado}</title>
+            <style>
+                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 25px; color: #1e293b; background: #fff; }
+                .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+                .empresa-info { font-size: 11px; color: #64748b; line-height: 1.4; }
+                .empresa-nome { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 3px; }
+                .doc-titulo { text-align: right; }
+                .doc-titulo h1 { margin: 0; font-size: 18px; color: #f97316; text-transform: uppercase; }
+                .doc-titulo p { margin: 3px 0 0 0; font-size: 12px; font-weight: bold; color: #475569; }
+                
+                .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; display: flex; justify-content: space-between; font-size: 12px; }
+                .info-box strong { color: #0f172a; }
+                
+                .cards-grid { display: flex; gap: 10px; margin-bottom: 25px; }
+                .card { flex: 1; padding: 12px; border-radius: 8px; border-left: 4px solid #cbd5e1; background: #f8fafc; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+                .card-label { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+                .card-val { font-size: 16px; font-weight: bold; }
+                
+                .card-rec { border-left-color: #22c55e; } .card-rec .card-val { color: #16a34a; }
+                .card-com { border-left-color: #f97316; } .card-com .card-val { color: #ea580c; }
+                .card-des { border-left-color: #ef4444; } .card-des .card-val { color: #dc2626; }
+                .card-liq { border-left-color: #3b82f6; background: #0f172a; color: #fff; } .card-liq .card-label { color: #94a3b8; } .card-liq .card-val { color: #fff; }
+                
+                .section-title { font-size: 13px; font-weight: bold; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; margin-top: 20px; margin-bottom: 10px; color: #334155; }
+                .sec-rec { background: #dcfce7; color: #15803d; }
+                .sec-des { background: #fee2e2; color: #b91c1c; }
+                
+                table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px; }
+                th { background: #f8fafc; padding: 8px; border-bottom: 2px solid #e2e8f0; color: #475569; text-transform: uppercase; font-size: 9px; }
+                
+                .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 10px; text-align: center; color: #94a3b8; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <!-- CABEÇALHO -->
+            <div class="header">
+                <div>
+                    ${lgHtml}
+                    <div class="empresa-info" style="margin-top: 5px;">
+                        <div class="empresa-nome">${nEmp}</div>
+                        <div>${docEmp}</div>
+                        <div>${contatoEmp}</div>
+                        <div>${endEmpStr}</div>
+                    </div>
+                </div>
+                <div class="doc-titulo">
+                    <h1>${tituloRelatorio}</h1>
+                    <p>Mês de Referência: ${mesFormatado}</p>
+                    <p style="font-size: 10px; color: #64748b; margin-top: 4px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
+            </div>
+
+            <!-- DADOS DO IMÓVEL / PROPRIETÁRIO -->
+            <div class="info-box">
+                <div><strong>Acomodação:</strong> ${subTitulo}</div>
+                <div><strong>Proprietário/Titular:</strong> ${propNome}</div>
+            </div>
+
+            <!-- RESUMO FINANCEIRO (CARDS) -->
+            <div class="cards-grid">
+                <div class="card card-rec">
+                    <div class="card-label">Receitas Brutas</div>
+                    <div class="card-val">R$ ${rTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                </div>
+                <div class="card card-com">
+                    <div class="card-label">Comissão Agência</div>
+                    <div class="card-val">R$ ${cTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                </div>
+                <div class="card card-des">
+                    <div class="card-label">Despesas Total</div>
+                    <div class="card-val">R$ ${dTotalGeral.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                </div>
+                <div class="card card-liq">
+                    <div class="card-label">Líquido Repasse</div>
+                    <div class="card-val">R$ ${liquidoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                </div>
+            </div>
+
+            <!-- ENTRADAS -->
+            <div class="section-title sec-rec">ENTRADAS / LOCAÇÕES</div>
+            <table>
+                <thead>
+                    <tr>
+                        ${colImovelHeader}
+                        <th style="text-align: left;">Hóspede / Status</th>
+                        <th style="text-align: center;">Período</th>
+                        <th style="text-align: right;">Valor Bruto</th>
+                        <th style="text-align: right;">Retido Agência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${linhasEntradasHTML || '<tr><td colspan="5" style="text-align:center; padding:10px; color:#94a3b8;">Nenhuma entrada registrada neste mês.</td></tr>'}
+                </tbody>
+            </table>
+
+            <!-- SAÍDAS -->
+            <div class="section-title sec-des">SAÍDAS / DESPESAS E TAXAS</div>
+            <table>
+                <thead>
+                    <tr>
+                        ${colImovelHeader}
+                        <th style="text-align: center; width: 80px;">Data</th>
+                        <th style="text-align: left;">Descrição</th>
+                        <th style="text-align: right; width: 100px;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${linhasSaidasHTML || '<tr><td colspan="4" style="text-align:center; padding:10px; color:#94a3b8;">Nenhuma despesa registrada neste mês.</td></tr>'}
+                </tbody>
+            </table>
+
+            <!-- RODAPÉ -->
+            <div class="footer">
+                Relatório gerado automaticamente por ${nEmp} em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}.
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                }
+            <\/script>
+        </body>
+        </html>
+    `;
+
+    const win = window.open('', '_blank');
+    win.document.write(htmlPDF);
+    win.document.close();
+}
         async function adicionarMembroEquipe() {
             const email = val('novo-equipe-email').trim().toLowerCase();
             const role = val('novo-equipe-perfil');
