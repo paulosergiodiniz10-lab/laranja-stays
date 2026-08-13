@@ -14,12 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <style>
-/* Esconde Meus Imóveis apenas se for Parceiro/Corretor */
-body.role-parceiro [data-aba="imoveis"],
-body.role-parceiro #btn-menu-imoveis,
-body.role-parceiro .menu-item-imoveis {
-    display: none !important;
-}
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -408,7 +402,41 @@ body.role-parceiro .menu-item-imoveis {
                             </div>
                         </div>
                     </div>
-                    <div id="admin-content-despesas" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1 max-w-xs"><label class="block text-xs font-medium text-slate-600 mb-1">Imóvel</label><select id="filtro-imovel-despesas" onchange="carregarListaDespesas()" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200"><button onclick="mudarMesDespesa(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm hover:text-red-500"><i class="fas fa-chevron-left text-xs"></i></button><span id="label-mes-despesa" class="text-sm font-bold px-3 w-32 text-center uppercase"></span><button onclick="mudarMesDespesa(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm hover:text-red-500"><i class="fas fa-chevron-right text-xs"></i></button></div><button onclick="abrirModalDespesa()" class="bg-red-500 text-white hover:bg-red-600 px-4 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-plus mr-2"></i>Nova Despesa</button></div><div class="p-6"><div id="placeholder-despesas" class="text-center py-16"><div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-receipt text-2xl text-slate-300"></i></div><h2 class="text-lg font-bold text-slate-800">Controle de Gastos</h2></div><div id="tabela-container-despesas" class="hidden-view bg-white rounded-xl border border-slate-200 shadow-sm p-0 overflow-hidden"><table class="w-full text-left text-sm"><thead class="bg-slate-50 border-b border-slate-100"><tr class="text-[10px] text-slate-500 uppercase tracking-wider"><th class="p-4">Data</th><th class="p-4">Descrição</th><th class="p-4 text-right">Valor (R$)</th><th class="p-4 text-center">Ações</th></tr></thead><tbody id="tbody-aba-despesas"></tbody></table></div></div></div>
+                    <div id="admin-content-despesas" class="hidden-view fade-in bg-slate-50 h-full">
+    <div class="p-6 border-b border-slate-200 bg-white flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-64">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Imóvel</label>
+                <select id="filtro-imovel-despesas" onchange="carregarListaDespesas()" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200 self-end">
+                <button onclick="mudarMesDespesa(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-colors"><i class="fas fa-chevron-left text-xs"></i></button>
+                <span id="label-mes-despesa" class="text-xs font-bold px-2 w-32 text-center text-slate-700 uppercase"></span>
+                <button onclick="mudarMesDespesa(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm text-slate-600 hover:text-red-500 transition-colors"><i class="fas fa-chevron-right text-xs"></i></button>
+            </div>
+        </div>
+        <button onclick="abrirModalDespesa()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95 flex items-center gap-2 transition-all"><i class="fas fa-plus text-xs"></i> Nova Despesa</button>
+    </div>
+    <div class="p-6">
+        <div id="placeholder-despesas" class="hidden-view text-center py-16">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-receipt text-2xl text-slate-300"></i></div>
+            <h2 class="text-lg font-bold text-slate-800">Controle de Gastos</h2>
+        </div>
+        <div id="tabela-container-despesas" class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 border-b border-slate-100">
+                    <tr class="text-[10px] text-slate-500 uppercase tracking-wider">
+                        <th class="p-4">Data</th>
+                        <th class="p-4">Descrição</th>
+                        <th class="p-4 text-right">Valor (R$)</th>
+                        <th class="p-4 text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-aba-despesas"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
                     <div id="admin-content-resultados" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1"><label class="block text-xs font-medium text-slate-500 mb-1">Selecione o Imóvel</label><select id="fin-imovel-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="w-48"><label class="block text-xs font-medium text-slate-500 mb-1">Mês/Ano</label><input type="month" id="fin-mes-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></div><button onclick="gerarRelatorioFinanceiro()" class="bg-slate-800 text-white hover:bg-slate-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-search mr-2"></i>Gerar</button></div><div id="fin-vazio" class="text-center py-20"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-file-invoice-dollar text-3xl text-slate-300"></i></div><h2 class="text-xl font-bold text-slate-800">Prestação de Contas (DRE)</h2></div><div id="fin-painel" class="hidden-view p-6 space-y-6"><div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div><h3 id="fin-nome-imovel" class="text-lg font-bold text-[#0071c2]">Nome</h3><p id="fin-nome-prop" class="text-sm font-medium text-slate-500">Proprietário</p></div><div class="flex items-center gap-3"><span id="fin-mes-label" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span><button onclick="exportarExcelDRE()" class="bg-[#107c41] text-white hover:bg-[#0b5c30] px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center"><i class="fas fa-file-excel mr-1.5"></i> Baixar Excel</button></div></div><div class="grid grid-cols-4 gap-4"><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-green-500"><h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receitas</h4><div id="fin-card-receitas" class="text-2xl font-bold text-green-600">0</div></div><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-orange-400"><h4 id="fin-label-comissao" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Comissão</h4><div id="fin-card-comissao" class="text-2xl font-bold text-orange-500">0</div></div><div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-red-500"><h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Despesas</h4><div id="fin-card-despesas" class="text-2xl font-bold text-red-600">0</div></div><div class="bg-slate-800 p-5 rounded-xl shadow-md border-l-4 border-l-blue-400 relative overflow-hidden"><h4 class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1 relative z-10">Líquido Prop.</h4><div id="fin-card-liquido" class="text-3xl font-bold text-white relative z-10">0</div></div></div><div class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col"><div class="flex border-b border-slate-200 bg-slate-50"><button id="btn-tab-dre-receitas" onclick="mudarAbaDRE('receitas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors"><i class="fas fa-arrow-down mr-2"></i>Entradas</button><button id="btn-tab-dre-despesas" onclick="mudarAbaDRE('despesas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"><i class="fas fa-arrow-up mr-2"></i>Saídas</button></div><div class="p-0 overflow-y-auto max-h-[400px]"><div id="dre-content-receitas" class="fade-in"><table class="w-full text-left text-sm"><thead class="bg-white sticky top-0 border-b border-slate-100 z-10"><tr class="text-[10px] text-slate-500 uppercase tracking-wider"><th class="p-3">Hóspede/Status</th><th class="p-3 text-center">Período</th><th class="p-3 text-right">Bruto</th><th class="p-3 text-right text-green-600">Retido</th></tr></thead><tbody id="fin-lista-receitas"></tbody></table></div><div id="dre-content-despesas" class="hidden-view fade-in w-full"><div class="bg-white sticky top-0 border-b border-slate-100 z-10 flex justify-between items-center p-2 px-4"><span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0 mt-2">Lançamentos</span><button onclick="abrirModalDespesa()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded text-[10px] font-bold"><i class="fas fa-plus"></i> Despesa</button></div><table class="w-full text-left text-sm"><thead class="bg-white border-b border-slate-100"><tr class="text-[10px] text-slate-500 uppercase tracking-wider"><th class="p-3">Data</th><th class="p-3">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead><tbody id="fin-lista-despesas"></tbody></table></div></div></div></div></div>
                 </div>
             </div>
@@ -556,15 +584,7 @@ function povoarSelectCategorias() {
         });
 
         let nuvemCarregadaSegura = false; // NOSSA NOVA TRAVA MESTRA
-if (typeof inicializarApp !== 'function') {
-    window.inicializarApp = function() {
-        show('tela-app');
-        if (typeof inicializarCalendarios === 'function') inicializarCalendarios();
-        if (typeof renderizarVitrine === 'function') renderizarVitrine(imoveisDB);
-        if (typeof renderizarAdmin === 'function') renderizarAdmin();
-        if (typeof aplicarPermissoesDeAcesso === 'function') aplicarPermissoesDeAcesso();
-    };
-    }
+
         async function carregarDadosFirebase(uidEmpresa) {
             try { 
                 const docSnap = await db.collection("sistema_saas").doc(uidEmpresa).get(); 
@@ -642,40 +662,44 @@ if (typeof inicializarApp !== 'function') {
             let nomeExibicao = "Painel Gestor";
             let cargoExibicao = "Temporada Stays PMS";
             let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-
-            if (ehParceiro) {
-                cargoExibicao = "Corretor / Parceiro";
-                // Busca o nome do corretor na equipe
-                if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
-                    const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
-                    if (meuCadastro && meuCadastro.nome) {
-                        nomeExibicao = meuCadastro.nome;
-                    } else {
-                        nomeExibicao = auth.currentUser.email;
-                    }
-                } else if (auth.currentUser) {
+if (ehParceiro) {
+            cargoExibicao = "Corretor / Parceiro";
+            // Busca o nome do corretor na equipe
+            if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                const meuCadastro = empresaDB.equipe.find(m => m.email === auth.currentUser.email);
+                if (meuCadastro && meuCadastro.nome) {
+                    nomeExibicao = meuCadastro.nome;
+                } else {
                     nomeExibicao = auth.currentUser.email;
                 }
+            } else if (auth.currentUser) {
+                nomeExibicao = auth.currentUser.email;
             }
+            if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-user mr-1.5 hidden sm:inline"></i> Painel';
+        } else {
+            cargoExibicao = "Gestor / Admin";
+            if(el('btn-admin')) el('btn-admin').innerHTML = '<i class="fas fa-cog mr-1.5 hidden sm:inline"></i> Admin';
+        }
 
             // Escreve no painel
             if(el('perfil-nome-usuario')) el('perfil-nome-usuario').innerText = nomeExibicao;
             if(el('perfil-cargo-usuario')) el('perfil-cargo-usuario').innerText = cargoExibicao;
 
-            // Esconde as abas administrativas se for corretor
-        const displayValor = ehParceiro ? 'none' : '';
+                        // Esconde as abas forçadamente se for corretor
+            const displayValor = ehParceiro ? 'none' : '';
 
-        if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
-        if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
-        if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
-        if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
-        
-        // Esconde Imóveis para o parceiro e mantém Orçamentos visível
-        if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
-        if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
+if(el('btn-admin-empresa')) el('btn-admin-empresa').style.display = displayValor;
+if(el('btn-admin-equipe')) el('btn-admin-equipe').style.display = displayValor;
+if(el('btn-admin-despesas')) el('btn-admin-despesas').style.display = displayValor;
+if(el('btn-admin-resultados')) el('btn-admin-resultados').style.display = displayValor;
 
-        // Se for parceiro, abre direto no Mapa de Reservas em vez de Imóveis
-        if (ehParceiro) mudarAbaInternaAdmin('mapa');
+// Esconde Meus Imóveis para o parceiro
+if(el('btn-admin-imoveis')) el('btn-admin-imoveis').style.display = displayValor;
+// Mantém Orçamentos visível para todos
+if(el('btn-admin-orcamentos')) el('btn-admin-orcamentos').style.display = '';
+// Abre direto no Mapa de Reservas para o parceiro
+if (ehParceiro) mudarAbaInternaAdmin('mapa');
+        }
 
         // ================= EQUIPE E ACESSOS =================
         let editandoMembroIndex = null;
@@ -893,8 +917,45 @@ function montarDropdownHospedesOrcamento() {
         };
         ul.appendChild(li);
     }
-} 
-            function inicializarCalendarios() {
+}
+        function inicializarApp() { 
+            show('tela-app'); inicializarCalendarios(); renderizarVitrine(imoveisDB); renderizarAdmin(); montarDropdownHospedes();montarDropdownHospedesOrcamento(); povoarSelectCategorias(); carregarEmpresa(); 
+            if(el('link-vitrine-display') && currentUserUid && empresaDB.slug) { let urlBase = window.location.origin + window.location.pathname; if(urlBase.includes('?')) urlBase = urlBase.split('?')[0]; el('link-vitrine-display').innerText = urlBase + '?link=' + empresaDB.slug; } else if (el('link-vitrine-display') && currentUserUid) { el('link-vitrine-display').innerText = "Salve o Nome da Empresa primeiro."; }
+            
+            if (isPublicVitrine) { 
+                mudarAba('vitrine'); 
+                hide('btn-admin'); 
+                hide('btn-logout'); 
+
+                // --- LEITURA DE PARÂMETROS DE BUSCA EXTERNA ---
+                const urlBusca = new URLSearchParams(window.location.search);
+                const destinoParam = urlBusca.get('destino');
+                const checkinParam = urlBusca.get('checkin');
+                const checkoutParam = urlBusca.get('checkout');
+                const hospedesParam = urlBusca.get('hospedes');
+
+                if (destinoParam) sv('busca-cidade', destinoParam);
+                if (hospedesParam) {
+                    sv('busca-pessoas', hospedesParam);
+                    sv('busca-pessoas-display', `${hospedesParam} Hóspedes`);
+                }
+                if (checkinParam && checkoutParam) {
+                    sv('busca-datas-range', `${checkinParam} até ${checkoutParam}`);
+                    let fp = el('busca-datas-range')?._flatpickr;
+                    if(fp) fp.setDate([checkinParam, checkoutParam]);
+                }
+
+                // Dispara a busca automática se a pessoa veio do site externo com filtros
+                if (checkinParam || destinoParam) {
+                    setTimeout(() => { realizarBusca(); }, 600);
+                }
+            } else { 
+                mudarAba('admin'); 
+                mudarAbaInternaAdmin('imoveis'); 
+                aplicarPermissoesDeAcesso();
+            }
+        }
+        function inicializarCalendarios() {
             if(el('busca-datas-range') && !el('busca-datas-range')._flatpickr) flatpickr("#busca-datas-range", { mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" }); 
             if(el('reserva-checkin') && !el('reserva-checkin')._flatpickr) flatpickr("#reserva-checkin", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('reserva-checkout')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); fpOut.setDate(n); } } });            if(el('reserva-checkout') && !el('reserva-checkout')._flatpickr) flatpickr("#reserva-checkout", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt" });
             if(el('filtro-reserva-inicio') && !el('filtro-reserva-inicio')._flatpickr) flatpickr("#filtro-reserva-inicio", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "pt", onChange: function(s) { let fpOut = el('filtro-reserva-fim')?._flatpickr; if (s[0] && fpOut) { let n = new Date(s[0]); n.setDate(n.getDate() + 1); fpOut.set("minDate", n); } } });
@@ -980,52 +1041,374 @@ function montarDropdownHospedesOrcamento() {
         function removerLogoEmpresa() { empresaDB.logo = ""; empresaDB.corTema = ""; carregarEmpresa(); }
 
         function gerarVoucher(imovelId, reservaId, isPreVoucher = false) {
-            const im = imoveisDB.find(i => i.id == imovelId); const res = im?.reservas.find(r => r.id == reservaId); if(!im || !res) return;
-            let dIn = parseInputDateSafe(res.checkin).split('-').reverse().join('/'); let dOut = parseInputDateSafe(res.checkout).split('-').reverse().join('/'); let noites = Math.round((new Date(parseInputDateSafe(res.checkout)+'T12:00:00') - new Date(parseInputDateSafe(res.checkin)+'T12:00:00')) / 86400000);
-            
-            let nEmp = empresaDB.nome || "Temporada Stays PMS"; 
-            let endIm = `${im.endereco?.rua || ''}, ${im.endereco?.numero || 'S/N'}`; if(im.endereco?.bairro) endIm += ` - ${im.endereco.bairro}`; if(im.cidade) endIm += `, ${im.cidade}`;
-            
-            let endEmpArr = []; if(empresaDB.endereco?.rua) endEmpArr.push(empresaDB.endereco.rua); if(empresaDB.endereco?.numero) endEmpArr.push(empresaDB.endereco.numero); if(empresaDB.endereco?.complemento) endEmpArr.push(empresaDB.endereco.complemento); if(empresaDB.endereco?.bairro) endEmpArr.push(empresaDB.endereco.bairro); let endEmp = endEmpArr.length > 0 ? endEmpArr.join(', ') : '';
-            let cInfo = []; if(empresaDB.endereco?.cidade) cInfo.push(empresaDB.endereco.cidade); if(empresaDB.endereco?.uf) cInfo.push(empresaDB.endereco.uf); 
-            let cidEmp = cInfo.join(', ') + (empresaDB.zap ? ` / ${empresaDB.zap}` : ''); 
-            let docEmp = `CNPJ/CPF: ${empresaDB.cnpj || '-'}` + (empresaDB.creci ? ` - CRECI: ${empresaDB.creci}` : '');
-            let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:10px; border-radius:4px; font-weight:bold;">LOGO</div>`;
-            
-            let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap?`WhatsApp: ${empresaDB.zap}<br>`:''}${empresaDB.email?`E-mail: ${empresaDB.email}`:''}`;
+    const im = imoveisDB.find(i => i.id == imovelId); 
+    const res = im?.reservas.find(r => r.id == reservaId); 
+    if(!im || !res) return;
 
-            // A MÁGICA ACONTECE AQUI: VERIFICA SE FOI FEITO POR CORRETOR (SIGILO)
-            if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPorUid !== 'admin') {
-                const corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
-                if (corretor) {
-                    nEmp = corretor.nome; // Nome do corretor no topo
-                    
-                    // Se o corretor tiver CRECI cadastrado, mostra ele. Senão, mostra apenas que é Parceiro.
-                    docEmp = corretor.creci ? `Corretor(a) Parceiro(a) - CRECI: ${corretor.creci}` : "Corretor(a) Parceiro(a)";
-                    
-                    endEmp = ""; // Esconde o endereço da empresa
-                    cidEmp = corretor.zap ? `WhatsApp: ${corretor.zap}` : ''; // Apenas Zap do corretor
-                    
-                    let iniciais = corretor.nome.substring(0, 2).toUpperCase();
-                    lgHtml = `<div style="width:80px; height:80px; background:#fbd38d; display:flex; align-items:center; justify-content:center; color:#9a3412; font-size:24px; border-radius:8px; font-weight:bold; text-transform:uppercase;">${iniciais}</div>`;
-                    
-                    assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
+    let dIn = parseInputDateSafe(res.checkin).split('-').reverse().join('/'); 
+    let dOut = parseInputDateSafe(res.checkout).split('-').reverse().join('/'); 
+    let noites = Math.round((new Date(parseInputDateSafe(res.checkout)+'T12:00:00') - new Date(parseInputDateSafe(res.checkin)+'T12:00:00')) / (1000*60*60*24));
+
+    // Número do Apartamento no Título
+    const numeroApto = im.numeroApto || im.apto || im.apartamento || '';
+    let nomeImovelExibicao = im.nome || '';
+    if (numeroApto && !nomeImovelExibicao.toLowerCase().includes(String(numeroApto).toLowerCase())) {
+        nomeImovelExibicao += ` - Apto ${numeroApto}`;
+    }
+
+    let endIm = `${im.endereco?.rua || ''}, ${im.endereco?.numero || 'S/N'}`; 
+    if(im.endereco?.bairro) endIm += ` - ${im.endereco.bairro}`; 
+    if(im.cidade) endIm += `, ${im.cidade}`;
+
+    let nEmp = empresaDB.nome || "Temporada Stays PMS";
+    let endEmpArr = [];
+    if(empresaDB.endereco?.rua) endEmpArr.push(empresaDB.endereco.rua);
+    if(empresaDB.endereco?.numero) endEmpArr.push(empresaDB.endereco.numero);
+    if(empresaDB.endereco?.complemento) endEmpArr.push(empresaDB.endereco.complemento);
+    
+    let cInfo = [];
+    if(empresaDB.endereco?.cidade) cInfo.push(empresaDB.endereco.cidade);
+    if(empresaDB.endereco?.uf) cInfo.push(empresaDB.endereco.uf);
+    
+    let cidEmp = cInfo.join(', ') + (empresaDB.zap ? ` / ${empresaDB.zap}` : '');
+    let docEmp = `CNPJ/CPF: ${empresaDB.cnpj || '-'}` + (empresaDB.creci ? ` - CRECI: ${empresaDB.creci}` : '');
+    let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9;"></div>`;
+    let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap ? `WhatsApp: ${empresaDB.zap}<br>` : ''}${empresaDB.email ? `E-mail: ${empresaDB.email}` : ''}`;
+
+    // Dados do Corretor (oculta logo e dados da empresa se for reserva dele)
+    let corretor = null;
+    if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPor !== 'Painel Gestor') {
+        corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
+    }
+
+    if (corretor) {
+        nEmp = corretor.nome;
+        docEmp = corretor.creci ? `CRECI: ${corretor.creci}` : 'Corretor / Parceiro';
+        endEmpArr = [];
+        cidEmp = corretor.zap ? `Contato: ${corretor.zap}` : '';
+        lgHtml = '';
+        assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
+    }
+
+    // Tabela de Hóspedes e Documentos
+    const calcIdade = (dNasc) => { if(!dNasc) return ''; let hoje = new Date(); let nasc = new Date(parseInputDateSafe(dNasc) + 'T12:00:00'); let idade = hoje.getFullYear() - nasc.getFullYear(); let m = hoje.getMonth() - nasc.getMonth(); if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--; return ` (${idade}a)`; };
+    
+    let lh = ""; 
+    if(res.titular && res.titular.nome){ 
+        const docTitular = res.titular.cpf || res.titular.doc || res.titular.documento || '-';
+        lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${res.titular.nome}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${docTitular}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${res.titular.dataNasc ? parseInputDateSafe(res.titular.dataNasc).split('-').reverse().join('/') + calcIdade(res.titular.dataNasc) : '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">Titular</td></tr>`; 
+    }
+    if(res.acompanhantes) {
+        res.acompanhantes.forEach(a => { 
+            const docAcomp = a.cpf || a.doc || a.documento || '-';
+            lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${a.nome}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${docAcomp}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${a.dataNasc ? parseInputDateSafe(a.dataNasc).split('-').reverse().join('/') + calcIdade(a.dataNasc) : '-'}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">Hóspede</td></tr>`; 
+        });
+    }
+
+    // Mapeamento EXATO com as chaves salvas no imóvel (im.voucher.cancelamento e im.voucher.infoGerais)
+    let polCanc = im.voucher?.cancelamento || im.voucherPolCancelamento || empresaDB.voucherPolCancelamento || "Consulte a central de reservas para obter detalhes sobre cancelamento ou alterações.";
+    let polInfo = im.voucher?.infoGerais || im.voucherPolInfo || empresaDB.regrasImovel || empresaDB.voucherPolInfo || "1. Apresente documento original de todos os hóspedes no check-in.<br>2. Respeite as normas internas e horários do condomínio.";
+
+    if (typeof polCanc === 'string') polCanc = polCanc.replace(/\r?\n/g, '<br>');
+    if (typeof polInfo === 'string') polInfo = polInfo.replace(/\r?\n/g, '<br>');
+
+    let tituloDocumento = isPreVoucher ? "PRÉ-VOUCHER" : "VOUCHER";
+    let avisoPreVoucher = isPreVoucher ? `<div style="background-color: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>` : '';
+
+    let html = `<html><head><title>${tituloDocumento}</title><style>body{font-family:sans-serif;margin:0;padding:20px;color:#333;} .box{max-width:800px;margin:0 auto;} .hdr{background-color:#f8fafc;border:#e2e8f0;padding:20px;border-radius:8px;font-weight:bold;font-size:18px;text-transform:uppercase;} .bdr{border:2px solid #fa8c16;border-radius:8px;padding:20px;margin-bottom:20px;} .im-font{font-size:22px;font-weight:bold;color:#1e293b;margin:0 0 8px 0;} .tr-color{color:#64748b;margin-bottom:20px;font-size:15px;} .lg{display:flex;justify-content:space-between;margin-bottom:20px;} .btn{width:100%;}</style></head><body><div class="box"><div class="lg"><div>${lgHtml}<h2 style="font-size: 18px; margin: 5px 0;">${nEmp}</h2><p style="font-size: 12px; color: #666; margin: 0;">${docEmp}<br>${cidEmp}</p></div><div style="text-align: right;"><span style="background-color:#ffe7ba; color:#d46b08; padding: 6px 12px; border-radius: 6px; font-weight: bold;">RESERVA: ${res.numeroReserva || res.id}</span><h1 style="margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px;">${tituloDocumento}</h1></div></div>${avisoPreVoucher}<div class="bdr"><h3 class="im-font">${nomeImovelExibicao}</h3><p class="tr-color">${endIm}</p><table style="width: 100%; border-collapse: collapse; font-size: 14px;"><tr><td><strong>Check-in:</strong> ${dIn}</td><td><strong>Check-out:</strong> ${dOut}</td><td><strong>Diárias:</strong> ${noites} noite(s)</td></tr></table></div><h3 style="font-size: 16px; margin-top: 20px;">Hóspedes Cadastrados</h3><table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;"><thead style="background-color: #f1f5f9;"><tr><th style="padding: 8px; text-align: left;">Nome</th><th style="padding: 8px; text-align: center;">Documento</th><th style="padding: 8px; text-align: center;">Nascimento (Idade)</th><th style="padding: 8px; text-align: center;">Tipo</th></tr></thead><tbody>${lh}</tbody></table><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Política de Cancelamento</h3><p style="font-size: 12px; color: #666; margin: 0 0 15px 0; line-height: 1.5;">${polCanc}</p><h3 style="font-size: 14px; margin: 15px 0 5px 0;">Informações Importantes & Regras</h3><p style="font-size: 12px; color: #666; margin: 0 0 20px 0; line-height: 1.5;">${polInfo}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="font-size: 13px; color: #333;">${assinaturaHtml}</p></div></body></html>`;
+
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+}
+// Variable global para controle de mês da tela de Despesas
+let mesAtualDespesas = new Date();
+
+// 1. POVOAR SELETORES DE IMÓVEIS NAS DUAS TELAS
+function povoarSelectsFinanceiros() {
+    const selDespesas = el('filtro-imovel-despesas');
+    const selDRE = el('fin-imovel-select');
+
+    let options = '<option value="">Selecione o Imóvel...</option>';
+    if (typeof imoveisDB !== 'undefined' && Array.isArray(imoveisDB)) {
+        imoveisDB.forEach(im => {
+            const apto = im.numeroApto ? ` (Apto ${im.numeroApto})` : '';
+            options += `<option value="${im.id}">${im.nome}${apto}</option>`;
+        });
+    }
+
+    if (selDespesas) {
+        selDespesas.innerHTML = options;
+        if (typeof imoveisDB !== 'undefined' && imoveisDB.length > 0) {
+            selDespesas.value = imoveisDB[0].id;
+        }
+    }
+
+    if (selDRE) {
+        selDRE.innerHTML = options;
+        if (typeof imoveisDB !== 'undefined' && imoveisDB.length > 0) {
+            selDRE.value = imoveisDB[0].id;
+        }
+    }
+
+    const inputMesDRE = el('fin-mes-select');
+    if (inputMesDRE && !inputMesDRE.value) {
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        inputMesDRE.value = `${ano}-${mes}`;
+    }
+
+    if (typeof atualizarLabelMesDespesa === 'function') atualizarLabelMesDespesa();
+    if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
+}
+        // 2. CONTROLE DE MÊS DA TELA DE DESPESAS
+function atualizarLabelMesDespesa() {
+    const label = el('label-mes-despesa');
+    if (label) {
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        label.innerText = `${meses[mesAtualDespesas.getMonth()]} ${mesAtualDespesas.getFullYear()}`;
+    }
+    carregarListaDespesas();
+}
+
+function mudarMesDespesa(delta) {
+    mesAtualDespesas.setMonth(mesAtualDespesas.getMonth() + delta);
+    if (typeof atualizarLabelMesDespesa === 'function') {
+        atualizarLabelMesDespesa();
+    }
+    carregarListaDespesas();
+}
+
+// 3. RENDERIZAR LISTA DE DESPESAS
+function carregarListaDespesas() {
+    const sel = el('filtro-imovel-despesas') || el('fin-imovel-select');
+    const imovelId = sel ? sel.value : null;
+    const tbody = el('tbody-aba-despesas');
+    const placeholder = el('placeholder-despesas');
+    const tabelaContainer = el('tabela-container-despesas');
+
+    // Exibe o container da tabela e esconde o placeholder
+    if (tabelaContainer) {
+        tabelaContainer.style.setProperty('display', 'block', 'important');
+        tabelaContainer.classList.remove('hidden-view');
+    }
+    if (placeholder) {
+        placeholder.style.setProperty('display', 'none', 'important');
+        placeholder.classList.add('hidden-view');
+    }
+
+    if (!tbody) return;
+
+    if (!imovelId) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Selecione um imóvel para visualizar as despesas.</td></tr>`;
+        return;
+    }
+
+    const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
+    if (!imovel || !imovel.despesas || imovel.despesas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa cadastrada para este imóvel.</td></tr>`;
+        return;
+    }
+
+    // Pega Mês e Ano selecionados no navegador
+    const anoSel = mesAtualDespesas.getFullYear();
+    const mesSel = mesAtualDespesas.getMonth() + 1; // Converte para base 1 (1-12)
+
+    // Filtra comparando Ano e Mês diretamente no texto da data (ISO ou BR)
+    const despesasFiltradas = imovel.despesas.filter(d => {
+        if (!d.data) return false;
+        
+        let dataNormal = d.data.toString().trim();
+        if (typeof parseInputDateSafe === 'function') {
+            dataNormal = parseInputDateSafe(dataNormal);
+        }
+
+        // Se a data for YYYY-MM-DD
+        if (dataNormal.includes('-')) {
+            const p = dataNormal.split('-');
+            if (p.length >= 2) {
+                const ano = parseInt(p[0], 10);
+                const mes = parseInt(p[1], 10);
+                return ano === anoSel && mes === mesSel;
+            }
+        }
+        
+        // Se a data for DD/MM/YYYY
+        if (dataNormal.includes('/')) {
+            const p = dataNormal.split('/');
+            if (p.length >= 3) {
+                const ano = parseInt(p[2], 10);
+                const mes = parseInt(p[1], 10);
+                return ano === anoSel && mes === mesSel;
+            }
+        }
+
+        return false;
+    });
+
+    tbody.innerHTML = '';
+
+    if (despesasFiltradas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Nenhuma despesa lançada em ${mesAtualDespesas.toLocaleString('pt-BR', { month: 'long' })} de ${anoSel}.</td></tr>`;
+        return;
+    }
+
+    // Renderiza as despesas encontradas
+    despesasFiltradas.forEach((d, idx) => {
+        const dataRaw = d.data ? (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data) : '';
+        const dataFmt = dataRaw.includes('-') ? dataRaw.split('-').reverse().join('/') : dataRaw;
+        const valorNum = parseFloat(d.valor || 0);
+        const valorFmt = isNaN(valorNum) ? '0,00' : valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-4 font-medium text-slate-700">${dataFmt}</td>
+                <td class="p-4 text-slate-600">${d.descricao || '-'}</td>
+                <td class="p-4 text-right font-bold text-red-600">R$ ${valorFmt}</td>
+                <td class="p-4 text-center">
+                    <button onclick="excluirDespesa(${imovel.id}, ${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50">Excluir</button>
+                </td>
+            </tr>`;
+    });
+}        // 4. SALVAR NOVA DESPESA
+function salvarDespesa() {
+    const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
+    const imovel = imoveisDB.find(i => i.id == imovelId);
+
+    if (!imovel) {
+        mostrarAlerta("Selecione um imóvel para lançar a despesa.");
+        return;
+    }
+
+    const desc = val('despesa-descricao') || val('cad-despesa-desc');
+    const valor = parseFloat(val('despesa-valor') || val('cad-despesa-valor'));
+    const data = val('despesa-data') || val('cad-despesa-data');
+
+    if (!desc || isNaN(valor) || valor <= 0) {
+        mostrarAlerta("Informe a descrição e um valor válido.");
+        return;
+    }
+
+    if (!imovel.despesas) imovel.despesas = [];
+
+    imovel.despesas.push({
+        id: Date.now(),
+        descricao: desc,
+        valor: valor,
+        data: data || new Date().toISOString().split('T')[0]
+    });
+
+    salvarBancoNoStorage();
+    carregarListaDespesas();
+    if (typeof fecharModalDespesa === 'function') fecharModalDespesa();
+    mostrarNotificacao("Despesa cadastrada com sucesso!");
+}
+
+// 5. EXCLUIR DESPESA
+function excluirDespesa(imovelId, index) {
+    const imovel = imoveisDB.find(i => i.id == imovelId);
+    if (!imovel || !imovel.despesas) return;
+
+    imovel.despesas.splice(index, 1);
+    salvarBancoNoStorage();
+    carregarListaDespesas();
+    mostrarNotificacao("Despesa removida.");
+}
+
+// 6. RENDERIZAR DRE COMPLETA
+function gerarRelatorioFinanceiro() {
+    const iId = val('fin-imovel-select');
+    const mSt = val('fin-mes-select');
+
+    if (!iId) {
+        mostrarAlerta("Selecione um imóvel.");
+        return;
+    }
+
+    const im = imoveisDB.find(i => i.id == iId);
+    if (!im) return;
+
+    hide('fin-vazio');
+    show('fin-painel');
+
+    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome || '';
+    if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
+    if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+
+    let tx = im.proprietario?.comissao || 20;
+    if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+
+    let r = 0, d = 0;
+    const tR = el('fin-lista-receitas');
+    const tD = el('fin-lista-despesas');
+
+    if (tR) tR.innerHTML = '';
+    if (tD) tD.innerHTML = '';
+
+    // Receitas
+    if (im.reservas) {
+        im.reservas.forEach(x => {
+            let checkinSeguro = parseInputDateSafe(x.checkin);
+            if (!mSt || checkinSeguro.startsWith(mSt)) {
+                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                    let v = parseFloat(x.valorTotal) || 0;
+                    r += v;
+                    if (tR) {
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/');
+                        tR.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td><td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-right font-bold text-green-600">R$ ${(v * (1 - tx/100)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+                    }
                 }
             }
+        });
+    }
 
-            const calcIdade = (dNasc) => { if(!dNasc) return ''; let hoje = new Date(); let nasc = new Date(parseInputDateSafe(dNasc) + 'T12:00:00'); let idade = hoje.getFullYear() - nasc.getFullYear(); let m = hoje.getMonth() - nasc.getMonth(); if(m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--; return ` (${idade})`; };
-            let lh = ``; if(res.titular?.nome) { let doc = res.titular.cpf || '-'; let nasc = res.titular.dataNasc ? parseInputDateSafe(res.titular.dataNasc).split('-').reverse().join('/') + calcIdade(res.titular.dataNasc) : '-'; lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${res.titular.nome} (Titular)</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${nasc}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${doc}</td></tr>`; }
-            if(res.acompanhantes) { res.acompanhantes.forEach(a => { let doc = a.cpf || '-'; let nasc = a.dataNasc ? parseInputDateSafe(a.dataNasc).split('-').reverse().join('/') + calcIdade(a.dataNasc) : '-'; lh += `<tr><td style="padding: 8px; border-bottom: 1px solid #eee;">${a.nome}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${nasc}</td><td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${doc}</td></tr>`; }); }
-            
-            let polCanc = im.voucher?.cancelamento || 'Consulte a central de reservas.';
-            let polInfo = im.voucher?.infoGerais || 'Apresente documento original no check-in.';
-            
-            let tituloDocumento = isPreVoucher ? 'PRÉ-VOUCHER' : 'VOUCHER';
-            let avisoPreVoucher = isPreVoucher ? `<div style="background-color:#fef2f2; border: 2px solid #ef4444; color:#991b1b; padding:15px; border-radius:8px; margin-bottom:20px; font-size:13px; line-height:1.5;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do <b>Voucher Oficial de Liberação</b> e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>` : '';
+    // Despesas
+    if (im.despesas) {
+        im.despesas.forEach(x => {
+            let dataSegura = parseInputDateSafe(x.data);
+            if (!mSt || dataSegura.startsWith(mSt)) {
+                let v = parseFloat(x.valor) || 0;
+                d += v;
+                if (tD) {
+                    tD.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao || '-'}</td><td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`;
+                }
+            }
+        });
+    }
 
-            const html = `<html><head><style>body{font-family:Arial,sans-serif;color:#333;margin:0;padding:20px;font-size:14px;}.c{max-width:800px;margin:0 auto;}.rb{background-color:#fbd38d;color:#9a3412;padding:10px 20px;border-radius:8px;font-weight:bold;font-size:16px;text-transform:uppercase;}.b{border:2px solid #fbd38d;border-radius:8px;padding:20px;margin-bottom:20px;}.in{font-size:22px;font-weight:bold;color:#1e293b;margin:0 0 5px 0;}.ie{color:#64748b;margin-bottom:20px;font-size:13px;}.ig{display:flex;justify-content:space-between;margin-bottom:20px;}.ic{width:48%;}.il{font-size:11px;text-transform:uppercase;color:#94a3b8;font-weight:bold;display:block;margin-bottom:3px;}.iv{font-size:14px;font-weight:bold;}.tb{background-color:#fbd38d;padding:6px 12px;border-radius:4px;font-weight:bold;display:inline-block;margin-bottom:10px;color:#9a3412;width:100%;box-sizing:border-box;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th{text-align:left;padding:8px;border-bottom:2px solid #333;font-size:12px;text-transform:uppercase;color:#64748b;}.ft{font-size:12px;color:#475569;line-height:1.5;white-space:pre-line;}</style></head><body><div class="c"><div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px;"><div style="display:flex; gap:15px; align-items:center;">${lgHtml}<div style="font-size:12px; color:#64748b; line-height:1.4;"><div style="font-size:16px; font-weight:bold; color:#64748b; margin-bottom:2px;">${nEmp}</div>${docEmp ? `<div>${docEmp}</div>` : ''}${endEmp ? `<div>${endEmp}</div>` : ''}${cidEmp ? `<div>${cidEmp}</div>` : ''}</div></div><div style="text-align:center; min-width:150px;"><div class="rb" style="margin-bottom:8px; display:inline-block; width:100%; box-sizing:border-box;">Reserva: ${res.numeroReserva||'S/N'}</div><div style="font-size:18px; font-weight:bold; letter-spacing:2px; color:#333;">${tituloDocumento}</div></div></div>${avisoPreVoucher}<div class="b"><div class="ig" style="margin-bottom:10px;"><div class="ic" style="width:60%;"><h2 class="in">${im.nome} ${im.numeroApto?`- Apto ${im.numeroApto}`:''}</h2><div class="ie">📍 ${endIm}</div></div><div class="ic" style="width:35%;text-align:right;"><div style="font-size:12px;color:#64748b;"><strong>Loc:</strong> RES${res.numeroReserva||'S/N'}-${imovelId}</div></div></div><div class="ig" style="background:#f8fafc;padding:15px;border-radius:6px;"><div class="ic"><span class="il">Check-in</span><span class="iv">📅 ${dIn} as ${im.checkin||'14:00'}</span></div><div class="ic"><span class="il">Check-out</span><span class="iv">📅 ${dOut} as ${im.checkout||'11:00'}</span></div><div class="ic text-right"><span class="il">Duração</span><span class="iv">🌙 ${noites} Noites</span></div></div></div><div class="b" style="padding-top:10px;"><div class="tb">Hóspedes</div><table><thead><tr><th>Nome</th><th style="text-align:center;">Data Nasc.</th><th style="text-align:center;">Documento</th></tr></thead><tbody>${lh}</tbody></table></div><div class="b"><h3 style="margin:0 0 10px 0;font-size:16px;border-bottom:1px solid #eee;padding-bottom:10px;">Políticas e Estrutura</h3><div style="margin-bottom:15px;"><strong style="font-size:13px;">Cancelamento:</strong><br><span style="font-size:13px;color:#b91c1c;font-weight:bold;white-space:pre-line;">${polCanc}</span></div><div><strong style="font-size:13px;">Acomodação:</strong><br><span class="ft">${im.estrutura||`Capacidade máx: ${im.capacidadeTotal} pessoas.`}</span></div></div><div class="b"><h3 style="margin:0 0 10px 0;font-size:16px;border-bottom:1px solid #eee;padding-bottom:10px;">Informações Gerais</h3><div class="ft">${polInfo}</div><div style="margin-top:40px;font-size:13px;">${assinaturaHtml}</div></div></div><script>window.onload=function(){window.print();};<\/script></body></html>`;
-            const w = window.open('', '_blank'); w.document.write(html); w.document.close();
-        }
+    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
+    if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
+
+    let c = r * (tx / 100);
+    let l = r - c - d;
+
+    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+}
+
+// 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
+function mudarAbaDRE(aba) {
+    const btnReceitas = el('btn-tab-dre-receitas');
+    const btnDespesas = el('btn-tab-dre-despesas');
+    const contentReceitas = el('dre-content-receitas');
+    const contentDespesas = el('dre-content-despesas');
+
+    if (aba === 'receitas') {
+        show(contentReceitas);
+        hide(contentDespesas);
+        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors";
+        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+    } else {
+        hide(contentReceitas);
+        show(contentDespesas);
+        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors";
+        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+    }
+}
         function renderizarAdmin() {
             const d = el('lista-imoveis-admin'); if(!d) return; d.innerHTML = '';
             if (imoveisDB.length === 0) { d.innerHTML = '<p class="text-center text-slate-500 py-4 font-bold">Nenhum imóvel cadastrado.</p>'; return; }
@@ -1036,7 +1419,8 @@ function montarDropdownHospedesOrcamento() {
                 let nm = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
                 d.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between hover:border-orange-200 transition-colors"><div class="flex items-center gap-4 w-full sm:w-auto"><img src="${tb}" class="w-16 h-16 rounded-lg object-cover bg-slate-100 shadow-sm"><div><h4 class="font-bold text-slate-800 text-lg">${nm}</h4><div class="flex flex-wrap items-center text-xs font-bold text-slate-500 mt-1 gap-3"><span><i class="fas fa-building mr-1 text-slate-400"></i>${im.tipo}</span><span><i class="fas fa-user-friends mr-1 text-slate-400"></i>Até ${im.capacidadeTotal}</span>${bgSt}</div></div></div><div class="flex gap-2 w-full sm:w-auto mt-3 sm:mt-0"><button onclick="editarImovel(${im.id})" title="Editar Imóvel" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-edit mr-1"></i> Editar</button><button onclick="abrirModalExclusao(${im.id})" title="Excluir Imóvel" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-trash-alt"></i></button></div></div>`);
             });
-        }
+        povoarSelectsFinanceiros();
+}
 
         function abrirModalExclusao(id) { 
     confirmarExclusao(() => {
@@ -1631,7 +2015,8 @@ function montarDropdownHospedesOrcamento() {
             else if(st === 'pago') vPago = vTF;
             
             // Lógica de Autoria (Mantém quem criou, ou grava o logado agora)
-            let criador = rOrig?.criadoPor || window.nomeUsuarioLogado || 'Gestor';
+         let nomeNaTela = el('perfil-nome-usuario')?.innerText;
+let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' ? nomeNaTela : (window.nomeUsuarioLogado || 'Gestor'));
             let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || 'admin';
 
             const obj = { 
@@ -1674,10 +2059,10 @@ function montarDropdownHospedesOrcamento() {
         confirmarExclusao(() => {
             im.reservas = im.reservas.filter(r => r.id != rId); 
             salvarBancoNoStorage(); 
-            renderizarMapaDisponibilidade(); 
-            renderizarListaReservasAdmin(); 
+            if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); 
+            if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); 
             fecharModalReserva(); 
-            mostrarNotificacao("Ficha Apagada!");
+            mostrarNotificacao("Reserva excluída com sucesso!");
         }, "Excluir Reserva", "Deseja realmente apagar esta ficha de reserva?");
     } 
 }
@@ -2029,24 +2414,113 @@ function renderListaOrc() {
             ls.forEach(d => { let dataFormatada = parseInputDateSafe(d.data).split('-').reverse().join('/'); if(tb) tb.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors"><td class="p-4 text-slate-500 font-medium">${dataFormatada}</td><td class="p-4 font-medium text-slate-800">${d.descricao}</td><td class="p-4 text-right font-medium text-red-600">R$ ${parseFloat(d.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-4 text-center whitespace-nowrap"><button onclick="editarDespesa(${d.id},${im.id})" title="Editar Despesa" class="text-slate-400 hover:text-slate-800 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100 mr-1"><i class="fas fa-edit"></i></button><button onclick="deletarDespesa(${d.id}, ${im.id})" title="Excluir Despesa" class="text-slate-400 hover:text-red-500 bg-white shadow-sm px-3 py-1.5 rounded-lg border border-slate-100"><i class="fas fa-trash"></i></button></td></tr>`); });
         }
         function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
-        function abrirModalDespesa() { 
-            sv('despesa-id',''); sv('despesa-data',''); sv('despesa-valor',''); 
-            povoarSelectCategorias(); sv('despesa-categoria',categoriasDB[0]); 
-            toggleCampoOutrosDespesa(); 
-            const s=el('despesa-imovel-select'); 
-            if(s){ 
-                s.innerHTML='<option value="">Selecione...</option>'; 
-                imoveisDB.forEach(i=>{ 
-                    let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
-                    s.insertAdjacentHTML('beforeend',`<option value="${i.id}">${nm}</option>`); 
-                }); 
-                if(val('filtro-imovel-despesas')) s.value=val('filtro-imovel-despesas'); 
-            } 
-            show('modal-nova-despesa'); 
-        }
-      function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id', d.id); sv('despesa-imovel-select', im.id); sv('despesa-data', d.data); povoarSelectCategorias(); sv('despesa-categoria', d.categoria); sv('despesa-descricao', d.descricao); sv('despesa-valor', d.valor); }
-function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-descricao'), vl=parseFloat(val('despesa-valor')); if(!im||!dt||!vl){alert('Preencha os campos obrigatórios!');return;} let objIm=imoveisDB.find(i=>i.id==im); if(!objIm)return; let id=val('despesa-id'); if(id){ let d=objIm.despesas.find(x=>x.id==id); if(d){d.data=dt; d.categoria=ct; d.descricao=ds; d.valor=vl;} } else { objIm.despesas.push({id:Date.now().toString(), data:dt, categoria:ct, descricao:ds, valor:vl}); } salvarBancoNoStorage(); fecharModalDespesa(); renderizarDespesas(); mostrarNotificacao("Despesa salva!"); }
+        function abrirModalDespesa() {
+    const modal = document.getElementById('modal-nova-despesa') || 
+                  document.getElementById('modal-cad-despesa') || 
+                  document.getElementById('modal-despesa');
 
+    if (!modal) {
+        alert("Erro: O modal de lançamento de despesa não foi encontrado no HTML.");
+        return;
+    }
+
+    if (document.getElementById('despesa-id')) document.getElementById('despesa-id').value = '';
+    if (document.getElementById('despesa-valor')) document.getElementById('despesa-valor').value = '';
+    if (document.getElementById('despesa-descricao')) document.getElementById('despesa-descricao').value = '';
+
+    if (document.getElementById('despesa-data')) {
+        document.getElementById('despesa-data').value = new Date().toISOString().split('T')[0];
+    }
+
+    if (typeof povoarSelectCategorias === 'function') povoarSelectCategorias();
+
+    const s = document.getElementById('despesa-imovel-select');
+    if (s && typeof imoveisDB !== 'undefined') {
+        s.innerHTML = '<option value="">Selecione...</option>';
+        imoveisDB.forEach(i => {
+            let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
+            s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`);
+        });
+        const imovelAtivo = document.getElementById('filtro-imovel-despesas')?.value || document.getElementById('fin-imovel-select')?.value;
+        if (imovelAtivo) s.value = imovelAtivo;
+    }
+
+    modal.classList.remove('hidden-view', 'hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+}
+
+function fecharModalDespesa() {
+    const modal = document.getElementById('modal-nova-despesa') || 
+                  document.getElementById('modal-cad-despesa') || 
+                  document.getElementById('modal-despesa');
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        modal.classList.add('hidden-view');
+    }
+}
+
+function editarDespesa(id, imId) { 
+    const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imId) : null; 
+    if (!im || !im.despesas) return;
+    const d = im.despesas.find(x => x.id == id); 
+    if (!d) return;
+    
+    abrirModalDespesa(); 
+    if (document.getElementById('despesa-id')) document.getElementById('despesa-id').value = d.id; 
+    if (document.getElementById('despesa-imovel-select')) document.getElementById('despesa-imovel-select').value = im.id; 
+    if (document.getElementById('despesa-data')) document.getElementById('despesa-data').value = d.data; 
+    if (document.getElementById('despesa-categoria')) document.getElementById('despesa-categoria').value = d.categoria; 
+    if (document.getElementById('despesa-descricao')) document.getElementById('despesa-descricao').value = d.descricao; 
+    if (document.getElementById('despesa-valor')) document.getElementById('despesa-valor').value = d.valor; 
+}
+
+function salvarDespesa() {
+    const imovelId = document.getElementById('despesa-imovel-select')?.value || document.getElementById('filtro-imovel-despesas')?.value;
+    const data = document.getElementById('despesa-data')?.value;
+    const categoria = document.getElementById('despesa-categoria')?.value;
+    const descricao = document.getElementById('despesa-descricao')?.value;
+    const valorRaw = document.getElementById('despesa-valor')?.value;
+
+    if (!imovelId) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel.");
+        else alert("Selecione um imóvel.");
+        return;
+    }
+    if (!data) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe a data.");
+        else alert("Informe a data.");
+        return;
+    }
+    if (!valorRaw) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe o valor.");
+        else alert("Informe o valor.");
+        return;
+    }
+
+    const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
+    if (!imovel) return;
+
+    if (!imovel.despesas) imovel.despesas = [];
+
+    const valor = parseFloat(valorRaw.replace(',', '.'));
+
+    const novaDespesa = {
+        id: Date.now(),
+        data: data,
+        categoria: categoria || 'Geral',
+        descricao: descricao || categoria || 'Despesa',
+        valor: isNaN(valor) ? 0 : valor
+    };
+
+    imovel.despesas.unshift(novaDespesa);
+
+    if (typeof salvarDados === 'function') salvarDados();
+
+    fecharModalDespesa();
+
+    if (typeof carregarListaDespesas === 'function') carregarListaDespesas();
+    if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
+}
 function povoarSelectCategorias() {
     const s = el('despesa-categoria');
     if (!s) return;
@@ -2090,37 +2564,79 @@ function fecharModalCategorias() { hide('modal-categorias'); povoarSelectCategor
         }
         
         function gerarRelatorioFinanceiro() {
-            const iId = val('fin-imovel-select'); const mSt = val('fin-mes-select'); if(!iId || !mSt) return;
-            const im = imoveisDB.find(i => i.id == iId); if(!im) return;
-            hide('fin-vazio'); show('fin-painel'); mudarAbaDRE('receitas');
-            if(el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome; if(el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`; if(el('fin-mes-label')) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
-            let tx = im.proprietario?.comissao || 20; if(el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
-            let r = 0, d = 0; const tR = el('fin-lista-receitas'); const tD = el('fin-lista-despesas'); 
-            if(tR) tR.innerHTML = ''; if(tD) tD.innerHTML = '';
-            if(im.reservas) {
-                im.reservas.forEach(x => { 
-                    let checkinSeguro = parseInputDateSafe(x.checkin);
-                    if(checkinSeguro.startsWith(mSt) && (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao')) { 
-                        let v = parseFloat(x.valorTotal) || 0; r += v; 
-                        let din = checkinSeguro.split('-').reverse().join('/'); let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/'); let retido = v * (tx / 100);
-                        if(tR) { tR.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} até ${dout}</td><td class="p-3 text-right font-medium text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td><td class="p-3 text-right text-green-600 font-bold bg-green-50/30">R$ ${retido.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`); }
-                    } 
-                });
+    // Pega o imóvel selecionado (seja na aba DRE ou na aba Despesas)
+    const iId = val('fin-imovel-select') || val('select-despesa-imovel') || val('dre-imovel-select');
+    const mSt = val('fin-mes-select') || val('select-despesa-mes') || val('dre-mes-select');
+
+    if (!iId) return;
+    const im = imoveisDB.find(i => i.id == iId);
+    if (!im) return;
+
+    // Se houver painéis para mostrar/ocultar
+    if (el('fin-vazio')) hide('fin-vazio');
+    if (el('fin-painel')) show('fin-painel');
+
+    // Atualiza Labels da Tela
+    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = im.nome || '';
+    if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
+    if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
+
+    let tx = im.proprietario?.comissao || 20;
+    if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
+
+    let r = 0, d = 0;
+    const tR = el('fin-lista-receitas') || el('lista-receitas-dre');
+    const tD = el('fin-lista-despesas') || el('lista-despesas-dre') || el('container-lista-despesas');
+
+    if (tR) tR.innerHTML = '';
+    if (tD) tD.innerHTML = '';
+
+    // 1. Processa Receitas / Reservas
+    if (im.reservas) {
+        im.reservas.forEach(x => {
+            let checkinSeguro = parseInputDateSafe(x.checkin);
+            // Se mSt estiver preenchido filtra por mês, caso contrário traz todas
+            if (!mSt || checkinSeguro.startsWith(mSt)) {
+                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                    let v = parseFloat(x.valorTotal) || 0;
+                    r += v;
+                    if (tR) {
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = parseInputDateSafe(x.checkout).split('-').reverse().join('/');
+                        tR.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3"><div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div><span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span></td><td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td><td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
+                    }
+                }
             }
-            if(im.despesas) {
-                im.despesas.forEach(x => { 
-                    let dataSegura = parseInputDateSafe(x.data);
-                    if(dataSegura.startsWith(mSt)) { 
-                        let v = parseFloat(x.valor) || 0; d += v; 
-                        if(tD) { tD.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao}</td><td class="p-3 text-right text-red-600 font-bold">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`); }
-                    } 
-                });
+        });
+    }
+
+    // 2. Processa Despesas / Gastos
+    if (im.despesas) {
+        im.despesas.forEach(x => {
+            let dataSegura = parseInputDateSafe(x.data);
+            if (!mSt || dataSegura.startsWith(mSt)) {
+                let v = parseFloat(x.valor) || 0;
+                d += v;
+                if (tD) {
+                    tD.insertAdjacentHTML('beforeend', `<tr class="border-b border-slate-50 hover:bg-slate-50"><td class="p-3 text-center text-slate-500 text-xxs">${dataSegura.split('-').reverse().join('/')}</td><td class="p-3 font-medium text-slate-700">${x.descricao || '-'}</td><td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>`);
+                }
             }
-            if(tR && tR.innerHTML === '') tR.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>`;
-            if(tD && tD.innerHTML === '') tD.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>`;
-            let c = r * (tx / 100); let l = r - c - d;
-            if(el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; if(el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-        }
+        });
+    }
+
+    // Mensagens de lista vazia
+    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
+    if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
+
+    // Totais Financeiros
+    let c = r * (tx / 100);
+    let l = r - c - d; // Líquido
+
+    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+}
 
         function mudarAbaDRE(a) { if(el('dre-content-receitas')) el('dre-content-receitas').classList[a==='receitas'?'remove':'add']('hidden-view'); if(el('dre-content-despesas')) el('dre-content-despesas').classList[a==='despesas'?'remove':'add']('hidden-view'); if(el('btn-tab-dre-receitas')) el('btn-tab-dre-receitas').className=a==='receitas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-dre-despesas')) el('btn-tab-dre-despesas').className=a==='despesas'?"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors":"flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors"; }
         
@@ -2438,40 +2954,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
             }
-       // ================= FIX GLOBAL PARA IDENTIFICAÇÃO DO CORRETOR =================
-function capturarDadosCriadorReserva() {
-    let cUid = window.uidUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser ? auth.currentUser.uid : 'admin');
-    let cNome = 'Gestor';
-
-    if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-        cNome = window.nomeUsuarioLogado || (typeof userData !== 'undefined' && userData.nome ? userData.nome : 'Corretor/Parceiro');
-    } else if (window.nomeUsuarioLogado && window.nomeUsuarioLogado !== 'Admin') {
-        cNome = window.nomeUsuarioLogado;
-    }
-
-  return { criadoPorUid: cUid, criadoPor: cNome };
-}
-// ================= REGRA DEFINITIVA DO PARCEIRO =================
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        if (typeof userRole !== 'undefined' && userRole === 'parceiro') {
-            // Oculta botão Meus Imóveis no menu
-            const btnImoveis = document.getElementById('btn-admin-imoveis');
-            if (btnImoveis) btnImoveis.style.display = 'none';
-
-            // Garante Orçamentos visível
-            const btnOrcamentos = document.getElementById('btn-admin-orcamentos');
-            if (btnOrcamentos) btnOrcamentos.style.display = '';
-
-            // Se estiver na tela de imóveis, vai para o mapa
-            if (typeof mudarAbaInternaAdmin === 'function') {
-                mudarAbaInternaAdmin('mapa');
-            }
-        }
-    }, 500);
-});
-}
-</script>
+</script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full mx-4 p-6 transform scale-95 transition-transform duration-300 id-modal-box">
@@ -2501,3 +2984,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 </body>
 </html>
+
+
+
