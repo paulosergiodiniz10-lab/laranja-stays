@@ -437,7 +437,93 @@
         </div>
     </div>
 </div>
-                    <div id="admin-content-resultados" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1"><label class="block text-xs font-medium text-slate-500 mb-1">Selecione o Imóvel</label><select id="fin-imovel-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="w-48"><label class="block text-xs font-medium text-slate-500 mb-1">Mês/Ano</label><input type="month" id="fin-mes-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></div><button onclick="gerarRelatorioFinanceiro()" class="bg-slate-800 text-white hover:bg-slate-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-search mr-2"></i>Gerar</button></div><div id="fin-vazio" class="text-center py-20"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-file-invoice-dollar text-3xl text-slate-300"></i></div><h2 class="text-xl font-bold text-slate-800">Prestação de Contas (DRE)</h2></div><div id="fin-painel" class="hidden-view p-6 space-y-6"><div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center"><div><h3 id="fin-nome-imovel" class="text-lg font-bold text-[#0071c2]">Nome</h3><p id="fin-nome-prop" class="text-sm font-medium text-slate-500">Proprietário</p></div><div class="flex items-center gap-3"><span id="fin-mes-label" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"><</span><button onclick="exportarExcelDRE()" class="bg-[#107c41] text-white hover:bg-[#0b5c30] px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center mr-2"><i class="fas fa-file-excel mr-1.5"></i> Baixar Excel</button><button onclick="gerarPDFDRE()" class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center transition-all active:scale-95"><i class="fas fa-file-pdf mr-1.5"></i> Gerar PDF</button>
+                    <div id="admin-content-resultados" class="hidden-view fade-in bg-slate-50 h-full"><div class="p-6 border-b border-slate-200 bg-white flex items-end gap-4"><div class="flex-1"><label class="block text-xs font-medium text-slate-500 mb-1">Selecione o Imóvel</label><select id="fin-imovel-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></select></div><div class="w-48"><label class="block text-xs font-medium text-slate-500 mb-1">Mês/Ano</label><input type="month" id="fin-mes-select" class="w-full px-3 py-2 rounded-xl border-2 border-slate-200 outline-none text-sm font-medium bg-slate-50"></div><button onclick="gerarRelatorioFinanceiro()" class="bg-slate-800 text-white hover:bg-slate-900 px-6 py-2.5 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-search mr-2"></i>Gerar</button></div><div id="fin-vazio" class="text-center py-20"><div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200"><i class="fas fa-file-invoice-dollar text-3xl text-slate-300"></i></div><h2 class="text-xl font-bold text-slate-800">Prestação de Contas (DRE)</h2></div><<div id="fin-painel" class="hidden-view space-y-6">
+    <!-- CABEÇALHO DO RELATÓRIO -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
+        <div>
+            <h3 id="fin-nome-imovel" class="text-xl font-bold text-[#0071c2]">Nome do Imóvel</h3>
+            <p id="fin-nome-prop" class="text-xs font-semibold text-slate-500 mt-1">Proprietário: -</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="fin-mes-label" class="bg-orange-100 text-orange-700 font-bold text-xs px-3 py-1.5 rounded-full uppercase tracking-wider">MM/AAAA</span>
+            <button onclick="exportarExcelDRE()" class="bg-[#107c41] text-white hover:bg-[#0b5c30] px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center transition-all active:scale-95">
+                <i class="fas fa-file-excel mr-1.5"></i> Baixar Excel
+            </button>
+            <button onclick="gerarPDFDRE()" class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg font-bold text-sm shadow-sm flex items-center transition-all active:scale-95">
+                <i class="fas fa-file-pdf mr-1.5"></i> Gerar PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- CARDS DE RESUMO FINANCEIRO -->
+    <div class="grid grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-green-500">
+            <h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Receitas</h4>
+            <div id="fin-card-receitas" class="text-2xl font-bold text-green-600">R$ 0,00</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-orange-400">
+            <h4 id="fin-label-comissao" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Comissão</h4>
+            <div id="fin-card-comissao" class="text-2xl font-bold text-orange-500">R$ 0,00</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-red-500">
+            <h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Despesas</h4>
+            <div id="fin-card-despesas" class="text-2xl font-bold text-red-600">R$ 0,00</div>
+        </div>
+        <div class="bg-slate-800 p-5 rounded-xl shadow-md border-l-4 border-l-blue-400 relative overflow-hidden">
+            <h4 class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1 relative z-10">Líquido Prop.</h4>
+            <div id="fin-card-liquido" class="text-3xl font-bold text-white relative z-10">R$ 0,00</div>
+        </div>
+    </div>
+
+    <!-- TABELAS DE ENTRADAS E SAÍDAS -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-0 flex flex-col overflow-hidden">
+        <div class="flex border-b border-slate-200 bg-slate-50">
+            <button id="btn-tab-dre-receitas" onclick="mudarAbaDRE('receitas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors">
+                <i class="fas fa-arrow-down mr-2"></i>Entradas
+            </button>
+            <button id="btn-tab-dre-despesas" onclick="mudarAbaDRE('despesas')" class="flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors">
+                <i class="fas fa-arrow-up mr-2"></i>Saídas
+            </button>
+        </div>
+        
+        <div class="p-0 overflow-y-auto max-h-[400px]">
+            <!-- ABA ENTRADAS -->
+            <div id="dre-content-receitas" class="fade-in">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-white sticky top-0 border-b border-slate-100 z-10">
+                        <tr class="text-[10px] text-slate-500 uppercase tracking-wider">
+                            <th class="p-3">Hóspede/Status</th>
+                            <th class="p-3 text-center">Período</th>
+                            <th class="p-3 text-right">Bruto</th>
+                            <th class="p-3 text-right text-green-600">Retido</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fin-lista-receitas"></tbody>
+                </table>
+            </div>
+
+            <!-- ABA SAÍDAS -->
+            <div id="dre-content-despesas" class="hidden-view fade-in w-full">
+                <div class="bg-white sticky top-0 border-b border-slate-100 z-10 flex justify-between items-center p-2 px-4">
+                    <span class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0 mt-2">Lançamentos</span>
+                    <button onclick="abrirModalDespesa()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded text-[10px] font-bold">
+                        <i class="fas fa-plus"></i> Despesa
+                    </button>
+                </div>
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-white border-b border-slate-100">
+                        <tr class="text-[10px] text-slate-500 uppercase tracking-wider">
+                            <th class="p-3">Data</th>
+                            <th class="p-3">Descrição</th>
+                            <th class="p-3 text-right">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fin-lista-despesas"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
                 </div>
             </div>
         </div>
