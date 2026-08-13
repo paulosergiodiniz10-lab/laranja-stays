@@ -3035,7 +3035,7 @@ window.exportarExcelDRE = function() {
     }
 };
 
-// 2. GERAR PDF GLOBAL
+// 2. GERAR PDF GLOBAL (LÍMPIDO, VIVO E TRANSPARENTE)
 window.gerarPDFDRE = function() {
     try {
         const selImovel = document.getElementById('fin-imovel-select');
@@ -3100,18 +3100,19 @@ window.gerarPDFDRE = function() {
                             let din = checkinSeguro.split('-').reverse().join('/');
                             let dout = ((typeof parseInputDateSafe === 'function') ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
 
-                            let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
+                            let colImovel = eTodos ? `<td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
 
                             linhasEntradasHTML += `
-                                <tr>
+                                <tr style="border-bottom: 1px solid #cbd5e1;">
                                     ${colImovel}
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1;">
                                         <strong>${x.titular?.nome || '-'}</strong>
-                                        <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 5px; border-radius:4px; font-weight:bold; margin-left:5px;">${x.statusPagamento.toUpperCase()}</span>
+                                        <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:5px;">${x.statusPagamento.toUpperCase()}</span>
                                     </td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${din} a ${dout}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #16a34a; font-weight: bold;">R$ ${(comissaoReserva + limpezaReserva).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center;">${din} a ${dout}</td>
+                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #ea580c; font-weight: bold;">R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #16a34a; font-weight: bold;">R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                                 </tr>`;
                         }
                     }
@@ -3125,14 +3126,14 @@ window.gerarPDFDRE = function() {
                         let v = parseFloat(x.valor) || 0;
                         dManuaisTotal += v;
                         let dFmt = dataSegura.split('-').reverse().join('/');
-                        let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
+                        let colImovel = eTodos ? `<td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
 
                         linhasSaidasHTML += `
-                            <tr>
+                            <tr style="border-bottom: 1px solid #cbd5e1;">
                                 ${colImovel}
-                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${dFmt}</td>
-                                <td style="padding: 8px; border-bottom: 1px solid #eee;">${x.descricao || '-'}</td>
-                                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center;">${dFmt}</td>
+                                <td style="padding: 9px; border-bottom: 1px solid #cbd5e1;">${x.descricao || '-'}</td>
+                                <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                             </tr>`;
                     }
                 });
@@ -3142,13 +3143,13 @@ window.gerarPDFDRE = function() {
             dLimpezasTotal += totalLimpezaAuto;
 
             if (totalLimpezaAuto > 0) {
-                let colImovel = eTodos ? `<td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 11px; font-weight: bold; color: #c2410c;">${nomeAptoDisplay}</td>` : '';
+                let colImovel = eTodos ? `<td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #c2410c;">${nomeAptoDisplay}</td>` : '';
                 linhasSaidasHTML += `
-                    <tr style="background-color: #fff7ed;">
+                    <tr style="background-color: #fff7ed; border-bottom: 1px solid #cbd5e1;">
                         ${colImovel}
-                        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; font-weight: bold; color: #c2410c;">Auto</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #9a3412;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
-                        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; color: #dc2626; font-weight: bold;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: #c2410c;">Auto</td>
+                        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-weight: bold; color: #9a3412;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
+                        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                     </tr>`;
             }
         });
@@ -3156,7 +3157,7 @@ window.gerarPDFDRE = function() {
         let dTotalGeral = dManuaisTotal + dLimpezasTotal;
         let liquidoFinal = rTotal - cTotal - dTotalGeral;
 
-        let colImovelHeader = eTodos ? `<th style="padding: 8px; text-align: left;">Imóvel</th>` : '';
+        let colImovelHeader = eTodos ? `<th style="padding: 9px; text-align: left; border-bottom: 2px solid #94a3b8;">Imóvel</th>` : '';
 
         let htmlPDF = `
             <!DOCTYPE html>
@@ -3164,20 +3165,20 @@ window.gerarPDFDRE = function() {
             <head>
                 <title>${tituloRelatorio} - ${mesFormatado}</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 25px; color: #1e293b; background: #fff; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-                    .empresa-info { font-size: 11px; color: #64748b; line-height: 1.4; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0; padding: 25px; color: #0f172a; background: #fff; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #cbd5e1; padding-bottom: 15px; margin-bottom: 20px; }
+                    .empresa-info { font-size: 11px; color: #475569; line-height: 1.4; }
                     .empresa-nome { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 3px; }
                     .doc-titulo { text-align: right; }
-                    .doc-titulo h1 { margin: 0; font-size: 18px; color: #f97316; text-transform: uppercase; }
-                    .doc-titulo p { margin: 3px 0 0 0; font-size: 12px; font-weight: bold; color: #475569; }
+                    .doc-titulo h1 { margin: 0; font-size: 18px; color: #ea580c; text-transform: uppercase; }
+                    .doc-titulo p { margin: 3px 0 0 0; font-size: 12px; font-weight: bold; color: #334155; }
                     
-                    .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; display: flex; justify-content: space-between; font-size: 12px; }
+                    .info-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; display: flex; justify-content: space-between; font-size: 12px; }
                     .info-box strong { color: #0f172a; }
                     
                     .cards-grid { display: flex; gap: 10px; margin-bottom: 25px; }
-                    .card { flex: 1; padding: 12px; border-radius: 8px; border-left: 4px solid #cbd5e1; background: #f8fafc; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-                    .card-label { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+                    .card { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; border-left: 4px solid #cbd5e1; background: #f8fafc; }
+                    .card-label { font-size: 9px; font-weight: bold; text-transform: uppercase; color: #475569; margin-bottom: 4px; }
                     .card-val { font-size: 16px; font-weight: bold; }
                     
                     .card-rec { border-left-color: #22c55e; } .card-rec .card-val { color: #16a34a; }
@@ -3185,14 +3186,15 @@ window.gerarPDFDRE = function() {
                     .card-des { border-left-color: #ef4444; } .card-des .card-val { color: #dc2626; }
                     .card-liq { border-left-color: #3b82f6; background: #0f172a; color: #fff; } .card-liq .card-label { color: #94a3b8; } .card-liq .card-val { color: #fff; }
                     
-                    .section-title { font-size: 13px; font-weight: bold; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; margin-top: 20px; margin-bottom: 10px; color: #334155; }
-                    .sec-rec { background: #dcfce7; color: #15803d; }
-                    .sec-des { background: #fee2e2; color: #b91c1c; }
+                    .section-title { font-size: 13px; font-weight: bold; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 25px; margin-bottom: 10px; }
+                    .sec-rec { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
+                    .sec-des { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
                     
-                    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px; }
-                    th { background: #f8fafc; padding: 8px; border-bottom: 2px solid #e2e8f0; color: #475569; text-transform: uppercase; font-size: 9px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px; border: 1px solid #cbd5e1; }
+                    th { background: #f1f5f9; padding: 9px; border-bottom: 2px solid #94a3b8; color: #1e293b; text-transform: uppercase; font-size: 9px; font-weight: bold; }
+                    tbody tr:nth-child(even) { background-color: #f8fafc; }
                     
-                    .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 10px; text-align: center; color: #94a3b8; }
+                    .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #cbd5e1; font-size: 10px; text-align: center; color: #64748b; }
                     @media print { body { padding: 0; } }
                 </style>
             </head>
@@ -3247,14 +3249,15 @@ window.gerarPDFDRE = function() {
                     <thead>
                         <tr>
                             ${colImovelHeader}
-                            <th style="text-align: left;">Hóspede / Status</th>
-                            <th style="text-align: center;">Período</th>
-                            <th style="text-align: right;">Valor Bruto</th>
-                            <th style="text-align: right;">Retido Agência</th>
+                            <th style="text-align: left; border-bottom: 2px solid #94a3b8;">Hóspede / Status</th>
+                            <th style="text-align: center; border-bottom: 2px solid #94a3b8;">Período</th>
+                            <th style="text-align: right; border-bottom: 2px solid #94a3b8;">Valor Bruto</th>
+                            <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #c2410c;">Comissão</th>
+                            <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #15803d;">Taxa Limpeza</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${linhasEntradasHTML || '<tr><td colspan="5" style="text-align:center; padding:10px; color:#94a3b8;">Nenhuma entrada registrada neste mês.</td></tr>'}
+                        ${linhasEntradasHTML || '<tr><td colspan="6" style="text-align:center; padding:12px; color:#64748b;">Nenhuma entrada registrada neste mês.</td></tr>'}
                     </tbody>
                 </table>
 
@@ -3264,13 +3267,13 @@ window.gerarPDFDRE = function() {
                     <thead>
                         <tr>
                             ${colImovelHeader}
-                            <th style="text-align: center; width: 80px;">Data</th>
-                            <th style="text-align: left;">Descrição</th>
-                            <th style="text-align: right; width: 100px;">Valor</th>
+                            <th style="text-align: center; width: 80px; border-bottom: 2px solid #94a3b8;">Data</th>
+                            <th style="text-align: left; border-bottom: 2px solid #94a3b8;">Descrição</th>
+                            <th style="text-align: right; width: 100px; border-bottom: 2px solid #94a3b8;">Valor</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${linhasSaidasHTML || '<tr><td colspan="4" style="text-align:center; padding:10px; color:#94a3b8;">Nenhuma despesa registrada neste mês.</td></tr>'}
+                        ${linhasSaidasHTML || '<tr><td colspan="4" style="text-align:center; padding:12px; color:#64748b;">Nenhuma despesa registrada neste mês.</td></tr>'}
                     </tbody>
                 </table>
 
