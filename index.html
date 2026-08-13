@@ -1145,66 +1145,59 @@ function mudarMesDespesa(delta) {
 
 // 3. RENDERIZAR LISTA DE DESPESAS
 function carregarListaDespesas() {
-    const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
+    const sel = el('filtro-imovel-despesas') || el('fin-imovel-select');
+    const imovelId = sel ? sel.value : null;
     const tbody = el('tbody-aba-despesas');
     const placeholder = el('placeholder-despesas');
     const tabelaContainer = el('tabela-container-despesas');
 
+    // 1. Força o container da tabela a ficar visível
+    if (tabelaContainer) {
+        tabelaContainer.style.setProperty('display', 'block', 'important');
+        tabelaContainer.classList.remove('hidden-view');
+    }
+
+    // 2. Esconde a mensagem de tela vazia/placeholder
+    if (placeholder) {
+        placeholder.style.setProperty('display', 'none', 'important');
+        placeholder.classList.add('hidden-view');
+    }
+
+    if (!tbody) return;
+
     if (!imovelId) {
-        if (placeholder && typeof show === 'function') show(placeholder);
-        if (tabelaContainer && typeof hide === 'function') hide(tabelaContainer);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Selecione um imóvel para visualizar as despesas.</td></tr>`;
         return;
     }
 
     const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
+    
+    tbody.innerHTML = '';
+
+    // Se o imóvel não tiver despesas
     if (!imovel || !imovel.despesas || imovel.despesas.length === 0) {
-        if (placeholder && typeof show === 'function') show(placeholder);
-        if (tabelaContainer && typeof hide === 'function') hide(tabelaContainer);
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa cadastrada para este imóvel.</td></tr>`;
         return;
     }
 
-    // Exibe o container e esconde o placeholder com verificação
-    if (placeholder && typeof hide === 'function') hide(placeholder);
-    if (tabelaContainer && typeof show === 'function') show(tabelaContainer);
+    // Renderiza as despesas do imóvel
+    imovel.despesas.forEach((d, idx) => {
+        const dataRaw = d.data ? (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data) : '';
+        const dataFmt = dataRaw ? dataRaw.split('-').reverse().join('/') : '-';
+        const valorNum = parseFloat(d.valor || 0);
+        const valorFmt = isNaN(valorNum) ? '0,00' : valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    // Mês e ano selecionados
-    const anoSel = typeof mesAtualDespesas !== 'undefined' ? mesAtualDespesas.getFullYear() : new Date().getFullYear();
-    const mesSel = typeof mesAtualDespesas !== 'undefined' ? mesAtualDespesas.getMonth() : new Date().getMonth();
-
-    // Filtra as despesas do mês selecionado
-    let despesasFiltradas = imovel.despesas.filter(d => {
-        if (!d.data) return true;
-        const dataStr = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data;
-        const dt = new Date(dataStr + 'T12:00:00');
-        return dt.getFullYear() === anoSel && dt.getMonth() === mesSel;
+        tbody.innerHTML += `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-4 font-medium text-slate-700">${dataFmt}</td>
+                <td class="p-4 text-slate-600">${d.descricao || '-'}</td>
+                <td class="p-4 text-right font-bold text-red-600">R$ ${valorFmt}</td>
+                <td class="p-4 text-center">
+                    <button onclick="excluirDespesa(${imovel.id}, ${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50">Excluir</button>
+                </td>
+            </tr>`;
     });
-
-    // Se o filtro do mês retornar vazio mas houver despesas cadastradas no imóvel, exibe todas para garantir a exibição
-    if (despesasFiltradas.length === 0 && imovel.despesas.length > 0) {
-        despesasFiltradas = imovel.despesas;
-    }
-
-    if (tbody) {
-        tbody.innerHTML = '';
-        despesasFiltradas.forEach((d, idx) => {
-            const dataRaw = d.data ? (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data) : '';
-            const dataFmt = dataRaw ? dataRaw.split('-').reverse().join('/') : '-';
-            const valorNum = parseFloat(d.valor || 0);
-            const valorFmt = isNaN(valorNum) ? '0,00' : valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            tbody.innerHTML += `
-                <tr class="border-b border-slate-100 hover:bg-slate-50">
-                    <td class="p-4 font-medium text-slate-700">${dataFmt}</td>
-                    <td class="p-4 text-slate-600">${d.descricao || '-'}</td>
-                    <td class="p-4 text-right font-bold text-red-600">R$ ${valorFmt}</td>
-                    <td class="p-4 text-center">
-                        <button onclick="excluirDespesa(${imovel.id}, ${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50">Excluir</button>
-                    </td>
-                </tr>`;
-        });
-    }
-}
-        // 4. SALVAR NOVA DESPESA
+}        // 4. SALVAR NOVA DESPESA
 function salvarDespesa() {
     const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
     const imovel = imoveisDB.find(i => i.id == imovelId);
