@@ -2534,54 +2534,6 @@ function editarDespesa(id, imId) {
     if (document.getElementById('despesa-descricao')) document.getElementById('despesa-descricao').value = d.descricao; 
     if (document.getElementById('despesa-valor')) document.getElementById('despesa-valor').value = d.valor; 
 }
-
-function salvarDespesa() {
-    const imovelId = document.getElementById('despesa-imovel-select')?.value || document.getElementById('filtro-imovel-despesas')?.value;
-    const data = document.getElementById('despesa-data')?.value;
-    const categoria = document.getElementById('despesa-categoria')?.value;
-    const descricao = document.getElementById('despesa-descricao')?.value;
-    const valorRaw = document.getElementById('despesa-valor')?.value;
-
-    if (!imovelId) {
-        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel.");
-        else alert("Selecione um imóvel.");
-        return;
-    }
-    if (!data) {
-        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe a data.");
-        else alert("Informe a data.");
-        return;
-    }
-    if (!valorRaw) {
-        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe o valor.");
-        else alert("Informe o valor.");
-        return;
-    }
-
-    const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
-    if (!imovel) return;
-
-    if (!imovel.despesas) imovel.despesas = [];
-
-    const valor = parseFloat(valorRaw.replace(',', '.'));
-
-    const novaDespesa = {
-        id: Date.now(),
-        data: data,
-        categoria: categoria || 'Geral',
-        descricao: descricao || categoria || 'Despesa',
-        valor: isNaN(valor) ? 0 : valor
-    };
-
-    imovel.despesas.unshift(novaDespesa);
-
-    if (typeof salvarDados === 'function') salvarDados();
-
-    fecharModalDespesa();
-
-    if (typeof carregarListaDespesas === 'function') carregarListaDespesas();
-    if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
-}
 function povoarSelectCategorias() {
     const s = el('despesa-categoria');
     if (!s) return;
