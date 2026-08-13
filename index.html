@@ -518,16 +518,68 @@
                             <th class="p-3 text-right">Valor</th>
                         </tr>
                     </thead>
-                    <tbody id="fin-lista-despesas"></tbody>
-                </table>
-            </div>
+                    <tbody id="fin-lista-despesas"></tbody></table></div></div></div></div></div>
+
+<!-- VIEW RECIBOS -->
+<div id="admin-content-recibos" class="hidden-view fade-in bg-slate-50 h-full p-6">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm max-w-3xl mx-auto">
+        <div class="border-b border-slate-100 pb-4 mb-6">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-file-invoice-dollar text-orange-500"></i> Financeiro | Gerar Recibo
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">Preencha os campos abaixo para gerar um recibo em PDF pronto para impressão ou envio.</p>
         </div>
-    </div>
-</div>
+
+        <form onsubmit="window.gerarPDFReciboDirect(event)" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">* Recebemos de (Nome / Documento):</label>
+                    <input type="text" id="rec-nome" required placeholder="Ex: Maurilio Porto / CPF: 000.000.000-00" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">* Valor (R$):</label>
+                    <input type="number" step="0.01" id="rec-valor" required placeholder="0.00" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-green-700 focus:ring-2 focus:ring-orange-500 outline-none">
                 </div>
             </div>
-        </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">* Referente a (Descrição):</label>
+                <textarea id="rec-descricao" rows="3" required placeholder="Ex: Pagamento referente a locação por temporada..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">* Quem Assina o Recibo?</label>
+                    <div class="flex gap-2 bg-slate-100 p-1 rounded-lg">
+                        <button type="button" id="btn-ass-empresa" onclick="window.setAssinaturaRecibo('empresa')" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all">Empresa</button>
+                        <button type="button" id="btn-ass-cliente" onclick="window.setAssinaturaRecibo('cliente')" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Cliente / Outro</button>
+                    </div>
+                </div>
+                <div id="box-nome-assinatura" class="hidden-view">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">* Nome na Assinatura:</label>
+                    <input type="text" id="rec-nome-ass" placeholder="Nome de quem irá assinar" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Cidade / UF:</label>
+                    <input type="text" id="rec-cidade" value="Caldas Novas - GO" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Data da Emissão:</label>
+                    <input type="date" id="rec-data" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-2.5 rounded-lg shadow transition-all flex items-center gap-2 text-sm active:scale-95">
+                    <i class="fas fa-file-pdf"></i> Gerar Recibo em PDF
+                </button>
+            </div>
+        </form>
     </div>
+</div></div></div></div></div>
 <!-- MODAL OBRIGATÓRIO DE TROCA DE SENHA (PRIMEIRO ACESSO EMPRESA) -->
 <div id="modal-trocar-senha-obrigatorio" class="hidden-view fixed inset-0 z-[10001] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 fade-in">
     <div class="bg-white rounded-2xl w-full max-w-md flex flex-col shadow-2xl overflow-hidden p-6 text-center border-2 border-orange-500">
