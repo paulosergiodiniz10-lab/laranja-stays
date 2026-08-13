@@ -1359,131 +1359,142 @@ function excluirDespesa(imovelId, index) {
 }
 
 // 6. RENDERIZAR DRE COMPLETA
+// 1. DRE COMPLETA (INDIVIDUAL E CONSOLIDADA)
 function gerarRelatorioFinanceiro() {
     const iId = val('fin-imovel-select');
     const mSt = val('fin-mes-select');
 
     if (!iId) {
-        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel.");
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel ou 'Todos'.");
         return;
     }
-
-    const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == iId) : null;
-    if (!im) return;
 
     if (typeof hide === 'function') hide('fin-vazio');
     if (typeof show === 'function') show('fin-painel');
 
-    // Nome completo com número do Apto se existir
-    let nomeExibicao = im.nome || '';
-    if (im.numeroApto) {
-        nomeExibicao += ` (Apto ${im.numeroApto})`;
-    }
+    const eTodos = (iId === 'TODOS');
+    const imoveisParaProcessar = eTodos ? imoveisDB : imoveisDB.filter(i => i.id == iId);
 
-    if (el('fin-nome-imovel')) el('fin-nome-imovel').innerText = nomeExibicao;
-    if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
+    if (!imoveisParaProcessar.length) return;
+
+    // Atualiza cabeçalhos
+    if (el('fin-nome-imovel')) {
+        el('fin-nome-imovel').innerText = eTodos ? "Relatório Consolidado (Todos os Imóveis)" : (imoveisParaProcessar[0].nome + (imoveisParaProcessar[0].numeroApto ? ` (Apto ${imoveisParaProcessar[0].numeroApto})` : ''));
+    }
+    if (el('fin-nome-prop')) {
+        el('fin-nome-prop').innerText = eTodos ? `Total de Acomodações: ${imoveisParaProcessar.length}` : `Proprietário: ${imoveisParaProcessar[0].proprietario?.nome || 'Não informado'}`;
+    }
     if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
 
-    let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
-    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+    if (el('fin-label-comissao')) {
+        el('fin-label-comissao').innerText = eTodos ? "Comissão Agência" : `Comissão (${imoveisParaProcessar[0].proprietario?.comissao || 20}%)`;
+    }
 
-    if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
-
-    let r = 0, d = 0;
-    let qtdReservasPagasMes = 0;
+    let rTotal = 0, cTotal = 0, dTotal = 0;
     const tR = el('fin-lista-receitas');
     const tD = el('fin-lista-despesas');
 
     if (tR) tR.innerHTML = '';
     if (tD) tD.innerHTML = '';
 
-    // 1. Processa Receitas / Reservas
-    if (im.reservas) {
-        im.reservas.forEach(x => {
-            let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
-            if (!mSt || checkinSeguro.startsWith(mSt)) {
-                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
-                    let v = parseFloat(x.valorTotal) || 0;
-                    r += v;
+    imoveisParaProcessar.forEach(im => {
+        let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+        let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+        let qtdReservasPagasMes = 0;
 
-                    let comissaoReserva = v * (tx / 100);
-                    let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
-                    let totalRetidoReserva = comissaoReserva + limpezaReserva;
+        let nomeAptoDisplay = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
 
-                    if (x.statusPagamento === 'pago') {
-                        qtdReservasPagasMes++;
+        // Processa Reservas
+        if (im.reservas) {
+            im.reservas.forEach(x => {
+                let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
+                if (!mSt || checkinSeguro.startsWith(mSt)) {
+                    if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                        let v = parseFloat(x.valorTotal) || 0;
+                        rTotal += v;
+
+                        let comissaoReserva = v * (tx / 100);
+                        cTotal += comissaoReserva;
+
+                        let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                        let totalRetidoReserva = comissaoReserva + limpezaReserva;
+
+                        if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
+
+                        if (tR) {
+                            let din = checkinSeguro.split('-').reverse().join('/');
+                            let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+                            let tagImovel = eTodos ? `<div class="text-[10px] font-bold text-slate-400 mt-0.5"><i class="fas fa-building mr-1"></i>${nomeAptoDisplay}</div>` : '';
+
+                            tR.insertAdjacentHTML('beforeend', `
+                                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                    <td class="p-3">
+                                        <div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div>
+                                        <span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span>
+                                        ${tagImovel}
+                                    </td>
+                                    <td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td>
+                                    <td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                    <td class="p-3 text-right font-bold text-green-600">R$ ${totalRetidoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                </tr>`);
+                        }
                     }
+                }
+            });
+        }
 
-                    if (tR) {
-                        let din = checkinSeguro.split('-').reverse().join('/');
-                        let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
-                        
-                        tR.insertAdjacentHTML('beforeend', `
+        // Processa Despesas Manuais
+        if (im.despesas) {
+            im.despesas.forEach(x => {
+                let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
+                if (!mSt || dataSegura.startsWith(mSt)) {
+                    let v = parseFloat(x.valor) || 0;
+                    dTotal += v;
+                    if (tD) {
+                        let tagImovel = eTodos ? `<div class="text-[10px] font-bold text-slate-400 mt-0.5"><i class="fas fa-building mr-1"></i>${nomeAptoDisplay}</div>` : '';
+                        tD.insertAdjacentHTML('beforeend', `
                             <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                <td class="p-3">
-                                    <div class="font-medium text-slate-700">${x.titular?.nome || '-'}</div>
-                                    <span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded uppercase font-bold">${x.statusPagamento}</span>
-                                </td>
-                                <td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td>
-                                <td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                                <td class="p-3 text-right font-bold text-green-600">R$ ${totalRetidoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td>
+                                <td class="p-3 font-medium text-slate-700">${x.descricao || '-'}${tagImovel}</td>
+                                <td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                             </tr>`);
                     }
                 }
-            }
-        });
-    }
-
-    // 2. Processa Despesas Manuais
-    if (im.despesas) {
-        im.despesas.forEach(x => {
-            let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
-            if (!mSt || dataSegura.startsWith(mSt)) {
-                let v = parseFloat(x.valor) || 0;
-                d += v;
-                if (tD) {
-                    tD.insertAdjacentHTML('beforeend', `
-                        <tr class="border-b border-slate-100 hover:bg-slate-50">
-                            <td class="p-3 text-center text-slate-500 text-xs">${dataSegura.split('-').reverse().join('/')}</td>
-                            <td class="p-3 font-medium text-slate-700">${x.descricao || '-'}</td>
-                            <td class="p-3 text-right font-bold text-red-600">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                        </tr>`);
-                }
-            }
-        });
-    }
-
-    // 3. Adiciona Taxas de Limpeza às Saídas
-    if (taxaLimpezaUnit > 0 && qtdReservasPagasMes > 0) {
-        const totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
-        d += totalLimpezaAuto;
-
-        if (tD) {
-            tD.insertAdjacentHTML('beforeend', `
-                <tr class="border-b border-slate-100 bg-orange-50/80 font-bold">
-                    <td class="p-3 text-center text-orange-600 text-xs"><i class="fas fa-broom mr-1"></i> Auto</td>
-                    <td class="p-3 font-bold text-orange-900">
-                        Taxa de Limpeza (${qtdReservasPagasMes} ${qtdReservasPagasMes === 1 ? 'reserva' : 'reservas'} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})
-                    </td>
-                    <td class="p-3 text-right font-bold text-red-600">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                </tr>`);
+            });
         }
-    }
+
+        // Processa Limpezas
+        if (taxaLimpezaUnit > 0 && qtdReservasPagasMes > 0) {
+            const totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
+            dTotal += totalLimpezaAuto;
+
+            if (tD) {
+                let tagImovel = eTodos ? `<span class="text-xs text-orange-700 font-normal"> - ${nomeAptoDisplay}</span>` : '';
+                tD.insertAdjacentHTML('beforeend', `
+                    <tr class="border-b border-slate-100 bg-orange-50/80 font-bold">
+                        <td class="p-3 text-center text-orange-600 text-xs"><i class="fas fa-broom mr-1"></i> Auto</td>
+                        <td class="p-3 font-bold text-orange-900">
+                            Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})${tagImovel}
+                        </td>
+                        <td class="p-3 text-right font-bold text-red-600">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    </tr>`);
+            }
+        }
+    });
 
     if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
     if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
 
-    // 4. Totais dos Cards
-    let c = r * (tx / 100);
-    let l = r - c - d;
+    // Totais dos Cards
+    let lTotal = rTotal - cTotal - dTotal;
 
-    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${c.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-receitas')) el('fin-card-receitas').innerText = `R$ ${rTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-comissao')) el('fin-card-comissao').innerText = `R$ ${cTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${dTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${lTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
 }
 
-// FUNÇÃO PARA EXPORTAR PARA EXCEL (PODE COLE LOGO ABAIXO DA LINHA 1463)
+// 2. EXPORTAR EXCEL (INDIVIDUAL E CONSOLIDADO)
 function exportarExcelDRE() {
     const iId = val('fin-imovel-select');
     const mSt = val('fin-mes-select');
@@ -1493,146 +1504,164 @@ function exportarExcelDRE() {
         return; 
     }
 
-    const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == iId) : null;
-    if (!im) return;
+    const eTodos = (iId === 'TODOS');
+    const imoveisParaProcessar = eTodos ? imoveisDB : imoveisDB.filter(i => i.id == iId);
 
-    let nomeExibicao = im.nome || '';
-    if (im.numeroApto) nomeExibicao += ` (Apto ${im.numeroApto})`;
+    if (!imoveisParaProcessar.length) return;
 
-    let propNome = im.proprietario?.nome || 'Não informado';
-    let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
-    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+    let nomeRelatorio = eTodos ? "RELATÓRIO CONSOLIDADO (TODOS OS IMÓVEIS)" : (`DRE - ` + (imoveisParaProcessar[0].nome + (imoveisParaProcessar[0].numeroApto ? ` (Apto ${imoveisParaProcessar[0].numeroApto})` : '')).toUpperCase());
 
-    let r = 0, dManuais = 0, qtdReservasPagasMes = 0;
+    let rTotal = 0, cTotal = 0, dManuaisTotal = 0, dLimpezasTotal = 0;
     let linhasEntradasHTML = '';
     let linhasSaidasHTML = '';
 
-    // Processa Entradas
-    if (im.reservas) {
-        im.reservas.forEach(x => {
-            let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
-            if (!mSt || checkinSeguro.startsWith(mSt)) {
-                if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
-                    let v = parseFloat(x.valorTotal) || 0;
-                    r += v;
+    imoveisParaProcessar.forEach(im => {
+        let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+        let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
+        let qtdReservasPagasMes = 0;
+        let nomeAptoDisplay = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
 
-                    let comissaoReserva = v * (tx / 100);
-                    let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+        if (im.reservas) {
+            im.reservas.forEach(x => {
+                let checkinSeguro = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkin) : x.checkin;
+                if (!mSt || checkinSeguro.startsWith(mSt)) {
+                    if (x.statusPagamento === 'pago' || (x.statusPagamento === 'cancelada' && parseFloat(x.valorTotal) > 0) || x.statusPagamento === 'devolucao') {
+                        let v = parseFloat(x.valorTotal) || 0;
+                        rTotal += v;
 
-                    if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
+                        let comissaoReserva = v * (tx / 100);
+                        cTotal += comissaoReserva;
 
-                    let din = checkinSeguro.split('-').reverse().join('/');
-                    let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+                        let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                        if (x.statusPagamento === 'pago') qtdReservasPagasMes++;
 
-                    let detalheRetido = `R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-                    if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})} Limpeza)`;
+                        let din = checkinSeguro.split('-').reverse().join('/');
+                        let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
 
-                    linhasEntradasHTML += `
+                        let detalheRetido = `R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+                        if (limpezaReserva > 0) detalheRetido += ` (+R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})} Limpeza)`;
+
+                        let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+
+                        linhasEntradasHTML += `
+                            <tr>
+                                ${colImovel}
+                                <td style="border: 1px solid #000; padding: 5px;">${x.titular?.nome || '-'} (${x.statusPagamento})</td>
+                                <td style="border: 1px solid #000; text-align: center; padding: 5px;">${din} a ${dout}</td>
+                                <td style="border: 1px solid #000; text-align: right; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td style="border: 1px solid #000; text-align: right; color: #15803d; font-weight: bold; padding: 5px;">${detalheRetido}</td>
+                            </tr>`;
+                    }
+                }
+            });
+        }
+
+        if (im.despesas) {
+            im.despesas.forEach(x => {
+                let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
+                if (!mSt || dataSegura.startsWith(mSt)) {
+                    let v = parseFloat(x.valor) || 0;
+                    dManuaisTotal += v;
+                    let dFmt = dataSegura.split('-').reverse().join('/');
+                    let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+
+                    linhasSaidasHTML += `
                         <tr>
-                            <td style="border: 1px solid #000; padding: 5px;">${x.titular?.nome || '-'} (${x.statusPagamento})</td>
-                            <td style="border: 1px solid #000; text-align: center; padding: 5px;">${din} a ${dout}</td>
-                            <td style="border: 1px solid #000; text-align: right; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                            <td style="border: 1px solid #000; text-align: right; color: #15803d; font-weight: bold; padding: 5px;">${detalheRetido}</td>
+                            ${colImovel}
+                            <td style="border: 1px solid #000; text-align: center; padding: 5px;">${dFmt}</td>
+                            <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px;">${x.descricao || '-'}</td>
+                            <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                         </tr>`;
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Processa Saídas Manuais
-    if (im.despesas) {
-        im.despesas.forEach(x => {
-            let dataSegura = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.data) : x.data;
-            if (!mSt || dataSegura.startsWith(mSt)) {
-                let v = parseFloat(x.valor) || 0;
-                dManuais += v;
-                let dFmt = dataSegura.split('-').reverse().join('/');
-                linhasSaidasHTML += `
-                    <tr>
-                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${dFmt}</td>
-                        <td colspan="2" style="border: 1px solid #000; padding: 5px;">${x.descricao || '-'}</td>
-                        <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                    </tr>`;
-            }
-        });
-    }
+        let totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
+        dLimpezasTotal += totalLimpezaAuto;
 
-    let totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
-    let dTotal = dManuais + totalLimpezaAuto;
-    let comissaoTotal = r * (tx / 100);
-    let liquidoFinal = r - comissaoTotal - dTotal;
+        if (totalLimpezaAuto > 0) {
+            let colImovel = eTodos ? `<td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${nomeAptoDisplay}</td>` : '';
+            linhasSaidasHTML += `
+                <tr style="background-color: #fff7ed;">
+                    ${colImovel}
+                    <td style="border: 1px solid #000; text-align: center; padding: 5px; font-weight: bold; color: #c2410c;">Auto</td>
+                    <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px; font-weight: bold; color: #9a3412;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
+                    <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>`;
+        }
+    });
 
+    let dTotalGeral = dManuaisTotal + dLimpezasTotal;
+    let liquidoFinal = rTotal - cTotal - dTotalGeral;
     let mesFormatado = mSt ? mSt.split('-').reverse().join('/') : '';
+    let totalCols = eTodos ? 5 : 4;
 
-    // Montagem do HTML Formatado com Cores
+    let headerTabelaHTML = eTodos ? `<td style="border: 1px solid #000; padding: 5px;">Acomodação</td>` : '';
+
     let excelHTML = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
         <head><meta charset="UTF-8"></head>
         <body>
             <table style="border-collapse: collapse; font-family: Arial, sans-serif; width: 100%;">
                 <tr>
-                    <td colspan="4" style="background-color: #f97316; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #000;">
-                        DRE - ${nomeExibicao.toUpperCase()}
+                    <td colspan="${totalCols}" style="background-color: #f97316; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #000;">
+                        ${nomeRelatorio}
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="4" style="text-align: center; font-size: 11px; font-weight: bold; color: #b91c1c; padding: 5px; border: 1px solid #000;">
-                        Mês: ${mesFormatado} | Prop: ${propNome} | Com: ${tx}% | Limpeza/Reserva: R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                    <td colspan="${totalCols}" style="text-align: center; font-size: 11px; font-weight: bold; color: #b91c1c; padding: 5px; border: 1px solid #000;">
+                        Mês de Referência: ${mesFormatado}
                     </td>
                 </tr>
-                <tr><td colspan="4"></td></tr>
+                <tr><td colspan="${totalCols}"></td></tr>
                 
                 <tr>
-                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(+) Receitas Brutas</td>
-                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #16a34a; padding: 5px;">R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(+) Receitas Brutas</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #16a34a; padding: 5px;">R$ ${rTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Comissão Agência (${tx}%)</td>
-                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${comissaoTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Comissão Agência</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${cTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Taxas de Limpeza (Reservas)</td>
-                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Taxas de Limpeza (Reservas)</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dLimpezasTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Despesas do Imóvel</td>
-                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dManuais.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 5px;">(-) Despesas de Imóveis</td>
+                    <td style="border: 1px solid #000; text-align: right; font-weight: bold; color: #dc2626; padding: 5px;">R$ ${dManuaisTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>
                 <tr style="background-color: #f1f5f9;">
-                    <td colspan="3" style="border: 1px solid #000; font-weight: bold; padding: 6px;">(=) LÍQUIDO PROPRIETÁRIO</td>
+                    <td colspan="${totalCols - 1}" style="border: 1px solid #000; font-weight: bold; padding: 6px;">(=) LÍQUIDO PROPRIETÁRIO / CONSOLIDADO</td>
                     <td style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 6px;">R$ ${liquidoFinal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>
                 
-                <tr><td colspan="4"></td></tr>
+                <tr><td colspan="${totalCols}"></td></tr>
 
                 <tr>
-                    <td colspan="4" style="background-color: #22c55e; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">ENTRADAS</td>
+                    <td colspan="${totalCols}" style="background-color: #22c55e; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">ENTRADAS</td>
                 </tr>
                 <tr style="background-color: #f0fdf4; font-weight: bold;">
+                    ${headerTabelaHTML}
                     <td style="border: 1px solid #000; padding: 5px;">Hóspede</td>
                     <td style="border: 1px solid #000; text-align: center; padding: 5px;">Período</td>
                     <td style="border: 1px solid #000; text-align: right; padding: 5px;">Bruto</td>
                     <td style="border: 1px solid #000; text-align: right; padding: 5px;">Retido Agência</td>
                 </tr>
-                ${linhasEntradasHTML || '<tr><td colspan="4" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma entrada registrada neste mês.</td></tr>'}
+                ${linhasEntradasHTML || `<tr><td colspan="${totalCols}" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma entrada registrada neste mês.</td></tr>`}
 
-                <tr><td colspan="4"></td></tr>
+                <tr><td colspan="${totalCols}"></td></tr>
 
                 <tr>
-                    <td colspan="4" style="background-color: #ef4444; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">SAÍDAS</td>
+                    <td colspan="${totalCols}" style="background-color: #ef4444; color: #ffffff; font-weight: bold; text-align: center; padding: 6px; border: 1px solid #000;">SAÍDAS</td>
                 </tr>
                 <tr style="background-color: #fef2f2; font-weight: bold; color: #991b1b;">
+                    ${headerTabelaHTML}
                     <td style="border: 1px solid #000; text-align: center; padding: 5px;">Data</td>
-                    <td colspan="2" style="border: 1px solid #000; padding: 5px;">Descrição</td>
+                    <td colspan="${eTodos ? '1' : '2'}" style="border: 1px solid #000; padding: 5px;">Descrição</td>
                     <td style="border: 1px solid #000; text-align: right; padding: 5px;">Valor</td>
                 </tr>
-                ${totalLimpezaAuto > 0 ? `
-                <tr>
-                    <td style="border: 1px solid #000; text-align: center; padding: 5px;">Auto</td>
-                    <td colspan="2" style="border: 1px solid #000; padding: 5px;">Taxa de Limpeza (${qtdReservasPagasMes} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})</td>
-                    <td style="border: 1px solid #000; text-align: right; color: #dc2626; font-weight: bold; padding: 5px;">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                </tr>` : ''}
-                ${linhasSaidasHTML || (totalLimpezaAuto === 0 ? '<tr><td colspan="4" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma despesa neste mês.</td></tr>' : '')}
+                ${linhasSaidasHTML || `<tr><td colspan="${totalCols}" style="border: 1px solid #000; text-align: center; padding: 5px;">Nenhuma despesa neste mês.</td></tr>`}
             </table>
         </body>
         </html>`;
@@ -1640,12 +1669,11 @@ function exportarExcelDRE() {
     const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', `DRE_${nomeExibicao.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.xls`);
+    link.setAttribute('download', `DRE_${eTodos ? 'CONSOLIDADO' : imoveisParaProcessar[0].nome.replace(/[^a-zA-Z0-9]/g, '_')}_${mSt}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
-        function mudarAbaDRE(a) { 
+}        function mudarAbaDRE(a) { 
     const contentReceitas = el('dre-content-receitas');
     const contentDespesas = el('dre-content-despesas');
     const btnReceitas = el('btn-tab-dre-receitas');
