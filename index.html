@@ -1143,26 +1143,27 @@ function povoarSelectsFinanceiros() {
     const selDespesas = el('filtro-imovel-despesas');
     const selDRE = el('fin-imovel-select');
 
-    let options = '<option value="">Selecione o Imóvel...</option>';
+    let optionsDespesas = '<option value="">Selecione o Imóvel...</option>';
+    let optionsDRE = '<option value="TODOS">🌟 Todos os Imóveis (Consolidado)</option>';
+
     if (typeof imoveisDB !== 'undefined' && Array.isArray(imoveisDB)) {
         imoveisDB.forEach(im => {
             const apto = im.numeroApto ? ` (Apto ${im.numeroApto})` : '';
-            options += `<option value="${im.id}">${im.nome}${apto}</option>`;
+            optionsDespesas += `<option value="${im.id}">${im.nome}${apto}</option>`;
+            optionsDRE += `<option value="${im.id}">${im.nome}${apto}</option>`;
         });
     }
 
     if (selDespesas) {
-        selDespesas.innerHTML = options;
+        selDespesas.innerHTML = optionsDespesas;
         if (typeof imoveisDB !== 'undefined' && imoveisDB.length > 0) {
             selDespesas.value = imoveisDB[0].id;
         }
     }
 
     if (selDRE) {
-        selDRE.innerHTML = options;
-        if (typeof imoveisDB !== 'undefined' && imoveisDB.length > 0) {
-            selDRE.value = imoveisDB[0].id;
-        }
+        selDRE.innerHTML = optionsDRE;
+        selDRE.value = "TODOS";
     }
 
     const inputMesDRE = el('fin-mes-select');
