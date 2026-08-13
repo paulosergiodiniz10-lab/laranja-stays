@@ -2381,11 +2381,11 @@ function renderListaOrc() {
         }
         function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
         function abrirModalDespesa() {
-    sv('despesa-id', ''); 
+    sv('despesa-id', '');
     sv('despesa-valor', '');
     sv('despesa-descricao', '');
 
-    // Preenche a data com a data atual de hoje
+    // Preenche com a data atual de hoje
     const hoje = new Date().toISOString().split('T')[0];
     sv('despesa-data', hoje);
 
@@ -2394,20 +2394,92 @@ function renderListaOrc() {
     if (typeof toggleCampoOutrosDespesa === 'function') toggleCampoOutrosDespesa();
 
     const s = el('despesa-imovel-select');
-    if (s) {
+    if (s && typeof imoveisDB !== 'undefined') {
         s.innerHTML = '<option value="">Selecione...</option>';
         imoveisDB.forEach(i => {
             let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
             s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`);
         });
-        // Pega o imóvel atualmente selecionado no filtro de despesas
-        if (val('filtro-imovel-despesas')) s.value = val('filtro-imovel-despesas');
+        
+        // Seleciona o imóvel ativo da tela
+        const imovelAtivo = val('filtro-imovel-despesas') || val('fin-imovel-select');
+        if (imovelAtivo) s.value = imovelAtivo;
     }
+
     show('modal-nova-despesa');
 }
-      function editarDespesa(id, imId) { const im = imoveisDB.find(i=>i.id==imId); const d = im.despesas.find(x=>x.id==id); abrirModalDespesa(); sv('despesa-id', d.id); sv('despesa-imovel-select', im.id); sv('despesa-data', d.data); povoarSelectCategorias(); sv('despesa-categoria', d.categoria); sv('despesa-descricao', d.descricao); sv('despesa-valor', d.valor); }
-function salvarDespesa() { const im=val('despesa-imovel-select'), dt=val('despesa-data'), ct=val('despesa-categoria'), ds=val('despesa-descricao'), vl=parseFloat(val('despesa-valor')); if(!im||!dt||!vl){alert('Preencha os campos obrigatórios!');return;} let objIm=imoveisDB.find(i=>i.id==im); if(!objIm)return; let id=val('despesa-id'); if(id){ let d=objIm.despesas.find(x=>x.id==id); if(d){d.data=dt; d.categoria=ct; d.descricao=ds; d.valor=vl;} } else { objIm.despesas.push({id:Date.now().toString(), data:dt, categoria:ct, descricao:ds, valor:vl}); } salvarBancoNoStorage(); fecharModalDespesa(); renderizarDespesas(); mostrarNotificacao("Despesa salva!"); }
 
+function fecharModalDespesa() {
+    hide('modal-nova-despesa');
+}
+
+function editarDespesa(id, imId) { 
+    const im = imoveisDB.find(i => i.id == imId); 
+    if (!im || !im.despesas) return;
+    const d = im.despesas.find(x => x.id == id); 
+    if (!d) return;
+    
+    abrirModalDespesa(); 
+    sv('despesa-id', d.id); 
+    sv('despesa-imovel-select', im.id); 
+    sv('despesa-data', d.data); 
+    sv('despesa-categoria', d.categoria); 
+    sv('despesa-descricao', d.descricao); 
+    sv('despesa-valor', d.valor); 
+}
+
+function salvarDespesa() {
+    const imovelId = val('despesa-imovel-select') || val('filtro-imovel-despesas');
+    const data = val('despesa-data');
+    const categoria = val('despesa-categoria');
+    const descricao = val('despesa-descricao');
+    const valorRaw = val('despesa-valor');
+
+    if (!imovelId) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel.");
+        return;
+    }
+    if (!data) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe a data.");
+        return;
+    }
+    if (!valorRaw) {
+        if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe o valor.");
+        return;
+    }
+
+    const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
+    if (!imovel) return;
+
+    if (!imovel.despesas) imovel.despesas = [];
+
+    const valor = parseFloat(valorRaw.replace(',', '.'));
+
+    const novaDespesa = {
+        id: Date.now(),
+        data: data,
+        categoria: categoria || 'Geral',
+        descricao: descricao || categoria || 'Despesa',
+        valor: isNaN(valor) ? 0 : valor
+    };
+
+    imovel.despesas.unshift(novaDespesa);
+
+    if (typeof salvarDados === 'function') salvarDados();
+
+    fecharModalDespesa();
+
+    // Sincroniza a tela para o mês da despesa cadastrada
+    const dtPartes = data.split('-');
+    if (dtPartes.length >= 2 && typeof mesAtualDespesas !== 'undefined') {
+        mesAtualDespesas = new Date(parseInt(dtPartes[0], 10), parseInt(dtPartes[1], 10) - 1, 1);
+        if (typeof atualizarLabelMesDespesa === 'function') atualizarLabelMesDespesa();
+    }
+
+    // Recarrega a tabela de despesas e a DRE
+    if (typeof carregarListaDespesas === 'function') carregarListaDespesas();
+    if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
+}
 function povoarSelectCategorias() {
     const s = el('despesa-categoria');
     if (!s) return;
