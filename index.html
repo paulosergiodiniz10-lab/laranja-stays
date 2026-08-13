@@ -2448,42 +2448,52 @@ function renderListaOrc() {
     modal.classList.remove('hidden-view', 'hidden');
     modal.style.setProperty('display', 'flex', 'important');
 }
+
 function fecharModalDespesa() {
-    hide('modal-nova-despesa');
+    const modal = document.getElementById('modal-nova-despesa') || 
+                  document.getElementById('modal-cad-despesa') || 
+                  document.getElementById('modal-despesa');
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        modal.classList.add('hidden-view');
+    }
 }
 
 function editarDespesa(id, imId) { 
-    const im = imoveisDB.find(i => i.id == imId); 
+    const im = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imId) : null; 
     if (!im || !im.despesas) return;
     const d = im.despesas.find(x => x.id == id); 
     if (!d) return;
     
     abrirModalDespesa(); 
-    sv('despesa-id', d.id); 
-    sv('despesa-imovel-select', im.id); 
-    sv('despesa-data', d.data); 
-    sv('despesa-categoria', d.categoria); 
-    sv('despesa-descricao', d.descricao); 
-    sv('despesa-valor', d.valor); 
+    if (document.getElementById('despesa-id')) document.getElementById('despesa-id').value = d.id; 
+    if (document.getElementById('despesa-imovel-select')) document.getElementById('despesa-imovel-select').value = im.id; 
+    if (document.getElementById('despesa-data')) document.getElementById('despesa-data').value = d.data; 
+    if (document.getElementById('despesa-categoria')) document.getElementById('despesa-categoria').value = d.categoria; 
+    if (document.getElementById('despesa-descricao')) document.getElementById('despesa-descricao').value = d.descricao; 
+    if (document.getElementById('despesa-valor')) document.getElementById('despesa-valor').value = d.valor; 
 }
 
 function salvarDespesa() {
-    const imovelId = val('despesa-imovel-select') || val('filtro-imovel-despesas');
-    const data = val('despesa-data');
-    const categoria = val('despesa-categoria');
-    const descricao = val('despesa-descricao');
-    const valorRaw = val('despesa-valor');
+    const imovelId = document.getElementById('despesa-imovel-select')?.value || document.getElementById('filtro-imovel-despesas')?.value;
+    const data = document.getElementById('despesa-data')?.value;
+    const categoria = document.getElementById('despesa-categoria')?.value;
+    const descricao = document.getElementById('despesa-descricao')?.value;
+    const valorRaw = document.getElementById('despesa-valor')?.value;
 
     if (!imovelId) {
         if (typeof mostrarAlerta === 'function') mostrarAlerta("Selecione um imóvel.");
+        else alert("Selecione um imóvel.");
         return;
     }
     if (!data) {
         if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe a data.");
+        else alert("Informe a data.");
         return;
     }
     if (!valorRaw) {
         if (typeof mostrarAlerta === 'function') mostrarAlerta("Informe o valor.");
+        else alert("Informe o valor.");
         return;
     }
 
@@ -2508,14 +2518,6 @@ function salvarDespesa() {
 
     fecharModalDespesa();
 
-    // Sincroniza a tela para o mês da despesa cadastrada
-    const dtPartes = data.split('-');
-    if (dtPartes.length >= 2 && typeof mesAtualDespesas !== 'undefined') {
-        mesAtualDespesas = new Date(parseInt(dtPartes[0], 10), parseInt(dtPartes[1], 10) - 1, 1);
-        if (typeof atualizarLabelMesDespesa === 'function') atualizarLabelMesDespesa();
-    }
-
-    // Recarrega a tabela de despesas e a DRE
     if (typeof carregarListaDespesas === 'function') carregarListaDespesas();
     if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
 }
