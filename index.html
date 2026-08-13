@@ -1140,7 +1140,10 @@ function atualizarLabelMesDespesa() {
 
 function mudarMesDespesa(delta) {
     mesAtualDespesas.setMonth(mesAtualDespesas.getMonth() + delta);
-    atualizarLabelMesDespesa();
+    if (typeof atualizarLabelMesDespesa === 'function') {
+        atualizarLabelMesDespesa();
+    }
+    carregarListaDespesas();
 }
 
 // 3. RENDERIZAR LISTA DE DESPESAS
@@ -1151,13 +1154,11 @@ function carregarListaDespesas() {
     const placeholder = el('placeholder-despesas');
     const tabelaContainer = el('tabela-container-despesas');
 
-    // 1. Força o container da tabela a ficar visível
+    // Exibe o container da tabela e oculta o placeholder
     if (tabelaContainer) {
         tabelaContainer.style.setProperty('display', 'block', 'important');
         tabelaContainer.classList.remove('hidden-view');
     }
-
-    // 2. Esconde a mensagem de tela vazia/placeholder
     if (placeholder) {
         placeholder.style.setProperty('display', 'none', 'important');
         placeholder.classList.add('hidden-view');
@@ -1171,17 +1172,37 @@ function carregarListaDespesas() {
     }
 
     const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
-    
-    tbody.innerHTML = '';
-
-    // Se o imóvel não tiver despesas
-    if (!imovel || !imovel.despesas || imovel.despesas.length === 0) {
+    if (!imovel || !imovel.despesas) {
         tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa cadastrada para este imóvel.</td></tr>`;
         return;
     }
 
-    // Renderiza as despesas do imóvel
-    imovel.despesas.forEach((d, idx) => {
+    // Pega Mês e Ano selecionados nas setas
+    const anoSel = mesAtualDespesas.getFullYear();
+    const mesSel = mesAtualDespesas.getMonth(); // 0 a 11
+
+    // Filtra apenas as despesas do Mês e Ano selecionados
+    const despesasFiltradas = imovel.despesas.filter(d => {
+        if (!d.data) return false;
+        const dataStr = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data;
+        const partes = dataStr.split('-');
+        if (partes.length < 3) return false;
+        
+        const ano = parseInt(partes[0], 10);
+        const mes = parseInt(partes[1], 10) - 1; // Ajusta mês de 1-12 para 0-11
+        
+        return ano === anoSel && mes === mesSel;
+    });
+
+    tbody.innerHTML = '';
+
+    if (despesasFiltradas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Nenhuma despesa lançada neste mês.</td></tr>`;
+        return;
+    }
+
+    // Renderiza as despesas do mês selecionado
+    despesasFiltradas.forEach((d, idx) => {
         const dataRaw = d.data ? (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data) : '';
         const dataFmt = dataRaw ? dataRaw.split('-').reverse().join('/') : '-';
         const valorNum = parseFloat(d.valor || 0);
@@ -1197,7 +1218,8 @@ function carregarListaDespesas() {
                 </td>
             </tr>`;
     });
-}        // 4. SALVAR NOVA DESPESA
+}        
+        // 4. SALVAR NOVA DESPESA
 function salvarDespesa() {
     const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
     const imovel = imoveisDB.find(i => i.id == imovelId);
