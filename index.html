@@ -2415,37 +2415,38 @@ function renderListaOrc() {
         }
         function mudarMesDespesa(dir) { despesaMes+=dir; if(despesaMes>12){despesaMes=1;despesaAno++;} if(despesaMes<1){despesaMes=12;despesaAno--;} carregarListaDespesas(); }
         function abrirModalDespesa() {
-    const modal = el('modal-nova-despesa') || el('modal-cad-despesa') || el('modal-despesa');
-    
+    const modal = document.getElementById('modal-nova-despesa') || 
+                  document.getElementById('modal-cad-despesa') || 
+                  document.getElementById('modal-despesa');
+
     if (!modal) {
-        alert("Erro: O modal de cadastro de despesa não foi encontrado no HTML.");
+        alert("Erro: O modal de lançamento de despesa não foi encontrado no HTML.");
         return;
     }
 
-    if (el('despesa-id')) sv('despesa-id', '');
-    if (el('despesa-valor')) sv('despesa-valor', '');
-    if (el('despesa-descricao')) sv('despesa-descricao', '');
+    if (document.getElementById('despesa-id')) document.getElementById('despesa-id').value = '';
+    if (document.getElementById('despesa-valor')) document.getElementById('despesa-valor').value = '';
+    if (document.getElementById('despesa-descricao')) document.getElementById('despesa-descricao').value = '';
 
-    if (el('despesa-data')) {
-        const hoje = new Date().toISOString().split('T')[0];
-        sv('despesa-data', hoje);
+    if (document.getElementById('despesa-data')) {
+        document.getElementById('despesa-data').value = new Date().toISOString().split('T')[0];
     }
 
     if (typeof povoarSelectCategorias === 'function') povoarSelectCategorias();
 
-    const s = el('despesa-imovel-select');
+    const s = document.getElementById('despesa-imovel-select');
     if (s && typeof imoveisDB !== 'undefined') {
         s.innerHTML = '<option value="">Selecione...</option>';
         imoveisDB.forEach(i => {
             let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
             s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`);
         });
-        const imovelAtivo = val('filtro-imovel-despesas') || val('fin-imovel-select');
+        const imovelAtivo = document.getElementById('filtro-imovel-despesas')?.value || document.getElementById('fin-imovel-select')?.value;
         if (imovelAtivo) s.value = imovelAtivo;
     }
 
-    modal.style.setProperty('display', 'flex', 'important');
     modal.classList.remove('hidden-view', 'hidden');
+    modal.style.setProperty('display', 'flex', 'important');
 }
 function fecharModalDespesa() {
     hide('modal-nova-despesa');
