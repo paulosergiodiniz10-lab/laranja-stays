@@ -1172,15 +1172,25 @@ function atualizarLabelMesDespesa() {
     carregarListaDespesas();
 }
 
-function mudarMesDespesa(delta) {
-    mesAtualDespesas.setMonth(mesAtualDespesas.getMonth() + delta);
-    if (typeof atualizarLabelMesDespesa === 'function') {
-        atualizarLabelMesDespesa();
+// ================= CONTROLE DE DESPESAS =================
+
+function atualizarLabelMesDespesa() {
+    const label = el('label-mes-despesa');
+    if (label && typeof mesAtualDespesas !== 'undefined') {
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        label.innerText = `${meses[mesAtualDespesas.getMonth()]} ${mesAtualDespesas.getFullYear()}`;
     }
     carregarListaDespesas();
 }
 
-// 3. RENDERIZAR LISTA DE DESPESAS
+function mudarMesDespesa(delta) {
+    if (typeof mesAtualDespesas === 'undefined') {
+        mesAtualDespesas = new Date();
+    }
+    mesAtualDespesas.setMonth(mesAtualDespesas.getMonth() + delta);
+    atualizarLabelMesDespesa();
+}
+
 function carregarListaDespesas() {
     const sel = el('filtro-imovel-despesas') || el('fin-imovel-select');
     const imovelId = sel ? sel.value : null;
@@ -1188,7 +1198,6 @@ function carregarListaDespesas() {
     const placeholder = el('placeholder-despesas');
     const tabelaContainer = el('tabela-container-despesas');
 
-    // Exibe o container da tabela e esconde o placeholder
     if (tabelaContainer) {
         tabelaContainer.style.setProperty('display', 'block', 'important');
         tabelaContainer.classList.remove('hidden-view');
@@ -1211,50 +1220,31 @@ function carregarListaDespesas() {
         return;
     }
 
-    // Pega Mês e Ano selecionados no navegador
     const anoSel = mesAtualDespesas.getFullYear();
-    const mesSel = mesAtualDespesas.getMonth() + 1; // Converte para base 1 (1-12)
+    const mesSel = mesAtualDespesas.getMonth() + 1;
 
-    // Filtra comparando Ano e Mês diretamente no texto da data (ISO ou BR)
     const despesasFiltradas = imovel.despesas.filter(d => {
         if (!d.data) return false;
-        
-        let dataNormal = d.data.toString().trim();
-        if (typeof parseInputDateSafe === 'function') {
-            dataNormal = parseInputDateSafe(dataNormal);
-        }
+        let dataNormal = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data.toString().trim()) : d.data;
 
-        // Se a data for YYYY-MM-DD
         if (dataNormal.includes('-')) {
             const p = dataNormal.split('-');
-            if (p.length >= 2) {
-                const ano = parseInt(p[0], 10);
-                const mes = parseInt(p[1], 10);
-                return ano === anoSel && mes === mesSel;
-            }
+            if (p.length >= 2) return parseInt(p[0], 10) === anoSel && parseInt(p[1], 10) === mesSel;
         }
-        
-        // Se a data for DD/MM/YYYY
         if (dataNormal.includes('/')) {
             const p = dataNormal.split('/');
-            if (p.length >= 3) {
-                const ano = parseInt(p[2], 10);
-                const mes = parseInt(p[1], 10);
-                return ano === anoSel && mes === mesSel;
-            }
+            if (p.length >= 3) return parseInt(p[2], 10) === anoSel && parseInt(p[1], 10) === mesSel;
         }
-
         return false;
     });
 
     tbody.innerHTML = '';
 
     if (despesasFiltradas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Nenhuma despesa lançada em ${mesAtualDespesas.toLocaleString('pt-BR', { month: 'long' })} de ${anoSel}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-medium">Nenhuma despesa lançada neste mês.</td></tr>`;
         return;
     }
 
-    // Renderiza as despesas encontradas
     despesasFiltradas.forEach((d, idx) => {
         const dataRaw = d.data ? (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data) : '';
         const dataFmt = dataRaw.includes('-') ? dataRaw.split('-').reverse().join('/') : dataRaw;
@@ -1264,13 +1254,84 @@ function carregarListaDespesas() {
         tbody.innerHTML += `
             <tr class="border-b border-slate-100 hover:bg-slate-50">
                 <td class="p-4 font-medium text-slate-700">${dataFmt}</td>
-                <td class="p-4 text-slate-600">${d.descricao || '-'}</td>
+                <td class="p-4 text-slate-600">${d.descricao || d.categoria || '-'}</td>
                 <td class="p-4 text-right font-bold text-red-600">R$ ${valorFmt}</td>
                 <td class="p-4 text-center">
-                    <button onclick="excluirDespesa(${imovel.id}, ${idx})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50">Excluir</button>
+                    <button onclick="deletarDespesa('${d.id}', ${imovel.id})" class="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded bg-red-50"><i class="fas fa-trash"></i> Excluir</button>
                 </td>
             </tr>`;
     });
+}
+
+function abrirModalDespesa() {
+    const modal = document.getElementById('modal-nova-despesa');
+    if (!modal) return;
+
+    sv('despesa-id', '');
+    sv('despesa-valor', '');
+    sv('despesa-descricao', '');
+    sv('despesa-data', new Date().toISOString().split('T')[0]);
+
+    if (typeof povoarSelectCategorias === 'function') povoarSelectCategorias();
+
+    const s = document.getElementById('despesa-imovel-select');
+    if (s && typeof imoveisDB !== 'undefined') {
+        s.innerHTML = '<option value="">Selecione...</option>';
+        imoveisDB.forEach(i => {
+            let nm = i.numeroApto ? `${i.nome} (Apto ${i.numeroApto})` : i.nome;
+            s.insertAdjacentHTML('beforeend', `<option value="${i.id}">${nm}</option>`);
+        });
+        const imovelAtivo = val('filtro-imovel-despesas') || val('fin-imovel-select');
+        if (imovelAtivo) s.value = imovelAtivo;
+    }
+
+    modal.classList.remove('hidden-view', 'hidden');
+    modal.style.setProperty('display', 'flex', 'important');
+}
+
+function fecharModalDespesa() {
+    const modal = document.getElementById('modal-nova-despesa');
+    if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        modal.classList.add('hidden-view');
+    }
+}
+
+function salvarDespesa() {
+    const imovelId = val('despesa-imovel-select') || val('filtro-imovel-despesas');
+    const data = val('despesa-data');
+    const categoria = val('despesa-categoria');
+    const descOutros = val('despesa-desc-outros');
+    const valorRaw = val('despesa-valor');
+
+    if (!imovelId) { mostrarAlerta("Selecione um imóvel."); return; }
+    if (!data) { mostrarAlerta("Informe a data."); return; }
+    if (!valorRaw) { mostrarAlerta("Informe o valor."); return; }
+
+    const imovel = typeof imoveisDB !== 'undefined' ? imoveisDB.find(i => i.id == imovelId) : null;
+    if (!imovel) return;
+
+    if (!imovel.despesas) imovel.despesas = [];
+
+    const valor = parseFloat(valorRaw.replace(',', '.'));
+    const descricaoFinal = (categoria === 'Outros' && descOutros) ? descOutros : (categoria || 'Despesa');
+
+    const novaDespesa = {
+        id: Date.now(),
+        data: data,
+        categoria: categoria || 'Geral',
+        descricao: descricaoFinal,
+        valor: isNaN(valor) ? 0 : valor
+    };
+
+    imovel.despesas.unshift(novaDespesa);
+
+    if (typeof salvarBancoNoStorage === 'function') salvarBancoNoStorage();
+
+    fecharModalDespesa();
+    carregarListaDespesas();
+    if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
+    mostrarNotificacao("Despesa salva com sucesso!");
 }        // 4. SALVAR NOVA DESPESA
 function salvarDespesa() {
     const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
