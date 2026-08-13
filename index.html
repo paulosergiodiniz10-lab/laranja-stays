@@ -1332,41 +1332,7 @@ function salvarDespesa() {
     carregarListaDespesas();
     if (typeof gerarRelatorioFinanceiro === 'function') gerarRelatorioFinanceiro();
     mostrarNotificacao("Despesa salva com sucesso!");
-}        // 4. SALVAR NOVA DESPESA
-function salvarDespesa() {
-    const imovelId = val('filtro-imovel-despesas') || val('fin-imovel-select');
-    const imovel = imoveisDB.find(i => i.id == imovelId);
-
-    if (!imovel) {
-        mostrarAlerta("Selecione um imóvel para lançar a despesa.");
-        return;
-    }
-
-    const desc = val('despesa-descricao') || val('cad-despesa-desc');
-    const valor = parseFloat(val('despesa-valor') || val('cad-despesa-valor'));
-    const data = val('despesa-data') || val('cad-despesa-data');
-
-    if (!desc || isNaN(valor) || valor <= 0) {
-        mostrarAlerta("Informe a descrição e um valor válido.");
-        return;
-    }
-
-    if (!imovel.despesas) imovel.despesas = [];
-
-    imovel.despesas.push({
-        id: Date.now(),
-        descricao: desc,
-        valor: valor,
-        data: data || new Date().toISOString().split('T')[0]
-    });
-
-    salvarBancoNoStorage();
-    carregarListaDespesas();
-    if (typeof fecharModalDespesa === 'function') fecharModalDespesa();
-    mostrarNotificacao("Despesa cadastrada com sucesso!");
-}
-
-// 5. EXCLUIR DESPESA
+}        // 5. EXCLUIR DESPESA
 function excluirDespesa(imovelId, index) {
     const imovel = imoveisDB.find(i => i.id == imovelId);
     if (!imovel || !imovel.despesas) return;
