@@ -2360,9 +2360,25 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
         } 
     });
 
-    // Injeta container do filtro de corretor no HTML se for Gestor/Admin
+    // Identificação Múltipla e Segura do Usuário Logado
+    let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
+    let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
+    let nomePerfil = (el('perfil-nome-usuario')?.innerText || '').toLowerCase().trim();
+
+    let meuCadastro = (typeof empresaDB !== 'undefined' && empresaDB.equipe && userEmail) 
+        ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === userEmail) 
+        : null;
+
+    let nomeEquipe = (meuCadastro?.nome || '').toLowerCase().trim();
+    let nomeGlobal = (window.nomeUsuarioLogado || '').toLowerCase().trim();
+
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+    if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
+    if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
+
+    // Injeta container do filtro de corretor no HTML apenas se for Gestor/Admin
     const containerFiltros = el('bloco-filtro-datas');
-    if (containerFiltros && !el('filtro-corretor-select-container') && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+    if (containerFiltros && !el('filtro-corretor-select-container') && !ehParceiro) {
         containerFiltros.insertAdjacentHTML('afterend', `
             <div id="filtro-corretor-select-container" class="ml-2">
                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
@@ -2374,7 +2390,7 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
     }
 
     const selectCorr = el('filtro-corretor-select');
-    if (selectCorr && typeof userRole !== 'undefined' && userRole !== 'parceiro') {
+    if (selectCorr && !ehParceiro) {
         let valAtual = selectCorr.value || 'todos';
         selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
         let corretoresUnicos = {};
@@ -2405,19 +2421,26 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
     }
 
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
-    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-    let meuNome = (window.nomeUsuarioLogado || '').toLowerCase().trim();
-    let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
 
     let fit = lista.filter(r => {
-        // 🔒 TRAVA DE SEGURANÇA DO CORRETOR
+        // 1. REGRA DO CORRETOR (Exibe apenas as reservas dele)
         if (ehParceiro) {
-            let nomeCriador = (r.criadoPor || '').toLowerCase().trim();
-            let pertenceAoCorretor = (r.criadoPorUid && r.criadoPorUid === meuUid) || (nomeCriador && nomeCriador === meuNome);
-            if (!pertenceAoCorretor) return false;
+            let criadoPorStr = (r.criadoPor || '').toLowerCase().trim();
+            let criadoPorUidStr = r.criadoPorUid || '';
+
+            let pertence = false;
+            if (userUid && criadoPorUidStr === userUid) pertence = true;
+            if (userEmail && criadoPorStr === userEmail) pertence = true;
+            if (nomeEquipe && criadoPorStr === nomeEquipe) pertence = true;
+            if (nomePerfil && nomePerfil !== 'painel gestor' && criadoPorStr === nomePerfil) pertence = true;
+            if (nomeGlobal && nomeGlobal !== 'painel gestor' && criadoPorStr === nomeGlobal) pertence = true;
+            if (nomePerfil && nomePerfil !== 'painel gestor' && (criadoPorStr.includes(nomePerfil) || nomePerfil.includes(criadoPorStr))) pertence = true;
+            if (nomeEquipe && (criadoPorStr.includes(nomeEquipe) || nomeEquipe.includes(criadoPorStr))) pertence = true;
+
+            if (!pertence) return false;
         }
 
-        // Filtro do Gestor
+        // 2. FILTRO SELECIONADO PELO GESTOR (Se o gestor escolheu um corretor específico no dropdown)
         if (!ehParceiro && fCorrValue !== 'todos') {
             if (fCorrValue === 'admin') {
                 if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
@@ -2426,6 +2449,7 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
             }
         }
 
+        // 3. FILTRO DE PERÍODO / DATA
         if (p === 'todas') return true;
 
         let rI = new Date(parseInputDateSafe(r.checkin) + 'T00:00:00');
