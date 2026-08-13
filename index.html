@@ -1363,11 +1363,13 @@ function gerarRelatorioFinanceiro() {
     if (el('fin-nome-prop')) el('fin-nome-prop').innerText = `Proprietário: ${im.proprietario?.nome || 'Não informado'}`;
     if (el('fin-mes-label') && mSt) el('fin-mes-label').innerText = mSt.split('-').reverse().join('/');
 
-    let tx = im.proprietario?.comissao !== undefined ? im.proprietario.comissao : 20;
+    let tx = im.proprietario?.comissao !== undefined ? parseFloat(im.proprietario.comissao) : 20;
+    let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || 0;
+
     if (el('fin-label-comissao')) el('fin-label-comissao').innerText = `Comissão (${tx}%)`;
 
     let r = 0, d = 0;
-    let qtdReservasPagasMes = 0; // Contador para a limpeza automática
+    let qtdReservasPagasMes = 0;
     const tR = el('fin-lista-receitas');
     const tD = el('fin-lista-despesas');
 
@@ -1383,7 +1385,10 @@ function gerarRelatorioFinanceiro() {
                     let v = parseFloat(x.valorTotal) || 0;
                     r += v;
 
-                    // Conta reservas 100% PAGAS para calcular a limpeza
+                    let comissaoReserva = v * (tx / 100);
+                    let limpezaReserva = x.statusPagamento === 'pago' ? taxaLimpezaUnit : 0;
+                    let totalRetidoReserva = comissaoReserva + limpezaReserva;
+
                     if (x.statusPagamento === 'pago') {
                         qtdReservasPagasMes++;
                     }
@@ -1391,6 +1396,7 @@ function gerarRelatorioFinanceiro() {
                     if (tR) {
                         let din = checkinSeguro.split('-').reverse().join('/');
                         let dout = (typeof parseInputDateSafe === 'function' ? parseInputDateSafe(x.checkout) : x.checkout).split('-').reverse().join('/');
+                        
                         tR.insertAdjacentHTML('beforeend', `
                             <tr class="border-b border-slate-100 hover:bg-slate-50">
                                 <td class="p-3">
@@ -1399,6 +1405,7 @@ function gerarRelatorioFinanceiro() {
                                 </td>
                                 <td class="p-3 text-center text-xs text-slate-500">${din} a ${dout}</td>
                                 <td class="p-3 text-right font-bold text-slate-700">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                                <td class="p-3 text-right font-bold text-green-600">R$ ${totalRetidoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                             </tr>`);
                     }
                 }
@@ -1425,8 +1432,7 @@ function gerarRelatorioFinanceiro() {
         });
     }
 
-    // 3. CALCULA E EXIBE A TAXA DE LIMPEZA AUTOMÁTICA DAS RESERVAS PAGAS
-    const taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || 0;
+    // 3. Adiciona Taxas de Limpeza às Saídas/Despesas
     if (taxaLimpezaUnit > 0 && qtdReservasPagasMes > 0) {
         const totalLimpezaAuto = taxaLimpezaUnit * qtdReservasPagasMes;
         d += totalLimpezaAuto;
@@ -1436,18 +1442,17 @@ function gerarRelatorioFinanceiro() {
                 <tr class="border-b border-slate-100 bg-orange-50/60 font-bold">
                     <td class="p-3 text-center text-orange-600 text-xs"><i class="fas fa-broom mr-1"></i> Auto</td>
                     <td class="p-3 font-bold text-orange-800">
-                        Taxa de Limpeza (${qtdReservasPagasMes} ${qtdReservasPagasMes === 1 ? 'reserva paga' : 'reservas pagas'} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})
+                        Taxa de Limpeza (${qtdReservasPagasMes} ${qtdReservasPagasMes === 1 ? 'reserva' : 'reservas'} x R$ ${taxaLimpezaUnit.toLocaleString('pt-BR',{minimumFractionDigits:2})})
                     </td>
                     <td class="p-3 text-right font-bold text-red-600">R$ ${totalLimpezaAuto.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
                 </tr>`);
         }
     }
 
-    // Mensagens de lista vazia
-    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
+    if (tR && tR.innerHTML === '') tR.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold">Nenhuma entrada registrada neste mês.</td></tr>';
     if (tD && tD.innerHTML === '') tD.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-slate-400 font-bold">Nenhuma despesa registrada neste mês.</td></tr>';
 
-    // 4. Totais Financeiros
+    // 4. Totais dos Cards
     let c = r * (tx / 100);
     let l = r - c - d;
 
@@ -1456,7 +1461,7 @@ function gerarRelatorioFinanceiro() {
     if (el('fin-card-despesas')) el('fin-card-despesas').innerText = `R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
     if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
 }
-// 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
+        // 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
 function mudarAbaDRE(aba) {
     const btnReceitas = el('btn-tab-dre-receitas');
     const btnDespesas = el('btn-tab-dre-despesas');
