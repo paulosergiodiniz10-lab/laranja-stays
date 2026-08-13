@@ -2405,10 +2405,20 @@ let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' 
     }
 
     let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+    let meuNome = (window.nomeUsuarioLogado || '').toLowerCase().trim();
+    let meuUid = window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : null);
 
     let fit = lista.filter(r => {
-        // Filtro de corretor exclusivo para visão Gestor
-        if (typeof userRole !== 'undefined' && userRole !== 'parceiro' && fCorrValue !== 'todos') {
+        // 🔒 TRAVA DE SEGURANÇA DO CORRETOR
+        if (ehParceiro) {
+            let nomeCriador = (r.criadoPor || '').toLowerCase().trim();
+            let pertenceAoCorretor = (r.criadoPorUid && r.criadoPorUid === meuUid) || (nomeCriador && nomeCriador === meuNome);
+            if (!pertenceAoCorretor) return false;
+        }
+
+        // Filtro do Gestor
+        if (!ehParceiro && fCorrValue !== 'todos') {
             if (fCorrValue === 'admin') {
                 if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor') return false;
             } else {
