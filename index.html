@@ -1462,24 +1462,24 @@ function gerarRelatorioFinanceiro() {
     if (el('fin-card-liquido')) el('fin-card-liquido').innerText = `R$ ${l.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
 }
         // 7. ALTERNÂNCIA DE ABAS NA DRE (ENTRADAS / SAÍDAS)
-function mudarAbaDRE(aba) {
-    const btnReceitas = el('btn-tab-dre-receitas');
-    const btnDespesas = el('btn-tab-dre-despesas');
+function mudarAbaDRE(a) { 
     const contentReceitas = el('dre-content-receitas');
     const contentDespesas = el('dre-content-despesas');
+    const btnReceitas = el('btn-tab-dre-receitas');
+    const btnDespesas = el('btn-tab-dre-despesas');
 
-    if (aba === 'receitas') {
-        show(contentReceitas);
-        hide(contentDespesas);
-        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors";
-        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+    if (a === 'receitas') {
+        if (contentReceitas) show('dre-content-receitas');
+        if (contentDespesas) hide('dre-content-despesas');
+        if (btnReceitas) btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-green-500 text-green-600 bg-green-50/50 whitespace-nowrap outline-none transition-colors";
+        if (btnDespesas) btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
     } else {
-        hide(contentReceitas);
-        show(contentDespesas);
-        btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors";
-        btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
+        if (contentReceitas) hide('dre-content-receitas');
+        if (contentDespesas) show('dre-content-despesas');
+        if (btnDespesas) btnDespesas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-red-500 text-red-600 bg-red-50/50 whitespace-nowrap outline-none transition-colors";
+        if (btnReceitas) btnReceitas.className = "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-transparent text-slate-500 hover:bg-slate-50 whitespace-nowrap outline-none transition-colors";
     }
-}
+}        
         function renderizarAdmin() {
             const d = el('lista-imoveis-admin'); if(!d) return; d.innerHTML = '';
             if (imoveisDB.length === 0) { d.innerHTML = '<p class="text-center text-slate-500 py-4 font-bold">Nenhum imóvel cadastrado.</p>'; return; }
