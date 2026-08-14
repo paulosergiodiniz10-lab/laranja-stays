@@ -2378,8 +2378,12 @@ function gerarRelatorioFinanceiro() {
             }
 
             const selectCorr = el('filtro-corretor-select');
+            let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+
             if (selectCorr && !ehParceiro) {
-                let valAtual = selectCorr.value || 'todos';
+                // Guarda a seleção atual antes de recriar as opções
+                let valorSelecionadoAnterior = selectCorr.value || 'todos';
+
                 selectCorr.innerHTML = `
                     <option value="todos">Todos</option>
                     <option value="admin">Apenas Gestor</option>
@@ -2406,7 +2410,9 @@ function gerarRelatorioFinanceiro() {
                     selectCorr.insertAdjacentHTML('beforeend', `<option value="${nome}">${nome}</option>`);
                 });
                 
-                selectCorr.value = valAtual;
+                // Restaura a seleção do usuário
+                selectCorr.value = valorSelecionadoAnterior;
+                fCorrValue = selectCorr.value;
             }
 
             const p = val('filtro-periodo-reservas') || 'todas';
@@ -2424,35 +2430,36 @@ function gerarRelatorioFinanceiro() {
                 if (val('filtro-reserva-fim')) dF = new Date(parseInputDateSafe(val('filtro-reserva-fim')) + 'T23:59:59');
             }
 
-            let fCorrValue = selectCorr ? selectCorr.value : 'todos';
-
             let fit = lista.filter(r => {
-                if (ehParceiro) {
-                    let criadoPorStr = (r.criadoPor || '').toLowerCase().trim();
-                    let criadoPorUidStr = r.criadoPorUid || '';
+                let rCriador = (r.criadoPor || '').trim();
+                let rCriadorLower = rCriador.toLowerCase();
+                let rCriadorUid = r.criadoPorUid || '';
 
+                if (ehParceiro) {
                     let pertence = false;
-                    if (userUid && criadoPorUidStr === userUid) pertence = true;
-                    if (userEmail && criadoPorStr === userEmail) pertence = true;
-                    if (nomeEquipe && criadoPorStr === nomeEquipe) pertence = true;
-                    if (nomePerfil && nomePerfil !== 'painel gestor' && criadoPorStr === nomePerfil) pertence = true;
-                    if (nomeGlobal && nomeGlobal !== 'painel gestor' && criadoPorStr === nomeGlobal) pertence = true;
-                    if (nomePerfil && nomePerfil !== 'painel gestor' && (criadoPorStr.includes(nomePerfil) || nomePerfil.includes(criadoPorStr))) pertence = true;
-                    if (nomeEquipe && (criadoPorStr.includes(nomeEquipe) || nomeEquipe.includes(criadoPorStr))) pertence = true;
+                    if (userUid && rCriadorUid === userUid) pertence = true;
+                    if (userEmail && rCriadorLower === userEmail) pertence = true;
+                    if (nomeEquipe && rCriadorLower === nomeEquipe) pertence = true;
+                    if (nomePerfil && nomePerfil !== 'painel gestor' && rCriadorLower === nomePerfil) pertence = true;
+                    if (nomeGlobal && nomeGlobal !== 'painel gestor' && rCriadorLower === nomeGlobal) pertence = true;
+                    if (nomePerfil && nomePerfil !== 'painel gestor' && (rCriadorLower.includes(nomePerfil) || nomePerfil.includes(rCriadorLower))) pertence = true;
+                    if (nomeEquipe && (rCriadorLower.includes(nomeEquipe) || nomeEquipe.includes(rCriadorLower))) pertence = true;
 
                     if (!pertence) return false;
                 }
 
                 if (!ehParceiro && fCorrValue !== 'todos') {
-                    let rCriador = (r.criadoPor || '').trim();
-                    let rCriadorUid = r.criadoPorUid || '';
+                    let ehGestor = (rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorUid === 'admin' || rCriadorUid === 'gestor');
 
                     if (fCorrValue === 'admin') {
-                        if (rCriador !== 'Gestor' && rCriador !== 'Painel Gestor' && rCriadorUid !== 'admin' && rCriadorUid !== userUid) return false;
+                        if (!ehGestor) return false;
                     } else if (fCorrValue === 'corretores') {
-                        if (rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorUid === 'admin' || rCriadorUid === userUid) return false;
+                        if (ehGestor) return false;
                     } else {
-                        if (rCriador.toLowerCase() !== fCorrValue.toLowerCase() && rCriadorUid !== fCorrValue) return false;
+                        let buscaLower = fCorrValue.toLowerCase().trim();
+                        if (rCriadorLower !== buscaLower && !rCriadorLower.includes(buscaLower) && !buscaLower.includes(rCriadorLower)) {
+                            return false;
+                        }
                     }
                 }
 
