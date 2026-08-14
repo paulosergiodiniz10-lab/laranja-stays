@@ -2380,16 +2380,32 @@ function gerarRelatorioFinanceiro() {
             const selectCorr = el('filtro-corretor-select');
             if (selectCorr && !ehParceiro) {
                 let valAtual = selectCorr.value || 'todos';
-                selectCorr.innerHTML = '<option value="todos">Todos</option><option value="admin">Apenas Gestor</option>';
-                let corretoresUnicos = {};
+                selectCorr.innerHTML = `
+                    <option value="todos">Todos</option>
+                    <option value="admin">Apenas Gestor</option>
+                    <option value="corretores">Apenas Corretores (Geral)</option>
+                `;
+                
+                let nomesCorretores = new Set();
+                
+                // Pega corretores cadastrados na equipe
+                if (empresaDB && empresaDB.equipe) {
+                    empresaDB.equipe.forEach(m => {
+                        if (m.nome) nomesCorretores.add(m.nome.trim());
+                    });
+                }
+                
+                // Pega corretores das reservas existentes
                 lista.forEach(r => {
-                    if (r.criadoPorUid && r.criadoPor && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor' && r.criadoPorUid !== userUid) {
-                        corretoresUnicos[r.criadoPorUid] = r.criadoPor;
+                    if (r.criadoPor && r.criadoPor !== 'Gestor' && r.criadoPor !== 'Painel Gestor') {
+                        nomesCorretores.add(r.criadoPor.trim());
                     }
                 });
-                for (const [uid, nome] of Object.entries(corretoresUnicos)) {
-                    selectCorr.insertAdjacentHTML('beforeend', `<option value="${uid}">${nome}</option>`);
-                }
+
+                nomesCorretores.forEach(nome => {
+                    selectCorr.insertAdjacentHTML('beforeend', `<option value="${nome}">${nome}</option>`);
+                });
+                
                 selectCorr.value = valAtual;
             }
 
@@ -2428,10 +2444,15 @@ function gerarRelatorioFinanceiro() {
                 }
 
                 if (!ehParceiro && fCorrValue !== 'todos') {
+                    let rCriador = (r.criadoPor || '').trim();
+                    let rCriadorUid = r.criadoPorUid || '';
+
                     if (fCorrValue === 'admin') {
-                        if (r.criadoPorUid && r.criadoPorUid !== 'admin' && r.criadoPorUid !== 'gestor' && r.criadoPorUid !== userUid) return false;
+                        if (rCriador !== 'Gestor' && rCriador !== 'Painel Gestor' && rCriadorUid !== 'admin' && rCriadorUid !== userUid) return false;
+                    } else if (fCorrValue === 'corretores') {
+                        if (rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorUid === 'admin' || rCriadorUid === userUid) return false;
                     } else {
-                        if (r.criadoPorUid !== fCorrValue) return false;
+                        if (rCriador.toLowerCase() !== fCorrValue.toLowerCase() && rCriadorUid !== fCorrValue) return false;
                     }
                 }
 
@@ -2445,7 +2466,6 @@ function gerarRelatorioFinanceiro() {
                 if (dF) return rI <= dF;
                 return true;
             });
-
             reservasAtuaisExportacao = fit;
 
             if (!fit.length) { 
