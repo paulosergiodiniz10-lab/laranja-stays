@@ -2336,7 +2336,111 @@ function gerarRelatorioFinanceiro() {
             fecharModalReserva(); 
             mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
         }
+function excluirReservaConfirmacao() { 
+            const imId = val('reserva-imovel-select'); 
+            const rId = val('reserva-id'); 
+            const im = imoveisDB.find(i => i.id == imId); 
+            
+            if(im && im.reservas){ 
+                confirmarExclusao(() => {
+                    im.reservas = im.reservas.filter(r => r.id != rId); 
+                    salvarBancoNoStorage(); 
+                    if(!el('admin-content-mapa').classList.contains('hidden-view')) renderizarMapaDisponibilidade(); 
+                    if(!el('admin-content-reservas').classList.contains('hidden-view')) renderizarListaReservasAdmin(); 
+                    fecharModalReserva(); 
+                    mostrarNotificacao("Reserva excluída com sucesso!");
+                }, "Excluir Reserva", "Deseja realmente apagar esta ficha de reserva?");
+            } 
+        }
 
+        function abrirModalPagamento(imId, rId) {
+            setVal('pagamento-imovel-id', imId); 
+            setVal('pagamento-reserva-id', rId); 
+            
+            const im = imoveisDB.find(i => String(i.id) === String(imId)); 
+            const res = im?.reservas?.find(r => String(r.id) === String(rId)); 
+            
+            if(!res) {
+                mostrarAlerta("Reserva não localizada.");
+                return;
+            }
+
+            let valorTotalNum = parseFloat(res.valorTotal) || 0;
+            let p = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0; 
+            let d = valorTotalNum - p;
+
+            const bx = el('pagamento-valor-box'); 
+            const tb = el('pagamento-texto-base'); 
+            const bc = el('btn-confirmar-pagamento'); 
+            const inVal = el('pagamento-valor-input');
+
+            if(inVal) inVal.value = d > 0 ? d.toFixed(2) : '0.00';
+
+            if(bx && tb && bc) {
+                bx.className = "bg-orange-50 border border-orange-200 text-orange-700 font-bold text-xs py-2 rounded-xl mb-3 text-center"; 
+                bc.className = "flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; 
+                bc.innerText = "Confirmar Recebimento";
+
+                if(d > 0 && p > 0) { 
+                    bx.innerText = `Já Pago: R$ ${p.toLocaleString('pt-BR',{minimumFractionDigits:2})} | Falta: R$ ${d.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+                    bx.classList.remove('hidden-view'); 
+                    tb.innerText = "Registrar pagamento parcial ou quitação:"; 
+                }
+                else if(d < 0) { 
+                    bx.innerText = `Devolver: R$ ${Math.abs(d).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+                    bx.className = "bg-red-50 text-red-700 font-bold text-xs py-2 rounded-xl mb-3 border border-red-200"; 
+                    bx.classList.remove('hidden-view'); 
+                    tb.innerText = "Registrar devolução/reembolso:"; 
+                    bc.className = "flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all"; 
+                    bc.innerText = "Confirmar Devolução"; 
+                    if(inVal) inVal.value = Math.abs(d).toFixed(2); 
+                }
+                else { 
+                    bx.innerText = `Valor Total da Reserva: R$ ${valorTotalNum.toLocaleString('pt-BR',{minimumFractionDigits:2})}`; 
+                    bx.classList.remove('hidden-view'); 
+                    tb.innerText = "Insira o valor recebido e a forma de pagamento:"; 
+                } 
+            } 
+            
+            show('modal-pagamento');
+        }
+
+        function fecharModalPagamento() { 
+            hide('modal-pagamento'); 
+        }
+
+        function confirmarPagamento() { 
+            const imId = val('pagamento-imovel-id'); 
+            const rId = val('pagamento-reserva-id'); 
+            const m = val('pagamento-metodo'); 
+            const vLancar = parseFloat(val('pagamento-valor-input')) || 0; 
+            
+            const im = imoveisDB.find(i => String(i.id) === String(imId)); 
+            if(im && im.reservas) { 
+                const res = im.reservas.find(r => String(r.id) === String(rId)); 
+                if(res) { 
+                    let pgAnt = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0;
+                    let vTotal = parseFloat(res.valorTotal) || 0;
+                    let novoTotalPago = pgAnt + vLancar;
+
+                    res.valorPago = novoTotalPago;
+                    res.formaPagamento = m;
+                    
+                    if(novoTotalPago >= vTotal) {
+                        res.statusPagamento = 'pago';
+                        mostrarNotificacao("Reserva Quitada com Sucesso!");
+                    } else {
+                        res.statusPagamento = 'pendente';
+                        mostrarNotificacao(`Pagamento de R$ ${vLancar.toLocaleString('pt-BR',{minimumFractionDigits:2})} registrado!`);
+                    }
+
+                    salvarBancoNoStorage(); 
+                    renderizarMapaDisponibilidade(); 
+                    renderizarListaReservasAdmin(); 
+                    fecharModalPagamento(); 
+                } 
+            } 
+        }
         function toggleFiltroPersonalizadoReservas() { 
             const selPeriodo = val('filtro-periodo-reservas');
             const bloco = el('bloco-filtro-datas');
