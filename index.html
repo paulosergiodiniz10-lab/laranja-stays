@@ -1858,7 +1858,7 @@ function gerarRelatorioFinanceiro() {
                 let dInB = new Date(parseInputDateSafe(checkin)+'T12:00:00'); 
                 let dOutB = new Date(parseInputDateSafe(checkout)+'T12:00:00'); 
                 for(let r of im.reservas) { 
-                    if(resIgnorar && String(r.id) === String(resIgnorar)) continue; 
+                    if(resIgnorar && (r.id == resIgnorar || String(r.id) === String(resIgnorar))) continue; 
                     if(r.statusPagamento==='cancelada') continue; 
                     let dInR = new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); 
                     let dOutR = new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); 
@@ -1879,43 +1879,93 @@ function gerarRelatorioFinanceiro() {
             let noites = Math.round((dO-dI)/86400000); 
             let total = 0; 
             let indisp = false; 
-            let maiorRegraMinima = 1;
+            let maiorRegraMinNoites = 1;
 
-            // 2. Soma as diárias e descobre o maior mínimo exigido no período
-            let idx = 0;
+            // 2. Validação de Regra do Pacote (Checa se o Check-in tentou cortar um pacote iniciado antes, ex: Sábado)
+            let dtCheckinStr = formatarDataLocalISO(dI);
+            let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
+
+            if (diaCheckinTarifa) {
+                let minNoitesDiaCheckin = diaCheckinTarifa.minNoites || 1;
+                let inicioSugerido = new Date(dI);
+                
+                // Só checa se o check-in for no Sábado (dia da semana = 6) e exigir mais de 1 noite
+                if (dI.getDay() === 6 && minNoitesDiaCheckin > 1) {
+                    let dSexta = new Date(dI);
+                    dSexta.setDate(dI.getDate() - 1);
+                    let strSexta = formatarDataLocalISO(dSexta);
+                    let tarifaSexta = im.calendario.find(x => x.data === strSexta);
+
+                    if (tarifaSexta && (tarifaSexta.minNoites || 1) > 1) {
+                        inicioSugerido = dSexta;
+                        maiorRegraMinNoites = tarifaSexta.minNoites;
+                    }
+                }
+
+                // Se tentou entrar no meio do pacote (ex: Sábado em vez de Sexta)
+                if (inicioSugerido.getTime() !== dI.getTime()) {
+                    let dOutSugerido = new Date(inicioSugerido);
+                    dOutSugerido.setDate(inicioSugerido.getDate() + maiorRegraMinNoites);
+                    return { 
+                        disponivel: false, 
+                        bloqueioMinNoites: true, 
+                        minNoites: maiorRegraMinNoites,
+                        dataEntradaSugerida: formatarDataLocalISO(inicioSugerido),
+                        dataSaidaSugerida: formatarDataLocalISO(dOutSugerido)
+                    };
+                }
+            }
+
+            // 3. Soma das diárias e verificação se cada dia de pacote tem a quantidade de noites respeitada
+            let quebrouPacote = false;
+            let saidaMinimaObrigatoria = new Date(dO);
+            let noitesRestantes = noites;
+
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
                 if(!diaTarifado) { indisp = true; break; } 
                 
-                total += diaTarifado.valor;
-
-                let minDia = diaTarifado.minNoites || 1;
-                // Considera o minNoites dos dias dormidos
-                if(minDia > maiorRegraMinima) {
-                    maiorRegraMinima = minDia;
+                let minDoDia = diaTarifado.minNoites || 1;
+                if(minDoDia > maiorRegraMinNoites) { 
+                    maiorRegraMinNoites = minDoDia; 
+                } 
+                
+                // Se dormiu num dia de pacote (ex: Sexta com 2 noites) e não ficou as noites a partir dele (saiu sábado)
+                if (minDoDia > 1 && noitesRestantes < minDoDia) {
+                    quebrouPacote = true;
+                    let dSaidaNec = new Date(d);
+                    dSaidaNec.setDate(d.getDate() + minDoDia);
+                    if (dSaidaNec > saidaMinimaObrigatoria) {
+                        saidaMinimaObrigatoria = dSaidaNec;
+                    }
                 }
-                idx++;
+
+                total += diaTarifado.valor; 
+                noitesRestantes--;
             }
             
             if(indisp) return {disponivel:false};
 
-            // 3. Validação da quantidade de noites
-            let quebrouMinNoites = (noites < maiorRegraMinima);
-            
-            let dOutMinSugerido = new Date(dI);
-            dOutMinSugerido.setDate(dI.getDate() + maiorRegraMinima);
+            if (noites < maiorRegraMinNoites) {
+                quebrouPacote = true;
+                let dOutCalculado = new Date(dI);
+                dOutCalculado.setDate(dI.getDate() + maiorRegraMinNoites);
+                if (dOutCalculado > saidaMinimaObrigatoria) {
+                    saidaMinimaObrigatoria = dOutCalculado;
+                }
+            }
 
             return { 
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: maiorRegraMinima, 
+                minNoites: maiorRegraMinNoites, 
                 precoTotal: total, 
                 noites: noites, 
-                bloqueioMinNoites: quebrouMinNoites,
+                bloqueioMinNoites: quebrouPacote,
                 dataEntradaSugerida: formatarDataLocalISO(dI),
-                dataSaidaSugerida: formatarDataLocalISO(dOutMinSugerido)
+                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
