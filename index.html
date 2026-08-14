@@ -3355,6 +3355,129 @@ window.gerarPDFDRE = function() {
         alert("Erro ao gerar PDF: " + err.message);
     }
 };
+          // ================= GERADOR DE RECIBOS =================
+let tipoAssinaturaRecibo = 'empresa';
+
+window.setAssinaturaRecibo = function(tipo) {
+    tipoAssinaturaRecibo = tipo;
+    const btnEmp = document.getElementById('btn-ass-empresa');
+    const btnCli = document.getElementById('btn-ass-cliente');
+    const boxAss = document.getElementById('box-nome-assinatura');
+
+    if (tipo === 'empresa') {
+        if(btnEmp) btnEmp.className = 'flex-1 py-1.5 text-xs font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all';
+        if(btnCli) btnCli.className = 'flex-1 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all';
+        if(boxAss) boxAss.classList.add('hidden-view');
+    } else {
+        if(btnCli) btnCli.className = 'flex-1 py-1.5 text-xs font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all';
+        if(btnEmp) btnEmp.className = 'flex-1 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all';
+        if(boxAss) boxAss.classList.remove('hidden-view');
+    }
+};
+
+window.gerarPDFReciboDirect = function(e) {
+    if (e) e.preventDefault();
+
+    try {
+        const nome = document.getElementById('rec-nome')?.value.trim() || '';
+        const valor = parseFloat(document.getElementById('rec-valor')?.value) || 0;
+        const descricao = document.getElementById('rec-descricao')?.value.trim() || '';
+        const cidade = document.getElementById('rec-cidade')?.value.trim() || "Caldas Novas - GO";
+        const dataInput = document.getElementById('rec-data')?.value;
+        
+        let dataObj = dataInput ? new Date(dataInput + 'T00:00:00') : new Date();
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        let dataFormatadaExtenso = `${dataObj.getDate()} de ${meses[dataObj.getMonth()]} de ${dataObj.getFullYear()}`;
+
+        let nomeAssinatura = empresaDB.nome || "Maurílio Porto Temporada";
+        if (tipoAssinaturaRecibo === 'cliente') {
+            nomeAssinatura = document.getElementById('rec-nome-ass')?.value.trim() || nome;
+        }
+
+        let emp = (typeof empresaDB !== 'undefined') ? empresaDB : {};
+        let nEmp = emp.nome || "Maurilio Porto Temporada";
+        let endEmpStr = "Avenida Orcalino Santos 219 Andar 1 Sala 109 Shopping CTC Centro";
+        if (emp.endereco?.rua) {
+            endEmpStr = `${emp.endereco.rua}, ${emp.endereco.numero || 'S/N'} - ${emp.endereco.bairro || ''} - ${emp.endereco.cidade || 'Caldas Novas'}/${emp.endereco.uf || 'GO'}`;
+        }
+        let contatoEmp = `+55 (64) 98144-0262 | +55 (64) 99211-1189<br>${emp.email || 'vailaemcaldas@gmail.com'}`;
+        let lgHtml = emp.logo ? `<img src="${emp.logo}" style="max-height: 75px; max-width: 200px; object-fit: contain;">` : `<div style="font-size:22px; font-weight:bold; color:#0f172a;">${nEmp}</div>`;
+
+        let htmlRecibo = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Recibo - ${nome}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; color: #1e293b; background: #fff; max-width: 800px; margin: 0 auto; }
+                    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #cbd5e1; padding-bottom: 15px; margin-bottom: 25px; }
+                    .empresa-info { text-align: right; font-size: 11px; color: #334155; line-height: 1.4; }
+                    .doc-titulo { font-size: 20px; font-weight: bold; color: #0f172a; text-decoration: underline; margin-bottom: 5px; }
+                    
+                    .bar-titulo { background: #e2e8f0; padding: 8px 12px; font-weight: bold; font-size: 14px; border: 1px solid #cbd5e1; margin-bottom: 30px; border-radius: 4px; }
+                    
+                    .campo-row { display: flex; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+                    .campo-label { width: 140px; font-weight: bold; color: #334155; }
+                    .campo-val { flex: 1; color: #0f172a; font-weight: bold; }
+                    
+                    .data-emissao { text-align: center; margin-top: 50px; font-size: 14px; font-weight: bold; color: #334155; }
+                    .ass-box { width: 350px; margin: 60px auto 0 auto; text-align: center; }
+                    .ass-linha { border-top: 1px solid #0f172a; padding-top: 8px; font-weight: bold; font-size: 13px; color: #0f172a; margin-top: 40px; }
+                    
+                    @media print { body { padding: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>${lgHtml}</div>
+                    <div class="empresa-info">
+                        <div class="doc-titulo">Financeiro | Recibo</div>
+                        <div>${endEmpStr}</div>
+                        <div>${contatoEmp}</div>
+                    </div>
+                </div>
+
+                <div class="bar-titulo">Recibo</div>
+
+                <div class="campo-row">
+                    <div class="campo-label">Recebemos de:</div>
+                    <div class="campo-val">${nome.toUpperCase()}</div>
+                </div>
+
+                <div class="campo-row">
+                    <div class="campo-label">Valor:</div>
+                    <div class="campo-val">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+                </div>
+
+                <div class="campo-row">
+                    <div class="campo-label">Referente:</div>
+                    <div class="campo-val">${descricao.toUpperCase()}</div>
+                </div>
+
+                <div class="data-emissao">${cidade}, ${dataFormatadaExtenso}</div>
+
+                <div class="ass-box">
+                    <div class="ass-linha">${nomeAssinatura}</div>
+                </div>
+
+                <script>
+                    window.onload = function() { window.print(); }
+                <\/script>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        if (win) {
+            win.document.write(htmlRecibo);
+            win.document.close();
+        } else {
+            alert("Permita as janelas Pop-up para gerar o recibo!");
+        }
+    } catch(err) {
+        alert("Erro ao gerar recibo: " + err.message);
+    }
+};
             async function adicionarMembroEquipe() {
             const email = val('novo-equipe-email').trim().toLowerCase();
             const role = val('novo-equipe-perfil');
