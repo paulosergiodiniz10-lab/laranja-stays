@@ -1858,7 +1858,7 @@ function gerarRelatorioFinanceiro() {
                 let dInB = new Date(parseInputDateSafe(checkin)+'T12:00:00'); 
                 let dOutB = new Date(parseInputDateSafe(checkout)+'T12:00:00'); 
                 for(let r of im.reservas) { 
-                    if(resIgnorar && r.id==resIgnorar) continue; 
+                    if(resIgnorar && String(r.id) === String(resIgnorar)) continue; 
                     if(r.statusPagamento==='cancelada') continue; 
                     let dInR = new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); 
                     let dOutR = new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); 
@@ -1879,71 +1879,83 @@ function gerarRelatorioFinanceiro() {
             let noites = Math.round((dO-dI)/86400000); 
             let total = 0; 
             let indisp = false; 
-            let maiorRegraMinNoites = 1;
+            let quebrouMinNoites = false;
+            let minNoitesExigidas = 1;
+            let sugIn = null;
+            let sugOut = null;
 
-            // 2. Validação de Regra do Pacote (Checa se o Check-in tentou cortar um pacote iniciado antes)
+            // 2. Validação se o Check-in tentou cortar um pacote já iniciado antes
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
 
-            if (diaCheckinTarifa) {
-                maiorRegraMinNoites = diaCheckinTarifa.minNoites || 1;
-                
-                // Só aplica a verificação retroativa se o próprio dia do check-in exigir mais de 1 noite
+            if (diaCheckinTarifa && (diaCheckinTarifa.minNoites || 1) > 1) {
                 let minNoitesDiaCheckin = diaCheckinTarifa.minNoites || 1;
-                
                 let inicioSugerido = new Date(dI);
-                if (minNoitesDiaCheckin > 1) {
-                    for (let retro = 1; retro < 7; retro++) {
-                        let dRetro = new Date(dI);
-                        dRetro.setDate(dRetro.getDate() - retro);
-                        let strRetro = formatarDataLocalISO(dRetro);
-                        let tarifaRetro = im.calendario.find(x => x.data === strRetro);
-                        
-                        if (tarifaRetro && tarifaRetro.nome === diaCheckinTarifa.nome && tarifaRetro.minNoites > retro) {
-                            inicioSugerido = dRetro;
-                            maiorRegraMinNoites = tarifaRetro.minNoites;
-                        } else {
-                            break;
-                        }
+                
+                for (let retro = 1; retro < 7; retro++) {
+                    let dRetro = new Date(dI);
+                    dRetro.setDate(dRetro.getDate() - retro);
+                    let strRetro = formatarDataLocalISO(dRetro);
+                    let tarifaRetro = im.calendario.find(x => x.data === strRetro);
+                    
+                    if (tarifaRetro && tarifaRetro.nome === diaCheckinTarifa.nome && (tarifaRetro.minNoites || 1) > retro) {
+                        inicioSugerido = dRetro;
+                        minNoitesDiaCheckin = tarifaRetro.minNoites;
+                    } else {
+                        break;
                     }
                 }
 
-                // Se tentou entrar no meio do pacote (ex: Sábado em vez de Sexta)
                 if (inicioSugerido.getTime() !== dI.getTime()) {
                     let dOutSugerido = new Date(inicioSugerido);
-                    dOutSugerido.setDate(inicioSugerido.getDate() + maiorRegraMinNoites);
+                    dOutSugerido.setDate(inicioSugerido.getDate() + minNoitesDiaCheckin);
                     return { 
                         disponivel: false, 
                         bloqueioMinNoites: true, 
-                        minNoites: maiorRegraMinNoites,
+                        minNoites: minNoitesDiaCheckin,
                         dataEntradaSugerida: formatarDataLocalISO(inicioSugerido),
                         dataSaidaSugerida: formatarDataLocalISO(dOutSugerido)
                     };
                 }
             }
 
-            // 3. Soma das diárias e verificação de quantidade mínima de noites normal
+            // 3. Soma das diárias e Validação de noites mínimas de cada dia dentro da estadia
+            let idxDia = 0;
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
                 if(!diaTarifado) { indisp = true; break; } 
-                if(diaTarifado.minNoites > maiorRegraMinNoites) { 
-                    maiorRegraMinNoites = diaTarifado.minNoites; 
-                } 
+                
+                let minDoDia = diaTarifado.minNoites || 1;
+                let noitesRestantes = noites - idxDia;
+
+                if (noitesRestantes < minDoDia) {
+                    quebrouMinNoites = true;
+                    if (minDoDia > minNoitesExigidas) {
+                        minNoitesExigidas = minDoDia;
+                        let dOutMin = new Date(d);
+                        dOutMin.setDate(d.getDate() + minDoDia);
+                        sugIn = formatarDataLocalISO(dI);
+                        sugOut = formatarDataLocalISO(dOutMin);
+                    }
+                }
+
                 total += diaTarifado.valor; 
+                idxDia++;
             }
             
             if(indisp) return {disponivel:false};
             
-            let quebrouMinNoites = noites < maiorRegraMinNoites; 
             return { 
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: maiorRegraMinNoites, 
+                minNoites: minNoitesExigidas, 
                 precoTotal: total, 
                 noites: noites, 
-                bloqueioMinNoites: quebrouMinNoites 
+                bloqueioMinNoites: quebrouMinNoites,
+                dataEntradaSugerida: sugIn,
+                dataSaidaSugerida: sugOut
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
