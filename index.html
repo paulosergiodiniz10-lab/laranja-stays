@@ -3803,30 +3803,90 @@ window.gerarPDFReciboDirect = function() {
         }
         // ESCONDE O NOME DO HÓSPEDE NO MAPA SE NÃO FOR DO CORRETOR
         function renderizarMapaDisponibilidade() {
-            if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`; const cont = el('container-mapa-grid'); if(!cont) return; const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
-            let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; h += `</div>`;
-            if(!imoveisDB.length) { h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`; } else {
+            if(el('label-mes-mapa')) el('label-mes-mapa').innerText = `${mesesCompletos[mapaMes - 1]} ${mapaAno}`;
+            const cont = el('container-mapa-grid');
+            if(!cont) return;
+            const dias = new Date(mapaAno, mapaMes, 0).getDate();
+
+            let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`;
+            for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`;
+            h += `</div>`;
+
+            // Identificação do Usuário Logado
+            let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
+            let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
+            let nomePerfil = (el('perfil-nome-usuario')?.innerText || '').toLowerCase().trim();
+
+            let meuCadastro = (typeof empresaDB !== 'undefined' && empresaDB.equipe && userEmail)
+                ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === userEmail)
+                : null;
+
+            let nomeEquipe = (meuCadastro?.nome || '').toLowerCase().trim();
+            let nomeGlobal = (window.nomeUsuarioLogado || '').toLowerCase().trim();
+
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
+            if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
+
+            if(!imoveisDB.length) {
+                h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`;
+            } else {
                 imoveisDB.forEach(im => {
-                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome; h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
+                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
+                    h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
+
                     for (let dia=1; dia<=dias; dia++) {
-                        let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`; let dObj = new Date(dt+'T12:00:00'); let cls = 'status-livre'; let txt = '1'; let rF = null;
-                        if(im.reservas) { for(let r of im.reservas) { if(r.statusPagamento==='cancelada') continue; let di=new Date(parseInputDateSafe(r.checkin)+'T12:00:00'); let do_=new Date(parseInputDateSafe(r.checkout)+'T12:00:00'); if(dObj>=di && dObj<do_) { cls=r.statusPagamento==='pago'?'status-pago':r.statusPagamento==='proprietario'?'status-proprietario':r.statusPagamento==='bloqueio'?'status-bloqueado':'status-pendente'; txt='0'; rF=r; if(dObj.getTime()===di.getTime()) txt=r.statusPagamento==='proprietario'?'Prop':r.statusPagamento==='bloqueio'?'Manut':(r.titular?.nome?`<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>`:'Res'); break; } } }
-                        
-                        // Regra de Ocultação do Corretor
-                        let podeEditar = true;
-                        if (rF && typeof userRole !== 'undefined' && userRole === 'parceiro') {
-                            if (rF.criadoPorUid !== window.uidUsuarioLogado) { podeEditar = false; }
+                        let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+                        let dObj = new Date(dt+'T12:00:00');
+                        let cls = 'status-livre';
+                        let txt = '1';
+                        let rF = null;
+
+                        if(im.reservas) {
+                            for(let r of im.reservas) {
+                                if(r.statusPagamento === 'cancelada') continue;
+                                let di = new Date(parseInputDateSafe(r.checkin) + 'T12:00:00');
+                                let do_ = new Date(parseInputDateSafe(r.checkout) + 'T12:00:00');
+
+                                if(dObj >= di && dObj < do_) {
+                                    cls = r.statusPagamento === 'pago' ? 'status-pago' : r.statusPagamento === 'proprietario' ? 'status-proprietario' : r.statusPagamento === 'bloqueio' ? 'status-bloqueado' : 'status-pendente';
+                                    txt = '0';
+                                    rF = r;
+                                    if(dObj.getTime() === di.getTime()) {
+                                        txt = r.statusPagamento === 'proprietario' ? 'Prop' : r.statusPagamento === 'bloqueio' ? 'Manut' : (r.titular?.nome ? `<span class="hover:underline">${r.titular.nome.split(' ')[0]}</span>` : 'Res');
+                                    }
+                                    break;
+                                }
+                            }
                         }
 
-                        let evt = ''; let tooltip = '';
+                        // Validação se a reserva é do Corretor logado (por Nome, E-mail ou UID)
+                        let pertenceAoCorretor = true;
+                        if (ehParceiro && rF) {
+                            pertenceAoCorretor = false;
+                            let criadoPorStr = (rF.criadoPor || '').toLowerCase().trim();
+                            let criadoPorUidStr = rF.criadoPorUid || '';
+
+                            if (userUid && criadoPorUidStr === userUid) pertenceAoCorretor = true;
+                            if (userEmail && criadoPorStr === userEmail) pertenceAoCorretor = true;
+                            if (nomeEquipe && (criadoPorStr === nomeEquipe || criadoPorStr.includes(nomeEquipe) || nomeEquipe.includes(criadoPorStr))) pertenceAoCorretor = true;
+                            if (nomePerfil && nomePerfil !== 'painel gestor' && (criadoPorStr === nomePerfil || criadoPorStr.includes(nomePerfil) || nomePerfil.includes(criadoPorStr))) pertenceAoCorretor = true;
+                            if (nomeGlobal && nomeGlobal !== 'painel gestor' && (criadoPorStr === nomeGlobal || criadoPorStr.includes(nomeGlobal) || nomeGlobal.includes(criadoPorStr))) pertenceAoCorretor = true;
+                        }
+
+                        let evt = '';
+                        let tooltip = '';
+
                         if (rF) {
-                            if (podeEditar) {
+                            if (!ehParceiro || pertenceAoCorretor) {
+                                // Reserva própria do corretor ou visão gestor: Verde (Pago) / Amarelo (Pendente) e nome do hóspede
                                 evt = `abrirEdicaoReservaMapa(${im.id}, ${rF.id})`;
                                 tooltip = rF.titular?.nome ? `Editar Reserva: ${rF.titular.nome}` : `Editar Bloqueio`;
                             } else {
-                                evt = ''; // Trava o clique
-                                txt = 'Ocupado'; // Esconde o nome do hóspede
-                                cls = 'bg-slate-300 text-white border-r border-slate-400'; // Cinza Escuro Neutro
+                                // Reserva de outros corretores: Mascara em Cinza e exibe "Ocupado"
+                                evt = '';
+                                txt = 'Ocupado';
+                                cls = 'bg-slate-300 text-white border-r border-slate-400';
                                 tooltip = 'Reservado por Outro Corretor';
                             }
                         } else {
@@ -3835,9 +3895,11 @@ window.gerarPDFReciboDirect = function() {
                         }
 
                         h += `<div ${evt ? `onclick="${evt}"` : ''} class="mapa-celula ${cls} truncate px-1 text-[10px] ${!evt?'cursor-not-allowed':''}" title="${tooltip}">${txt}</div>`;
-                    } h += `</div>`;
+                    }
+                    h += `</div>`;
                 });
-            } cont.innerHTML = h;
+            }
+            cont.innerHTML = h;
         }
         window.onload = function() {};
         // ==========================================
