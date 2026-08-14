@@ -2479,20 +2479,21 @@ function gerarRelatorioFinanceiro() {
 
                 // Filtro de Corretor (Visão Gestor)
                 if (!ehParceiro && fCorrValue !== 'todos') {
-                    let ehReservaGestor = (rCriador === '' || rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorLower === 'gestor' || rCriadorUid === 'admin' || rCriadorUid === 'gestor' || rCriadorUid === userUid);
+                    let badgeNome = (r.criadoPor || 'Gestor').trim();
+                    let ehGestor = (badgeNome === 'Gestor' || badgeNome === 'Painel Gestor' || badgeNome.toLowerCase() === 'gestor');
 
                     if (fCorrValue === 'admin') {
-                        if (!ehReservaGestor) return false;
+                        if (!ehGestor) return false;
                     } else if (fCorrValue === 'corretores') {
-                        if (ehReservaGestor) return false;
+                        if (ehGestor) return false;
                     } else {
                         let fLower = fCorrValue.toLowerCase().trim();
-                        if (rCriadorLower !== fLower && !rCriadorLower.includes(fLower) && !fLower.includes(rCriadorLower)) {
+                        let badgeLower = badgeNome.toLowerCase();
+                        if (badgeLower !== fLower && !badgeLower.includes(fLower) && !fLower.includes(badgeLower)) {
                             return false;
                         }
                     }
                 }
-
                 // Filtro de Período
                 if (p !== 'todas' && (dI || dF)) {
                     let rCheckinStr = parseInputDateSafe(r.checkin);
