@@ -2337,9 +2337,26 @@ function gerarRelatorioFinanceiro() {
             mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
         }
 
+        function toggleFiltroPersonalizadoReservas() { 
+            const selPeriodo = val('filtro-periodo-reservas');
+            const bloco = el('bloco-filtro-datas');
+            if(bloco) {
+                if(selPeriodo === 'personalizado') {
+                    bloco.classList.remove('hidden-view');
+                } else {
+                    bloco.classList.add('hidden-view');
+                    renderizarListaReservasAdmin();
+                }
+            }
+        }
+
         function renderizarListaReservasAdmin() {
-            const tb = el('lista-reservas-tbody'); if (!tb) return; tb.innerHTML = ''; let lista = [];
+            const tb = el('lista-reservas-tbody'); 
+            if (!tb) return; 
+            tb.innerHTML = ''; 
+            let lista = [];
             
+            // Coleta todas as reservas
             imoveisDB.forEach(im => { 
                 if (im.reservas && im.reservas.length) { 
                     im.reservas.forEach(r => lista.push({ 
@@ -2350,6 +2367,7 @@ function gerarRelatorioFinanceiro() {
                 } 
             });
 
+            // Dados do usuário logado
             let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
             let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
             let nomePerfil = (el('perfil-nome-usuario')?.innerText || '').toLowerCase().trim();
@@ -2359,12 +2377,11 @@ function gerarRelatorioFinanceiro() {
                 : null;
 
             let nomeEquipe = (meuCadastro?.nome || '').toLowerCase().trim();
-            let nomeGlobal = (window.nomeUsuarioLogado || '').toLowerCase().trim();
-
             let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
             if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
             if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
 
+            // Injeta o dropdown de corretor se ainda não existir
             const containerFiltros = el('bloco-filtro-datas');
             if (containerFiltros && !el('filtro-corretor-select-container') && !ehParceiro) {
                 containerFiltros.insertAdjacentHTML('afterend', `
@@ -2377,11 +2394,11 @@ function gerarRelatorioFinanceiro() {
                 `);
             }
 
+            // Popula opções de corretores
             const selectCorr = el('filtro-corretor-select');
             let fCorrValue = selectCorr ? selectCorr.value : 'todos';
 
             if (selectCorr && !ehParceiro) {
-                // Guarda a seleção atual antes de recriar as opções
                 let valorSelecionadoAnterior = selectCorr.value || 'todos';
 
                 selectCorr.innerHTML = `
@@ -2392,17 +2409,16 @@ function gerarRelatorioFinanceiro() {
                 
                 let nomesCorretores = new Set();
                 
-                // Pega corretores cadastrados na equipe
                 if (empresaDB && empresaDB.equipe) {
                     empresaDB.equipe.forEach(m => {
-                        if (m.nome) nomesCorretores.add(m.nome.trim());
+                        if (m.nome && m.nome.trim() !== '') nomesCorretores.add(m.nome.trim());
                     });
                 }
                 
-                // Pega corretores das reservas existentes
                 lista.forEach(r => {
-                    if (r.criadoPor && r.criadoPor !== 'Gestor' && r.criadoPor !== 'Painel Gestor') {
-                        nomesCorretores.add(r.criadoPor.trim());
+                    let c = (r.criadoPor || '').trim();
+                    if (c && c !== 'Gestor' && c !== 'Painel Gestor' && c.toLowerCase() !== 'gestor') {
+                        nomesCorretores.add(c);
                     }
                 });
 
@@ -2410,69 +2426,94 @@ function gerarRelatorioFinanceiro() {
                     selectCorr.insertAdjacentHTML('beforeend', `<option value="${nome}">${nome}</option>`);
                 });
                 
-                // Restaura a seleção do usuário
                 selectCorr.value = valorSelecionadoAnterior;
                 fCorrValue = selectCorr.value;
             }
 
+            // FILTRO DE PERÍODO (DATA LOCAL SEGURA)
             const p = val('filtro-periodo-reservas') || 'todas';
-            let dI = null; let dF = null;
-            let hj = new Date(); hj.setHours(0,0,0,0);
+            let dI = null; 
+            let dF = null;
+            let hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
 
             if (p === 'hoje') { 
-                dI = new Date(hj); dI.setHours(0,0,0,0); 
-                dF = new Date(hj); dF.setHours(23,59,59,999); 
+                dI = new Date(hoje);
+                dF = new Date(hoje);
+                dF.setHours(23, 59, 59, 999);
             }
-            else if (p === '7') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 7); dF.setHours(23,59,59,999); }
-            else if (p === '30') { dI = new Date(hj); dF = new Date(hj); dF.setDate(dF.getDate() + 30); dF.setHours(23,59,59,999); }
+            else if (p === '7') { 
+                dI = new Date(hoje);
+                dF = new Date(hoje);
+                dF.setDate(dF.getDate() + 7);
+                dF.setHours(23, 59, 59, 999);
+            }
+            else if (p === '30') { 
+                dI = new Date(hoje);
+                dF = new Date(hoje);
+                dF.setDate(dF.getDate() + 30);
+                dF.setHours(23, 59, 59, 999);
+            }
             else if (p === 'personalizado') {
-                if (val('filtro-reserva-inicio')) dI = new Date(parseInputDateSafe(val('filtro-reserva-inicio')) + 'T00:00:00');
-                if (val('filtro-reserva-fim')) dF = new Date(parseInputDateSafe(val('filtro-reserva-fim')) + 'T23:59:59');
+                let valIn = val('filtro-reserva-inicio');
+                let valOut = val('filtro-reserva-fim');
+                if (valIn) dI = new Date(parseInputDateSafe(valIn) + 'T00:00:00');
+                if (valOut) dF = new Date(parseInputDateSafe(valOut) + 'T23:59:59');
             }
 
+            // FILTRAGEM FINAL
             let fit = lista.filter(r => {
                 let rCriador = (r.criadoPor || '').trim();
                 let rCriadorLower = rCriador.toLowerCase();
                 let rCriadorUid = r.criadoPorUid || '';
 
+                // Se o usuário logado for corretor (vê só as suas)
                 if (ehParceiro) {
                     let pertence = false;
                     if (userUid && rCriadorUid === userUid) pertence = true;
                     if (userEmail && rCriadorLower === userEmail) pertence = true;
-                    if (nomeEquipe && rCriadorLower === nomeEquipe) pertence = true;
-                    if (nomePerfil && nomePerfil !== 'painel gestor' && rCriadorLower === nomePerfil) pertence = true;
-                    if (nomeGlobal && nomeGlobal !== 'painel gestor' && rCriadorLower === nomeGlobal) pertence = true;
-                    if (nomePerfil && nomePerfil !== 'painel gestor' && (rCriadorLower.includes(nomePerfil) || nomePerfil.includes(rCriadorLower))) pertence = true;
-                    if (nomeEquipe && (rCriadorLower.includes(nomeEquipe) || nomeEquipe.includes(rCriadorLower))) pertence = true;
-
+                    if (nomeEquipe && (rCriadorLower === nomeEquipe || rCriadorLower.includes(nomeEquipe) || nomeEquipe.includes(rCriadorLower))) pertence = true;
+                    if (nomePerfil && nomePerfil !== 'painel gestor' && (rCriadorLower === nomePerfil || rCriadorLower.includes(nomePerfil))) pertence = true;
                     if (!pertence) return false;
                 }
 
+                // Filtro de Corretor (Visão Gestor)
                 if (!ehParceiro && fCorrValue !== 'todos') {
-                    let ehGestor = (rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorUid === 'admin' || rCriadorUid === 'gestor');
+                    let ehReservaGestor = (rCriador === '' || rCriador === 'Gestor' || rCriador === 'Painel Gestor' || rCriadorLower === 'gestor' || rCriadorUid === 'admin' || rCriadorUid === 'gestor' || rCriadorUid === userUid);
 
                     if (fCorrValue === 'admin') {
-                        if (!ehGestor) return false;
+                        if (!ehReservaGestor) return false;
                     } else if (fCorrValue === 'corretores') {
-                        if (ehGestor) return false;
+                        if (ehReservaGestor) return false;
                     } else {
-                        let buscaLower = fCorrValue.toLowerCase().trim();
-                        if (rCriadorLower !== buscaLower && !rCriadorLower.includes(buscaLower) && !buscaLower.includes(rCriadorLower)) {
+                        let fLower = fCorrValue.toLowerCase().trim();
+                        if (rCriadorLower !== fLower && !rCriadorLower.includes(fLower) && !fLower.includes(rCriadorLower)) {
                             return false;
                         }
                     }
                 }
 
-                if (p === 'todas') return true;
+                // Filtro de Período
+                if (p !== 'todas' && (dI || dF)) {
+                    let rCheckinStr = parseInputDateSafe(r.checkin);
+                    let rCheckoutStr = parseInputDateSafe(r.checkout);
+                    if (!rCheckinStr || !rCheckoutStr) return true;
 
-                let rI = new Date(parseInputDateSafe(r.checkin) + 'T00:00:00');
-                let rF_date = new Date(parseInputDateSafe(r.checkout) + 'T23:59:59');
+                    let rIn = new Date(rCheckinStr + 'T00:00:00');
+                    let rOut = new Date(rCheckoutStr + 'T23:59:59');
 
-                if (dI && dF) return rI <= dF && rF_date >= dI;
-                if (dI) return rF_date >= dI;
-                if (dF) return rI <= dF;
+                    if (dI && dF) {
+                        if (rIn > dF || rOut < dI) return false;
+                    } else if (dI && rOut < dI) {
+                        return false;
+                    } else if (dF && rIn > dF) {
+                        return false;
+                    }
+                }
+
                 return true;
             });
+
             reservasAtuaisExportacao = fit;
 
             if (!fit.length) { 
@@ -2484,7 +2525,9 @@ function gerarRelatorioFinanceiro() {
 
             fit.forEach(res => {
                 let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-                let bdg = ''; let bP = ''; let bV = '';
+                let bdg = ''; 
+                let bP = ''; 
+                let bV = '';
                 let pg = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0; 
                 if (res.statusPagamento === 'pago' && pg === 0) pg = parseFloat(res.valorTotal || 0); 
                 let dif = parseFloat(res.valorTotal || 0) - pg; 
