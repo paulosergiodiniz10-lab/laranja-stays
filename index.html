@@ -2265,11 +2265,37 @@ function gerarRelatorioFinanceiro() {
             const im = imoveisDB.find(i => i.id == imId); 
             if(!im) { mostrarAlerta("Imóvel não encontrado."); return; }
             if(!im.reservas) im.reservas = [];
+
+            // 🔒 BLOQUEIO RÍGIDO DE PACOTES / MÍNIMO DE NOITES (Tanto na Criação quanto na Edição)
+            if (st !== 'bloqueio' && st !== 'proprietario' && st !== 'cancelada') {
+                let inf = calcularPrecoDinamico(im, ci, co, rId);
+                
+                if (inf.bloqueioMinNoites) {
+                    let min = inf.minNoites;
+                    let dIn = new Date(parseInputDateSafe(ci)+'T12:00:00');
+                    let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                    let dataOutDigitada = new Date(parseInputDateSafe(co)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                    
+                    let inSug = inf.dataEntradaSugerida ? new Date(parseInputDateSafe(inf.dataEntradaSugerida)+'T12:00:00') : dIn;
+                    let outSug = inf.dataSaidaSugerida ? new Date(parseInputDateSafe(inf.dataSaidaSugerida)+'T12:00:00') : new Date(inSug.getTime() + (min * 86400000));
+                    
+                    let dataInCorreta = inSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                    let dataOutCorreta = outSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+                    mostrarAlerta(`Atenção: A regra tarifária exige no mínimo <b>${min} noites</b> para este pacote, iniciando em <b>${dataInCorreta}</b>.<br><br>Você selecionou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInCorreta} a ${dataOutCorreta}</b>`);
+                    return;
+                }
+
+                if (!inf.disponivel) {
+                    mostrarAlerta("Não há tarifas cadastradas para todas as diárias deste período ou as datas estão indisponíveis.");
+                    return;
+                }
+            }
             
             let cap = parseInt(im.capacidadeTotal) || 10;
             let totalHospedesCadastrados = 1 + (acompanhantesTemp ? acompanhantesTemp.length : 0); 
             
-            // Se o valor estiver zerado, tenta calcular automaticamente
+            // Se o valor estiver zerado, calcula automaticamente
             if (vT <= 0 && st !== 'bloqueio' && st !== 'proprietario' && st !== 'cancelada') {
                 let inf = calcularPrecoDinamico(im, ci, co, rId);
                 if (inf && inf.precoTotal) {
