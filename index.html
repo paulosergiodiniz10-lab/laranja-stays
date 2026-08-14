@@ -1879,72 +1879,58 @@ function gerarRelatorioFinanceiro() {
             let noites = Math.round((dO-dI)/86400000); 
             let total = 0; 
             let indisp = false; 
-            let quebrouMinNoites = false;
-            let minNoitesExigidas = 1;
-            let sugIn = null;
-            let sugOut = null;
 
-            // 2. Validação se o Check-in tentou cortar um pacote já iniciado antes
+            // 2. A regra de mínimo de noites é determinada pelo Check-in
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
+            let minNoitesExigidas = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
-            if (diaCheckinTarifa && (diaCheckinTarifa.minNoites || 1) > 1) {
-                let minNoitesDiaCheckin = diaCheckinTarifa.minNoites || 1;
+            // Se o dia do checkin tentou entrar cortando um pacote que começou antes no mesmo bloco
+            if (diaCheckinTarifa && minNoitesExigidas > 1) {
                 let inicioSugerido = new Date(dI);
-                
                 for (let retro = 1; retro < 7; retro++) {
                     let dRetro = new Date(dI);
                     dRetro.setDate(dRetro.getDate() - retro);
                     let strRetro = formatarDataLocalISO(dRetro);
                     let tarifaRetro = im.calendario.find(x => x.data === strRetro);
                     
+                    // Se o dia anterior faz parte do mesmo pacote e exige pegar desde ele
                     if (tarifaRetro && tarifaRetro.nome === diaCheckinTarifa.nome && (tarifaRetro.minNoites || 1) > retro) {
                         inicioSugerido = dRetro;
-                        minNoitesDiaCheckin = tarifaRetro.minNoites;
+                        minNoitesExigidas = tarifaRetro.minNoites;
                     } else {
                         break;
                     }
                 }
 
+                // Tentou entrar no meio do pacote (ex: tentou entrar sábado quando o pacote começa sexta)
                 if (inicioSugerido.getTime() !== dI.getTime()) {
                     let dOutSugerido = new Date(inicioSugerido);
-                    dOutSugerido.setDate(inicioSugerido.getDate() + minNoitesDiaCheckin);
+                    dOutSugerido.setDate(inicioSugerido.getDate() + minNoitesExigidas);
                     return { 
                         disponivel: false, 
                         bloqueioMinNoites: true, 
-                        minNoites: minNoitesDiaCheckin,
+                        minNoites: minNoitesExigidas,
                         dataEntradaSugerida: formatarDataLocalISO(inicioSugerido),
                         dataSaidaSugerida: formatarDataLocalISO(dOutSugerido)
                     };
                 }
             }
 
-            // 3. Soma das diárias e Validação de noites mínimas de cada dia dentro da estadia
-            let idxDia = 0;
+            // 3. Soma das diárias e cálculo do valor total
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
                 if(!diaTarifado) { indisp = true; break; } 
-                
-                let minDoDia = diaTarifado.minNoites || 1;
-                let noitesRestantes = noites - idxDia;
-
-                if (noitesRestantes < minDoDia) {
-                    quebrouMinNoites = true;
-                    if (minDoDia > minNoitesExigidas) {
-                        minNoitesExigidas = minDoDia;
-                        let dOutMin = new Date(d);
-                        dOutMin.setDate(d.getDate() + minDoDia);
-                        sugIn = formatarDataLocalISO(dI);
-                        sugOut = formatarDataLocalISO(dOutMin);
-                    }
-                }
-
                 total += diaTarifado.valor; 
-                idxDia++;
             }
             
             if(indisp) return {disponivel:false};
+
+            // 4. Validação: A quantidade de noites atende ao mínimo exigido no check-in?
+            let quebrouMinNoites = (noites < minNoitesExigidas);
+            let dOutMinSugerido = new Date(dI);
+            dOutMinSugerido.setDate(dI.getDate() + minNoitesExigidas);
             
             return { 
                 disponivel: true, 
@@ -1954,8 +1940,8 @@ function gerarRelatorioFinanceiro() {
                 precoTotal: total, 
                 noites: noites, 
                 bloqueioMinNoites: quebrouMinNoites,
-                dataEntradaSugerida: sugIn,
-                dataSaidaSugerida: sugOut
+                dataEntradaSugerida: formatarDataLocalISO(dI),
+                dataSaidaSugerida: formatarDataLocalISO(dOutMinSugerido)
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
