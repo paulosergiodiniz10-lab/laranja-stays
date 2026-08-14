@@ -3532,29 +3532,58 @@ window.gerarPDFReciboDirect = function(e) {
         const descricao = document.getElementById('rec-descricao')?.value.trim() || '';
         const cidade = document.getElementById('rec-cidade')?.value.trim() || "Caldas Novas - GO";
         const dataInput = document.getElementById('rec-data')?.value;
+
+        if (!nome) { alert("Por favor, preencha o campo 'Recebemos de'."); return; }
+        if (!valor || valor <= 0) { alert("Por favor, informe um valor válido."); return; }
+        if (!descricao) { alert("Por favor, preencha o campo 'Referente a'."); return; }
         
-        let dataObj = dataInput ? new Date(dataInput + 'T00:00:00') : new Date();
+        let dataObj = dataInput ? new Date(dataInput + 'T12:00:00') : new Date();
         const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         let dataFormatadaExtenso = `${dataObj.getDate()} de ${meses[dataObj.getMonth()]} de ${dataObj.getFullYear()}`;
 
-        let nomeAssinatura = empresaDB.nome || "Maurílio Porto Temporada";
+        // Identifica se quem está logado é Corretor/Parceiro ou Gestor
+        let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
+        let meuCadastro = (typeof empresaDB !== 'undefined' && empresaDB.equipe && userEmail) 
+            ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === userEmail) 
+            : null;
+
+        let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+        if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
+        if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
+
+        let nEmissor = empresaDB.nome || "Temporada Stays";
+        let docEmissor = empresaDB.cnpj ? `CNPJ/CPF: ${empresaDB.cnpj}` + (empresaDB.creci ? ` | CRECI: ${empresaDB.creci}` : '') : '';
+        let contatoEmissor = `${empresaDB.zap ? `WhatsApp: ${empresaDB.zap}` : ''} ${empresaDB.email ? `| E-mail: ${empresaDB.email}` : ''}`;
+        
+        let endEmpArr = [];
+        if (empresaDB.endereco?.rua) endEmpArr.push(`${empresaDB.endereco.rua}, ${empresaDB.endereco.numero || 'S/N'}`);
+        if (empresaDB.endereco?.bairro) endEmpArr.push(empresaDB.endereco.bairro);
+        if (empresaDB.endereco?.cidade) endEmpArr.push(`${empresaDB.endereco.cidade}/${empresaDB.endereco.uf || ''}`);
+        let endEmissorStr = endEmpArr.join(' - ');
+        
+        let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-height: 75px; max-width: 200px; object-fit: contain;">` : `<div style="font-size:22px; font-weight:bold; color:#0f172a;">${nEmissor}</div>`;
+        let nomeAssinatura = empresaDB.nome || "Temporada Stays";
+
+        // SE FOR CORRETOR: Remove a logo da agência e usa apenas os dados dele
+        if (ehParceiro && meuCadastro) {
+            nEmissor = meuCadastro.nome || "Corretor Parceiro";
+            docEmissor = meuCadastro.creci ? `CRECI: ${meuCadastro.creci}` : 'Corretor / Parceiro Autorizado';
+            contatoEmissor = `${meuCadastro.zap ? `WhatsApp: ${meuCadastro.zap}` : ''} ${meuCadastro.email ? `| E-mail: ${meuCadastro.email}` : ''}`;
+            endEmissorStr = '';
+            lgHtml = `<div style="font-size:20px; font-weight:bold; color:#0f172a;">${nEmissor}</div>`;
+            nomeAssinatura = meuCadastro.nome || "Corretor Parceiro";
+        }
+
+        // Se marcou que quem assina é o Cliente/Outro
         if (tipoAssinaturaRecibo === 'cliente') {
             nomeAssinatura = document.getElementById('rec-nome-ass')?.value.trim() || nome;
         }
-
-        let emp = (typeof empresaDB !== 'undefined') ? empresaDB : {};
-        let nEmp = emp.nome || "Maurilio Porto Temporada";
-        let endEmpStr = "Avenida Orcalino Santos 219 Andar 1 Sala 109 Shopping CTC Centro";
-        if (emp.endereco?.rua) {
-            endEmpStr = `${emp.endereco.rua}, ${emp.endereco.numero || 'S/N'} - ${emp.endereco.bairro || ''} - ${emp.endereco.cidade || 'Caldas Novas'}/${emp.endereco.uf || 'GO'}`;
-        }
-        let contatoEmp = `+55 (64) 98144-0262 | +55 (64) 99211-1189<br>${emp.email || 'vailaemcaldas@gmail.com'}`;
-        let lgHtml = emp.logo ? `<img src="${emp.logo}" style="max-height: 75px; max-width: 200px; object-fit: contain;">` : `<div style="font-size:22px; font-weight:bold; color:#0f172a;">${nEmp}</div>`;
 
         let htmlRecibo = `
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
                 <title>Recibo - ${nome}</title>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 40px; color: #1e293b; background: #fff; max-width: 800px; margin: 0 auto; }
@@ -3579,13 +3608,15 @@ window.gerarPDFReciboDirect = function(e) {
                 <div class="header">
                     <div>${lgHtml}</div>
                     <div class="empresa-info">
-                        <div class="doc-titulo">Financeiro | Recibo</div>
-                        <div>${endEmpStr}</div>
-                        <div>${contatoEmp}</div>
+                        <div class="doc-titulo">Recibo de Pagamento</div>
+                        <div style="font-weight:bold; font-size:13px; margin-bottom:2px;">${nEmissor}</div>
+                        <div>${docEmissor}</div>
+                        <div>${contatoEmissor}</div>
+                        ${endEmissorStr ? `<div>${endEmissorStr}</div>` : ''}
                     </div>
                 </div>
 
-                <div class="bar-titulo">Recibo</div>
+                <div class="bar-titulo">RECIBO</div>
 
                 <div class="campo-row">
                     <div class="campo-label">Recebemos de:</div>
@@ -3620,15 +3651,15 @@ window.gerarPDFReciboDirect = function(e) {
             win.document.write(htmlRecibo);
             win.document.close();
         } else {
-            alert("Permita as janelas Pop-up para gerar o recibo!");
+            alert("Permita as janelas Pop-up no seu navegador para gerar o recibo!");
         }
 
-        window.limparFormularioRecibo();
-
     } catch(err) {
+        console.error("Erro ao gerar recibo:", err);
         alert("Erro ao gerar recibo: " + err.message);
     }
-};            async function adicionarMembroEquipe() {
+};
+            async function adicionarMembroEquipe() {
             const email = val('novo-equipe-email').trim().toLowerCase();
             const role = val('novo-equipe-perfil');
             if(!email) { mostrarAlerta("Digite o e-mail do parceiro."); return; }
