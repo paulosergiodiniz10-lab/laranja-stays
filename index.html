@@ -1880,7 +1880,7 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
-            // 2. Verifica se a entrada tentou entrar no meio de um pacote já iniciado
+            // 2. Identifica se a entrada tentou começar no meio de um pacote de fim de semana (ex: Sábado)
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
             let minNoitesCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
@@ -1889,24 +1889,23 @@ function gerarRelatorioFinanceiro() {
             let quebrouPacote = false;
             let minNoitesBloqueio = minNoitesCheckin;
 
-            // Se entrou em um dia de pacote (ex: Sábado), checa se o dia anterior começou o pacote
-            if (diaCheckinTarifa && minNoitesCheckin > 1) {
-                let dOntem = new Date(dI);
-                dOntem.setDate(dOntem.getDate() - 1);
-                let strOntem = formatarDataLocalISO(dOntem);
-                let tarifaOntem = im.calendario.find(x => x.data === strOntem);
+            // Se entrou no SÁBADO (dia da semana = 6) e o sábado exige 2 noites, o pacote começou na SEXTA anterior
+            if (dI.getDay() === 6 && minNoitesCheckin > 1) {
+                let dSexta = new Date(dI);
+                dSexta.setDate(dI.getDate() - 1);
+                let strSexta = formatarDataLocalISO(dSexta);
+                let tarifaSexta = im.calendario.find(x => x.data === strSexta);
 
-                if (tarifaOntem && (tarifaOntem.minNoites || 1) === minNoitesCheckin && tarifaOntem.nome === diaCheckinTarifa.nome) {
-                    entradaSugerida = dOntem;
+                if (tarifaSexta && (tarifaSexta.minNoites || 1) > 1) {
+                    entradaSugerida = dSexta;
                     quebrouPacote = true;
-                    minNoitesBloqueio = minNoitesCheckin;
+                    minNoitesBloqueio = tarifaSexta.minNoites;
                 }
             }
 
-            // 3. Soma das diárias e checagem de quebra de pacote no meio da estadia (ex: Quinta a Sábado)
-            let dataCursor = new Date(dI);
+            // 3. Soma das diárias e cálculo da saída mínima exigida pelas noites dormidas
             let noitesRestantes = noites;
-            let saidaMinimaObrigatoria = new Date(dO);
+            let saidaMinimaCalculada = new Date(dO);
 
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
@@ -1915,15 +1914,15 @@ function gerarRelatorioFinanceiro() {
                 
                 let minDesteDia = diaTarifado.minNoites || 1;
                 
-                // Se passou por um dia de pacote (ex: Sexta) e não tem noites suficientes a partir dele
+                // Se a estadia passa por um dia que exige pacote (ex: Sexta com 2 noites) e não cumpre até o fim
                 if (minDesteDia > 1 && noitesRestantes < minDesteDia) {
                     quebrouPacote = true;
                     if (minDesteDia > minNoitesBloqueio) minNoitesBloqueio = minDesteDia;
                     
-                    let dSaidaCalculada = new Date(d);
-                    dSaidaCalculada.setDate(d.getDate() + minDesteDia);
-                    if (dSaidaCalculada > saidaMinimaObrigatoria) {
-                        saidaMinimaObrigatoria = dSaidaCalculada;
+                    let dSaidaNecessaria = new Date(d);
+                    dSaidaNecessaria.setDate(d.getDate() + minDesteDia);
+                    if (dSaidaNecessaria > saidaMinimaCalculada) {
+                        saidaMinimaCalculada = dSaidaNecessaria;
                     }
                 }
 
@@ -1933,18 +1932,18 @@ function gerarRelatorioFinanceiro() {
             
             if(indisp) return {disponivel:false};
 
-            // Se entrou na Sexta com menos de 2 noites
+            // Se entrou na Sexta mas colocou menos noites do que o pacote
             if (entradaSugerida.getTime() === dI.getTime() && noites < minNoitesCheckin) {
                 quebrouPacote = true;
                 let dSaidaMin = new Date(dI);
                 dSaidaMin.setDate(dI.getDate() + minNoitesCheckin);
-                if (dSaidaMin > saidaMinimaObrigatoria) saidaMinimaObrigatoria = dSaidaMin;
+                if (dSaidaMin > saidaMinimaCalculada) saidaMinimaCalculada = dSaidaMin;
             }
 
-            // Se for entrada antecipada sugerida (ex: tentou sábado)
+            // Se entrou no Sábado (entrada corrigida para a Sexta)
             if (entradaSugerida.getTime() !== dI.getTime()) {
-                saidaMinimaObrigatoria = new Date(entradaSugerida);
-                saidaMinimaObrigatoria.setDate(entradaSugerida.getDate() + minNoitesBloqueio);
+                saidaMinimaCalculada = new Date(entradaSugerida);
+                saidaMinimaCalculada.setDate(entradaSugerida.getDate() + minNoitesBloqueio);
             }
 
             return { 
@@ -1956,7 +1955,7 @@ function gerarRelatorioFinanceiro() {
                 noites: noites, 
                 bloqueioMinNoites: quebrouPacote,
                 dataEntradaSugerida: formatarDataLocalISO(entradaSugerida),
-                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
+                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaCalculada)
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
