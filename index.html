@@ -2747,12 +2747,14 @@ function buscarDisponibilidadeOrcamento() {
     let conflitoCap = false;
     let sugInStr = null; 
     let sugOutStr = null;
+    let totalNoitesPesquisadas = 0;
     
     imoveisDB.forEach(im => {
         let cap = parseInt(im.capacidadeTotal) || 10;
         if (cap < ps) { conflitoCap = true; return; }
 
         let inf = calcularPrecoDinamico(im, ci, co);
+        if(inf.noites) totalNoitesPesquisadas = inf.noites;
 
         if(inf.bloqueioMinNoites) { 
             if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; 
@@ -2779,9 +2781,13 @@ function buscarDisponibilidadeOrcamento() {
             let dataInCorreta = sugInStr ? sugInStr.split('-').reverse().join('/') : ci.split('-').reverse().join('/');
             let dataOutCorreta = sugOutStr ? sugOutStr.split('-').reverse().join('/') : co.split('-').reverse().join('/');
 
+            let tituloAviso = (totalNoitesPesquisadas >= minNoitesBloqueio) 
+                ? "Período selecionado incompleto para a regra tarifária deste pacote."
+                : `A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.`;
+
             div.innerHTML = `<div class="text-center p-6 text-orange-700 font-medium bg-orange-50 rounded-xl border border-orange-200">
                 <i class="fas fa-exclamation-triangle text-2xl text-orange-500 mb-2 block"></i>
-                <b class="text-orange-800 text-base">Atenção: A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.</b><br>
+                <b class="text-orange-800 text-base">Atenção: ${tituloAviso}</b><br>
                 <span class="text-xs text-slate-600 mt-2 block">Sugestão de acordo com a regra: <b class="text-slate-800">${dataInCorreta} a ${dataOutCorreta}</b></span>
             </div>`;
         } else if (conflitoReserva) {
@@ -2790,8 +2796,7 @@ function buscarDisponibilidadeOrcamento() {
             div.innerHTML = `<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`;
         }
     }
-}
-function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
+}function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
 function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
 function editarOrcamento(id) { const o = orcamentosDB.find(x => x.id === id); if (!o) return; sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
 
