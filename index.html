@@ -2441,8 +2441,12 @@ function excluirReservaConfirmacao() {
         }
 
         function abrirModalPagamento(imId, rId) {
-            setVal('pagamento-imovel-id', imId); 
-            setVal('pagamento-reserva-id', rId); 
+    if (userRole === 'parceiro') {
+        mostrarAlerta("Acesso restrito ao Gestor/Admin para fechamento de caixa e financeiro.");
+        return;
+    }
+    setVal('pagamento-imovel-id', imId);
+    setVal('pagamento-reserva-id', rId); 
             
             const im = imoveisDB.find(i => String(i.id) === String(imId)); 
             const res = im?.reservas?.find(r => String(r.id) === String(rId)); 
@@ -2738,18 +2742,18 @@ function excluirReservaConfirmacao() {
                     addI = `<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
                     bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
                 } else if (res.statusPagamento === 'pendente') {
-                    bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
-                    bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-                    if (pg > 0) bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
-                    addI = pg > 0 ? `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
-                } else if (res.statusPagamento === 'devolucao') {
-                    bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
-                    bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-                    addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
-                } else if (res.statusPagamento === 'cancelada') {
-                    bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
-                    if (pg > res.valorTotal) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-                    addI = pg > res.valorTotal ? `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : '<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
+    bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
+    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+    if (pg > 0) bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
+    addI = pg > 0 ? `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
+} else if (res.statusPagamento === 'devolucao') {
+    bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
+    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+    addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+} else if (res.statusPagamento === 'cancelada') {
+    bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
+    if (!ehParceiro && pg > res.valorTotal) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+    addI = pg > res.valorTotal ? `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : '<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
                 } else if (res.statusPagamento === 'proprietario') {
                     bdg = `<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;
                 } else {
