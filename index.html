@@ -3941,8 +3941,11 @@ window.gerarPDFReciboDirect = function() {
                 h += `<div class="p-4 text-slate-400 font-bold">Sem imóveis.</div>`;
             } else {
                 imoveisDB.forEach(im => {
-                    let nomeDisplayMapa = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
-                    h += `<div class="mapa-row"><div class="mapa-col-fixa"><span class="text-xs font-bold text-blue-600 truncate" title="${nomeDisplayMapa}">${nomeDisplayMapa}</span><span class="text-[9px] text-slate-400 truncate">${im.cidade}</span></div>`;
+                    let aptoBadge = im.numeroApto ? `<span class="text-orange-500 font-bold">(Apto ${im.numeroApto})</span>` : '';
+                    let cidadeTexto = im.cidade || 'Caldas Novas - GO';
+                    let linhaSub = aptoBadge ? `${aptoBadge} <span class="text-slate-400 font-normal text-[10px]">- ${cidadeTexto}</span>` : `<span class="text-slate-400 font-normal text-[10px]">${cidadeTexto}</span>`;
+
+                    h += `<div class="mapa-row"><div class="mapa-col-fixa" style="line-height: 1.25;"><span class="text-xs font-bold text-blue-600 block leading-tight" title="${im.nome}">${im.nome}</span><div class="mt-0.5 leading-tight">${linhaSub}</div></div>`;
 
                     for (let dia=1; dia<=dias; dia++) {
                         let dt = `${mapaAno}-${String(mapaMes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
