@@ -782,6 +782,8 @@ function povoarSelectCategorias() {
         }
 
         function fazerLogin() { 
+            hide('modal-primeiro-acesso');
+            hide('modal-recuperar-senha');
             const e = val('login-email'); 
             const s = val('login-senha'); 
             const errDiv = el('login-erro');
@@ -3834,27 +3836,25 @@ window.gerarPDFReciboDirect = function() {
             erroDiv.classList.add('hidden-view');
 
             try {
-                // 1. Cria a conta no Firebase Auth primeiro para autenticar o corretor
+                // 1. Cria a conta no Firebase
                 const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
                 const user = userCredential.user;
 
-                // 2. Agora autenticado, busca os dados da agência na lista de convites
+                // 2. Busca o convite da agência
                 let agenciaIdDefinida = null;
                 let roleDefinida = 'parceiro';
 
                 try {
                     const pendenteDoc = await db.collection("usuarios_pendentes").doc(email).get();
                     if (pendenteDoc.exists) {
-                        const dadosPendente = pendenteDoc.data();
-                        agenciaIdDefinida = dadosPendente.agenciaId;
-                        roleDefinida = dadosPendente.role || 'parceiro';
+                        const dados = pendenteDoc.data();
+                        agenciaIdDefinida = dados.agenciaId;
+                        roleDefinida = dados.role || 'parceiro';
                         await db.collection("usuarios_pendentes").doc(email).delete().catch(()=>{});
                     }
-                } catch(errPend) {
-                    console.warn("Aviso ao ler convite pendente:", errPend);
-                }
+                } catch(e) {}
 
-                // 3. Salva o perfil do corretor vinculado à agência do gestor
+                // 3. Grava o usuário e fecha o modal imediatamente
                 await db.collection("usuarios").doc(user.uid).set({
                     email: email,
                     role: roleDefinida,
@@ -3864,20 +3864,21 @@ window.gerarPDFReciboDirect = function() {
                 }, { merge: true });
 
                 hide('modal-primeiro-acesso');
-                mostrarNotificacao("Acesso criado com sucesso! Entrando...");
+                hide('tela-login');
+                sv('primeiro-acesso-email', '');
+                sv('primeiro-acesso-senha', '');
+                mostrarNotificacao("Acesso criado com sucesso!");
 
             } catch (error) {
                 console.error("Erro ao criar acesso:", error);
                 btn.disabled = false;
                 btn.innerText = "Criar Acesso e Entrar";
                 if (error.code === 'auth/email-already-in-use') {
-                    erroDiv.innerText = "Este e-mail já possui conta cadastrada. Faça o login normal ou clique em 'Esqueci minha senha'.";
+                    erroDiv.innerText = "Este e-mail já tem cadastro. Faça o login normal.";
                 } else if (error.code === 'auth/weak-password') {
-                    erroDiv.innerText = "A senha é muito fraca. Digite pelo menos 6 caracteres.";
-                } else if (error.code === 'auth/invalid-email') {
-                    erroDiv.innerText = "O e-mail digitado é inválido.";
+                    erroDiv.innerText = "A senha deve ter pelo menos 6 caracteres.";
                 } else {
-                    erroDiv.innerText = "Erro ao criar acesso: " + (error.message || "Tente novamente.");
+                    erroDiv.innerText = "Erro ao criar conta. Verifique os dados e tente novamente.";
                 }
                 erroDiv.classList.remove('hidden-view');
             }
