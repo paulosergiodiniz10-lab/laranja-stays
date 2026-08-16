@@ -2647,13 +2647,19 @@ function excluirReservaConfirmacao() {
                 
                 if (empresaDB && empresaDB.equipe) {
                     empresaDB.equipe.forEach(m => {
-                        if (m.nome && m.nome.trim() !== '') nomesCorretores.add(m.nome.trim());
+                        if (m.nome && m.nome.trim() !== '' && m.role !== 'dono') {
+                            nomesCorretores.add(m.nome.trim());
+                        }
                     });
                 }
                 
                 lista.forEach(r => {
                     let c = (r.criadoPor || '').trim();
-                    if (c && c !== 'Gestor' && c !== 'Painel Gestor' && c.toLowerCase() !== 'gestor') {
+                    let membroDono = (typeof empresaDB !== 'undefined' && empresaDB.equipe) 
+                        ? empresaDB.equipe.find(m => m.nome === c && m.role === 'dono') 
+                        : null;
+
+                    if (c && c !== 'Gestor' && c !== 'Painel Gestor' && c.toLowerCase() !== 'gestor' && !membroDono) {
                         nomesCorretores.add(c);
                     }
                 });
@@ -2703,7 +2709,6 @@ function excluirReservaConfirmacao() {
                 let rCriadorLower = rCriador.toLowerCase();
                 let rCriadorUid = r.criadoPorUid || '';
 
-                // Se o usuário logado for corretor (vê só as suas)
                 if (ehParceiro) {
                     let pertence = false;
                     if (userUid && rCriadorUid === userUid) pertence = true;
@@ -2713,30 +2718,33 @@ function excluirReservaConfirmacao() {
                     if (!pertence) return false;
                 }
 
-                // Filtro de Corretor ou Status (Visão Gestor)
+                let badgeNome = (r.criadoPor || 'Gestor').trim();
+                let ehGestor = (badgeNome === 'Gestor' || badgeNome === 'Painel Gestor' || badgeNome.toLowerCase() === 'gestor');
+                if (!ehGestor && typeof empresaDB !== 'undefined' && empresaDB.equipe) {
+                    let membroEquipe = empresaDB.equipe.find(m => m.nome === badgeNome || m.email === badgeNome);
+                    if (membroEquipe && membroEquipe.role === 'dono') {
+                        ehGestor = true;
+                    }
+                }
+
                 if (!ehParceiro && fCorrValue !== 'todos') {
                     if (fCorrValue === 'pago') {
                         if (r.statusPagamento !== 'pago') return false;
                     } else if (fCorrValue === 'pendente') {
                         if (r.statusPagamento !== 'pendente') return false;
+                    } else if (fCorrValue === 'admin') {
+                        if (!ehGestor) return false;
+                    } else if (fCorrValue === 'corretores') {
+                        if (ehGestor) return false;
                     } else {
-                        let badgeNome = (r.criadoPor || 'Gestor').trim();
-                        let ehGestor = (badgeNome === 'Gestor' || badgeNome === 'Painel Gestor' || badgeNome.toLowerCase() === 'gestor');
-
-                        if (fCorrValue === 'admin') {
-                            if (!ehGestor) return false;
-                        } else if (fCorrValue === 'corretores') {
-                            if (ehGestor) return false;
-                        } else {
-                            let fLower = fCorrValue.toLowerCase().trim();
-                            let badgeLower = badgeNome.toLowerCase();
-                            if (badgeLower !== fLower && !badgeLower.includes(fLower) && !fLower.includes(badgeLower)) {
-                                return false;
-                            }
+                        let fLower = fCorrValue.toLowerCase().trim();
+                        let badgeLower = badgeNome.toLowerCase();
+                        if (badgeLower !== fLower && !badgeLower.includes(fLower) && !fLower.includes(badgeLower)) {
+                            return false;
                         }
                     }
                 }
-                // Filtro de Período
+
                 if (p !== 'todas' && (dI || dF)) {
                     let rCheckinStr = parseInputDateSafe(r.checkin);
                     let rCheckoutStr = parseInputDateSafe(r.checkout);
@@ -2756,7 +2764,6 @@ function excluirReservaConfirmacao() {
 
                 return true;
             });
-
             reservasAtuaisExportacao = fit;
 
             if (!fit.length) { 
