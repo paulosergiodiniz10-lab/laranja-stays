@@ -1973,11 +1973,34 @@ function gerarRelatorioFinanceiro() {
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
             let minExigido = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
-            // Sugestão parte sempre da data digitada para frente
-            let entradaSugerida = new Date(dI);
-            let saidaSugerida = new Date(dI);
-            saidaSugerida.setDate(dI.getDate() + minExigido);
+            // Identifica o início real do pacote contínuo (busca para trás se este dia faz parte de um bloco)
+            let dInicioBloco = new Date(dI);
+            if (minExigido > 1) {
+                while (true) {
+                    let dAnt = new Date(dInicioBloco);
+                    dAnt.setDate(dAnt.getDate() - 1);
+                    let dtAntStr = formatarDataLocalISO(dAnt);
+                    let diaAntTarifa = im.calendario.find(x => x.data === dtAntStr);
+                    if (diaAntTarifa && (diaAntTarifa.minNoites || 1) > 1) {
+                        dInicioBloco = dAnt;
+                        if ((diaAntTarifa.minNoites || 1) > minExigido) {
+                            minExigido = diaAntTarifa.minNoites;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+
             let quebrouPacote = false;
+            let entradaSugerida = new Date(dInicioBloco);
+            let saidaSugerida = new Date(dInicioBloco);
+            saidaSugerida.setDate(dInicioBloco.getDate() + minExigido);
+
+            // Se o usuário selecionou uma entrada que quebra o início do pacote
+            if (formatarDataLocalISO(dInicioBloco) !== formatarDataLocalISO(dI)) {
+                quebrouPacote = true;
+            }
 
             // Soma os valores das diárias e checa disponibilidade
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
@@ -1989,8 +2012,8 @@ function gerarRelatorioFinanceiro() {
                 let minDesteDia = diaTarifado.minNoites || 1;
                 if (minDesteDia > minExigido) {
                     minExigido = minDesteDia;
-                    let dNovaSaida = new Date(dI);
-                    dNovaSaida.setDate(dI.getDate() + minExigido);
+                    let dNovaSaida = new Date(dInicioBloco);
+                    dNovaSaida.setDate(dInicioBloco.getDate() + minExigido);
                     if (dNovaSaida > saidaSugerida) saidaSugerida = dNovaSaida;
                 }
             }
