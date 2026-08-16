@@ -1978,43 +1978,16 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
-            // 1. Identifica a data de check-in
+            // A entrada sugerida é rigorosamente o primeiro dia pesquisado
+            let entradaSugerida = new Date(dI);
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
-            let minCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
+            let minExigido = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
-            let dInicioReal = new Date(dI);
+            let saidaSugerida = new Date(dI);
+            saidaSugerida.setDate(dI.getDate() + minExigido);
 
-            // Trava de segurança: retrocede no máximo (minCheckin - 1) dias para evitar puxar semanas passadas
-            if (minCheckin > 1) {
-                let limiteVolta = minCheckin - 1;
-                for (let step = 1; step <= limiteVolta; step++) {
-                    let dAnt = new Date(dI);
-                    dAnt.setDate(dAnt.getDate() - step);
-                    let dtAntStr = formatarDataLocalISO(dAnt);
-                    let diaAntTarifa = im.calendario.find(x => x.data === dtAntStr);
-                    if (diaAntTarifa && (diaAntTarifa.minNoites || 1) >= minCheckin) {
-                        dInicioReal = dAnt;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            let quebrouPacote = false;
-            let entradaSugerida = new Date(dInicioReal);
-            let diaInicioBloco = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioReal));
-            let minBloco = diaInicioBloco ? (diaInicioBloco.minNoites || 1) : minCheckin;
-            
-            let saidaMinimaObrigatoria = new Date(dInicioReal);
-            saidaMinimaObrigatoria.setDate(dInicioReal.getDate() + minBloco);
-
-            // Se o usuário entrou no meio do pacote (ex: sábado quando começou na sexta)
-            if (formatarDataLocalISO(dInicioReal) !== formatarDataLocalISO(dI)) {
-                quebrouPacote = true;
-            }
-
-            // 2. Percorre as noites da reserva
+            // Soma os valores das diárias e checa disponibilidade
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
@@ -2022,53 +1995,28 @@ function gerarRelatorioFinanceiro() {
                 total += diaTarifado.valor;
                 
                 let minDesteDia = diaTarifado.minNoites || 1;
-                if (minDesteDia > 1) {
-                    let dInicioDesteBloco = new Date(d);
-                    let limiteVolta = minDesteDia - 1;
-                    for (let step = 1; step <= limiteVolta; step++) {
-                        let dAnt = new Date(d);
-                        dAnt.setDate(dAnt.getDate() - step);
-                        let diaAnt = im.calendario.find(x => x.data === formatarDataLocalISO(dAnt));
-                        if (diaAnt && (diaAnt.minNoites || 1) >= minDesteDia) {
-                            dInicioDesteBloco = dAnt;
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    let diaBase = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioDesteBloco));
-                    let minBase = diaBase ? (diaBase.minNoites || 1) : minDesteDia;
-                    
-                    let dFimPacote = new Date(dInicioDesteBloco);
-                    dFimPacote.setDate(dInicioDesteBloco.getDate() + minBase);
-
-                    if (dO < dFimPacote) {
-                        quebrouPacote = true;
-                        if (dFimPacote > saidaMinimaObrigatoria) {
-                            saidaMinimaObrigatoria = dFimPacote;
-                        }
-                    }
+                if (minDesteDia > minExigido) {
+                    minExigido = minDesteDia;
+                    let dNovaSaida = new Date(dI);
+                    dNovaSaida.setDate(dI.getDate() + minExigido);
+                    if (dNovaSaida > saidaSugerida) saidaSugerida = dNovaSaida;
                 }
             }
             
             if(indisp) return {disponivel:false};
 
-            if (dO < saidaMinimaObrigatoria) {
-                quebrouPacote = true;
-            }
-
-            let minNoitesFinal = Math.max(minBloco, Math.round((saidaMinimaObrigatoria - entradaSugerida)/86400000));
+            let quebrouPacote = (noites < minExigido);
 
             return { 
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: minNoitesFinal, 
+                minNoites: minExigido, 
                 precoTotal: total, 
                 noites: noites, 
                 bloqueioMinNoites: quebrouPacote,
                 dataEntradaSugerida: formatarDataLocalISO(entradaSugerida),
-                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
+                dataSaidaSugerida: formatarDataLocalISO(saidaSugerida)
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
