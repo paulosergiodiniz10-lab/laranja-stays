@@ -1969,23 +1969,20 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
+            // 1. Encontra o início real se o check-in começou no meio de um bloco fechado
+            let dInicioReal = new Date(dI);
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
-            let minExigido = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
+            let minCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
-            // Identifica o início real do pacote contínuo (busca para trás se este dia faz parte de um bloco)
-            let dInicioBloco = new Date(dI);
-            if (minExigido > 1) {
+            if (minCheckin > 1) {
                 while (true) {
-                    let dAnt = new Date(dInicioBloco);
+                    let dAnt = new Date(dInicioReal);
                     dAnt.setDate(dAnt.getDate() - 1);
                     let dtAntStr = formatarDataLocalISO(dAnt);
                     let diaAntTarifa = im.calendario.find(x => x.data === dtAntStr);
                     if (diaAntTarifa && (diaAntTarifa.minNoites || 1) > 1) {
-                        dInicioBloco = dAnt;
-                        if ((diaAntTarifa.minNoites || 1) > minExigido) {
-                            minExigido = diaAntTarifa.minNoites;
-                        }
+                        dInicioReal = dAnt;
                     } else {
                         break;
                     }
@@ -1993,16 +1990,19 @@ function gerarRelatorioFinanceiro() {
             }
 
             let quebrouPacote = false;
-            let entradaSugerida = new Date(dInicioBloco);
-            let saidaSugerida = new Date(dInicioBloco);
-            saidaSugerida.setDate(dInicioBloco.getDate() + minExigido);
+            let entradaSugerida = new Date(dInicioReal);
+            let saidaMinimaObrigatoria = new Date(dI);
 
-            // Se o usuário selecionou uma entrada que quebra o início do pacote
-            if (formatarDataLocalISO(dInicioBloco) !== formatarDataLocalISO(dI)) {
+            // Se tentou entrar no meio do pacote (ex: sábado quando começou na sexta)
+            if (formatarDataLocalISO(dInicioReal) !== formatarDataLocalISO(dI)) {
                 quebrouPacote = true;
+                let diaInicioBloco = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioReal));
+                let minBloco = diaInicioBloco ? (diaInicioBloco.minNoites || 1) : minCheckin;
+                saidaMinimaObrigatoria = new Date(dInicioReal);
+                saidaMinimaObrigatoria.setDate(dInicioReal.getDate() + minBloco);
             }
 
-            // Soma os valores das diárias e checa disponibilidade
+            // 2. Percorre as noites da reserva para somar valor e checar pacotes intermediários
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
@@ -2010,17 +2010,38 @@ function gerarRelatorioFinanceiro() {
                 total += diaTarifado.valor;
                 
                 let minDesteDia = diaTarifado.minNoites || 1;
-                if (minDesteDia > minExigido) {
-                    minExigido = minDesteDia;
-                    let dNovaSaida = new Date(dInicioBloco);
-                    dNovaSaida.setDate(dInicioBloco.getDate() + minExigido);
-                    if (dNovaSaida > saidaSugerida) saidaSugerida = dNovaSaida;
+                if (minDesteDia > 1) {
+                    // Procura o início deste bloco
+                    let dInicioDesteBloco = new Date(d);
+                    while (true) {
+                        let dAnt = new Date(dInicioDesteBloco);
+                        dAnt.setDate(dAnt.getDate() - 1);
+                        let diaAnt = im.calendario.find(x => x.data === formatarDataLocalISO(dAnt));
+                        if (diaAnt && (diaAnt.minNoites || 1) > 1) {
+                            dInicioDesteBloco = dAnt;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    let diaBase = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioDesteBloco));
+                    let minBase = diaBase ? (diaBase.minNoites || 1) : minDesteDia;
+                    
+                    let dFimPacote = new Date(dInicioDesteBloco);
+                    dFimPacote.setDate(dInicioDesteBloco.getDate() + minBase);
+
+                    if (dO < dFimPacote) {
+                        quebrouPacote = true;
+                        if (dFimPacote > saidaMinimaObrigatoria) {
+                            saidaMinimaObrigatoria = dFimPacote;
+                        }
+                    }
                 }
             }
             
             if(indisp) return {disponivel:false};
 
-            if (noites < minExigido) {
+            if (dO < saidaMinimaObrigatoria) {
                 quebrouPacote = true;
             }
 
@@ -2028,15 +2049,14 @@ function gerarRelatorioFinanceiro() {
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: minExigido, 
+                minNoites: Math.round((saidaMinimaObrigatoria - entradaSugerida)/86400000), 
                 precoTotal: total, 
                 noites: noites, 
                 bloqueioMinNoites: quebrouPacote,
                 dataEntradaSugerida: formatarDataLocalISO(entradaSugerida),
-                dataSaidaSugerida: formatarDataLocalISO(saidaSugerida)
+                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
             };
-        }
-        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
+        }        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
     const cid = val('busca-cidade').toLowerCase().trim(); 
