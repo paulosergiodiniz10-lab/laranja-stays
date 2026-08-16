@@ -1978,24 +1978,23 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
-            // 1. Identifica a data de check-in e se faz parte de um bloco tarifário
+            // 1. Identifica a data de check-in
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
             let minCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
             let dInicioReal = new Date(dI);
 
-            // Retrocede apenas se o dia anterior imediato existir no calendário e for do mesmo pacote
+            // Trava de segurança: retrocede no máximo (minCheckin - 1) dias para evitar puxar semanas passadas
             if (minCheckin > 1) {
-                let dTeste = new Date(dInicioReal);
-                for (let step = 0; step < 15; step++) {
-                    let dAnt = new Date(dTeste);
-                    dAnt.setDate(dAnt.getDate() - 1);
+                let limiteVolta = minCheckin - 1;
+                for (let step = 1; step <= limiteVolta; step++) {
+                    let dAnt = new Date(dI);
+                    dAnt.setDate(dAnt.getDate() - step);
                     let dtAntStr = formatarDataLocalISO(dAnt);
                     let diaAntTarifa = im.calendario.find(x => x.data === dtAntStr);
-                    if (diaAntTarifa && (diaAntTarifa.minNoites || 1) > 1) {
+                    if (diaAntTarifa && (diaAntTarifa.minNoites || 1) >= minCheckin) {
                         dInicioReal = dAnt;
-                        dTeste = dAnt;
                     } else {
                         break;
                     }
@@ -2010,12 +2009,12 @@ function gerarRelatorioFinanceiro() {
             let saidaMinimaObrigatoria = new Date(dInicioReal);
             saidaMinimaObrigatoria.setDate(dInicioReal.getDate() + minBloco);
 
-            // Bloqueio se o cliente selecionou uma data que entra no meio do pacote
+            // Se o usuário entrou no meio do pacote (ex: sábado quando começou na sexta)
             if (formatarDataLocalISO(dInicioReal) !== formatarDataLocalISO(dI)) {
                 quebrouPacote = true;
             }
 
-            // 2. Percorre as noites selecionadas
+            // 2. Percorre as noites da reserva
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
@@ -2025,11 +2024,12 @@ function gerarRelatorioFinanceiro() {
                 let minDesteDia = diaTarifado.minNoites || 1;
                 if (minDesteDia > 1) {
                     let dInicioDesteBloco = new Date(d);
-                    for (let step = 0; step < 15; step++) {
-                        let dAnt = new Date(dInicioDesteBloco);
-                        dAnt.setDate(dAnt.getDate() - 1);
+                    let limiteVolta = minDesteDia - 1;
+                    for (let step = 1; step <= limiteVolta; step++) {
+                        let dAnt = new Date(d);
+                        dAnt.setDate(dAnt.getDate() - step);
                         let diaAnt = im.calendario.find(x => x.data === formatarDataLocalISO(dAnt));
-                        if (diaAnt && (diaAnt.minNoites || 1) > 1) {
+                        if (diaAnt && (diaAnt.minNoites || 1) >= minDesteDia) {
                             dInicioDesteBloco = dAnt;
                         } else {
                             break;
@@ -2057,11 +2057,13 @@ function gerarRelatorioFinanceiro() {
                 quebrouPacote = true;
             }
 
+            let minNoitesFinal = Math.max(minBloco, Math.round((saidaMinimaObrigatoria - entradaSugerida)/86400000));
+
             return { 
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: Math.round((saidaMinimaObrigatoria - entradaSugerida)/86400000), 
+                minNoites: minNoitesFinal, 
                 precoTotal: total, 
                 noites: noites, 
                 bloqueioMinNoites: quebrouPacote,
