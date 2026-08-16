@@ -1254,21 +1254,30 @@ function montarDropdownHospedesOrcamento() {
     let lgHtml = empresaDB.logo ? `<img src="${empresaDB.logo}" style="max-width: 80px; max-height: 80px; object-fit: contain; border-radius: 4px;">` : `<div style="width:80px; height:80px; background:#f1f5f9;"></div>`;
     let assinaturaHtml = `Att,<br><strong>${nEmp}</strong><br>${empresaDB.zap ? `WhatsApp: ${empresaDB.zap}<br>` : ''}${empresaDB.email ? `E-mail: ${empresaDB.email}` : ''}`;
 
-    // Dados do Corretor (oculta logo e dados da empresa se for reserva dele)
-    let corretor = null;
-    if (res.criadoPor && res.criadoPor !== 'Gestor' && res.criadoPor !== 'Painel Gestor') {
-        corretor = empresaDB.equipe?.find(m => m.nome === res.criadoPor);
-    }
+    // Dados do Corretor (só substitui a empresa se o criador for REALMENTE corretor e NÃO gestor/dono)
+        let corretor = null;
+        let cNome = (res.criadoPor || '').trim();
+        let ehGestorVoucher = (cNome === '' || cNome === 'Gestor' || cNome === 'Painel Gestor' || cNome.toLowerCase() === 'gestor');
 
-    if (corretor) {
-        nEmp = corretor.nome;
-        docEmp = corretor.creci ? `CRECI: ${corretor.creci}` : 'Corretor / Parceiro';
-        endEmpArr = [];
-        cidEmp = corretor.zap ? `Contato: ${corretor.zap}` : '';
-        lgHtml = '';
-        assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email ? `E-mail: ${corretor.email}` : ''}`;
-    }
+        if (!ehGestorVoucher && empresaDB?.equipe) {
+            let membro = empresaDB.equipe.find(m => m.nome === cNome || m.email === cNome);
+            if (membro) {
+                if (membro.role === 'dono') {
+                    ehGestorVoucher = true;
+                } else {
+                    corretor = membro;
+                }
+            }
+        }
 
+        if (corretor && !ehGestorVoucher) {
+            nEmp = corretor.nome;
+            docEmp = corretor.creci ? `CRECI: ${corretor.creci}` : 'Corretor / Parceiro';
+            endEmpArr = [];
+            cidEmp = corretor.zap ? `Contato: ${corretor.zap}` : '';
+            lgHtml = '';
+            assinaturaHtml = `Att,<br><strong>${corretor.nome}</strong><br>${corretor.zap ? `WhatsApp: ${corretor.zap}<br>` : ''}${corretor.email || ''}`;
+        }
     // Tabela de Hóspedes e Documentos
     const calcIdade = (dNasc) => { if(!dNasc) return ''; let hoje = new Date(); let nasc = new Date(parseInputDateSafe(dNasc) + 'T12:00:00'); let idade = hoje.getFullYear() - nasc.getFullYear(); let m = hoje.getMonth() - nasc.getMonth(); if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--; return ` (${idade}a)`; };
     
