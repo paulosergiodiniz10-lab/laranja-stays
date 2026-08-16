@@ -1978,20 +1978,24 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
-            // 1. Encontra o início real se o check-in começou no meio de um bloco fechado
-            let dInicioReal = new Date(dI);
+            // 1. Identifica a data de check-in e se faz parte de um bloco tarifário
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
             let minCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
+            let dInicioReal = new Date(dI);
+
+            // Retrocede apenas se o dia anterior imediato existir no calendário e for do mesmo pacote
             if (minCheckin > 1) {
-                while (true) {
-                    let dAnt = new Date(dInicioReal);
+                let dTeste = new Date(dInicioReal);
+                for (let step = 0; step < 15; step++) {
+                    let dAnt = new Date(dTeste);
                     dAnt.setDate(dAnt.getDate() - 1);
                     let dtAntStr = formatarDataLocalISO(dAnt);
                     let diaAntTarifa = im.calendario.find(x => x.data === dtAntStr);
                     if (diaAntTarifa && (diaAntTarifa.minNoites || 1) > 1) {
                         dInicioReal = dAnt;
+                        dTeste = dAnt;
                     } else {
                         break;
                     }
@@ -2000,18 +2004,18 @@ function gerarRelatorioFinanceiro() {
 
             let quebrouPacote = false;
             let entradaSugerida = new Date(dInicioReal);
-            let saidaMinimaObrigatoria = new Date(dI);
+            let diaInicioBloco = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioReal));
+            let minBloco = diaInicioBloco ? (diaInicioBloco.minNoites || 1) : minCheckin;
+            
+            let saidaMinimaObrigatoria = new Date(dInicioReal);
+            saidaMinimaObrigatoria.setDate(dInicioReal.getDate() + minBloco);
 
-            // Se tentou entrar no meio do pacote (ex: sábado quando começou na sexta)
+            // Bloqueio se o cliente selecionou uma data que entra no meio do pacote
             if (formatarDataLocalISO(dInicioReal) !== formatarDataLocalISO(dI)) {
                 quebrouPacote = true;
-                let diaInicioBloco = im.calendario.find(x => x.data === formatarDataLocalISO(dInicioReal));
-                let minBloco = diaInicioBloco ? (diaInicioBloco.minNoites || 1) : minCheckin;
-                saidaMinimaObrigatoria = new Date(dInicioReal);
-                saidaMinimaObrigatoria.setDate(dInicioReal.getDate() + minBloco);
             }
 
-            // 2. Percorre as noites da reserva para somar valor e checar pacotes intermediários
+            // 2. Percorre as noites selecionadas
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
@@ -2020,9 +2024,8 @@ function gerarRelatorioFinanceiro() {
                 
                 let minDesteDia = diaTarifado.minNoites || 1;
                 if (minDesteDia > 1) {
-                    // Procura o início deste bloco
                     let dInicioDesteBloco = new Date(d);
-                    while (true) {
+                    for (let step = 0; step < 15; step++) {
                         let dAnt = new Date(dInicioDesteBloco);
                         dAnt.setDate(dAnt.getDate() - 1);
                         let diaAnt = im.calendario.find(x => x.data === formatarDataLocalISO(dAnt));
@@ -2065,7 +2068,8 @@ function gerarRelatorioFinanceiro() {
                 dataEntradaSugerida: formatarDataLocalISO(entradaSugerida),
                 dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
             };
-        }        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
+        }
+        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
             const cid = val('busca-cidade').toLowerCase().trim();
@@ -2893,74 +2897,77 @@ function exportarExcelReservas() {
 function mudarAbaOrcamento(a) { if(el('orc-content-novo')) el('orc-content-novo').classList[a==='novo'?'remove':'add']('hidden-view'); if(el('orc-content-hist')) el('orc-content-hist').classList[a==='novo'?'add':'remove']('hidden-view'); if(el('btn-tab-orc-novo')) el('btn-tab-orc-novo').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors"; if(el('btn-tab-orc-hist')) el('btn-tab-orc-hist').className = a==='novo' ? "flex-shrink-0 px-6 py-3.5 text-sm font-medium border-b-[3px] border-transparent text-slate-500 hover:bg-slate-100 whitespace-nowrap outline-none transition-colors" : "flex-shrink-0 px-6 py-3.5 text-sm font-bold border-b-[3px] border-orange-500 text-orange-600 bg-orange-50/50 whitespace-nowrap outline-none transition-colors"; if(a!=='novo') renderListaOrc(); }
 
 function buscarDisponibilidadeOrcamento() {
-    const ciRaw = val('busca-orc-checkin'); 
-    const coRaw = val('busca-orc-checkout'); 
-    const ps = parseInt(val('busca-orc-hospedes')) || 2;
-    
-    if(!ciRaw || !coRaw) { mostrarAlerta("Preencha as datas."); return; }
-    
-    let ci = parseInputDateSafe(ciRaw);
-    let co = parseInputDateSafe(coRaw);
+            const ciRaw = val('busca-orc-checkin'); 
+            const coRaw = val('busca-orc-checkout'); 
+            const ps = parseInt(val('busca-orc-hospedes')) || 2;
+            
+            if(!ciRaw || !coRaw) { mostrarAlerta("Preencha as datas."); return; }
+            
+            let ci = parseInputDateSafe(ciRaw);
+            let co = parseInputDateSafe(coRaw);
 
-    const div = el('lista-imoveis-orcamento'); 
-    if(div) div.innerHTML = '';
-    
-    let count = 0; 
-    let minNoitesBloqueio = null; 
-    let conflitoReserva = false; 
-    let conflitoCap = false;
-    let sugInStr = null; 
-    let sugOutStr = null;
-    let totalNoitesPesquisadas = 0;
-    
-    imoveisDB.forEach(im => {
-        let cap = parseInt(im.capacidadeTotal) || 10;
-        if (cap < ps) { conflitoCap = true; return; }
+            const div = el('lista-imoveis-orcamento'); 
+            if(div) div.innerHTML = '';
+            
+            let count = 0; 
+            let minNoitesBloqueio = null; 
+            let conflitoReserva = false; 
+            let conflitoCap = false;
+            let sugInStr = null; 
+            let sugOutStr = null;
+            let totalNoitesPesquisadas = 0;
+            
+            imoveisDB.forEach(im => {
+                let cap = parseInt(im.capacidadeTotal) || 10;
+                if (cap < ps) { conflitoCap = true; return; }
 
-        let inf = calcularPrecoDinamico(im, ci, co);
-        if(inf.noites) totalNoitesPesquisadas = inf.noites;
+                let inf = calcularPrecoDinamico(im, ci, co);
+                if(inf.noites) totalNoitesPesquisadas = inf.noites;
 
-        if(inf.bloqueioMinNoites) { 
-            if(!minNoitesBloqueio || inf.minNoites > minNoitesBloqueio) minNoitesBloqueio = inf.minNoites; 
-            sugInStr = inf.dataEntradaSugerida;
-            sugOutStr = inf.dataSaidaSugerida;
+                if(inf.bloqueioMinNoites) { 
+                    if(!minNoitesBloqueio || (inf.minNoites || 1) >= minNoitesBloqueio) {
+                        minNoitesBloqueio = inf.minNoites || 1;
+                        sugInStr = inf.dataEntradaSugerida;
+                        sugOutStr = inf.dataSaidaSugerida;
+                    }
+                }
+                
+                if(!inf.disponivel || inf.bloqueioMinNoites) { 
+                    if(verificarChoqueDatas(im.id, ci, co)) conflitoReserva = true; 
+                    return; 
+                }
+                
+                count++;
+                let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
+                let nomeExibicao = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
+                
+                if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${nomeExibicao}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
+            });
+            
+            if(count === 0 && div) {
+                if(minNoitesBloqueio && sugInStr && sugOutStr) {
+                    let dataInCorreta = sugInStr.split('-').reverse().join('/');
+                    let dataOutCorreta = sugOutStr.split('-').reverse().join('/');
+
+                    let tituloAviso = (totalNoitesPesquisadas >= minNoitesBloqueio) 
+                        ? "Período selecionado incompleto para a regra tarifária deste pacote."
+                        : `A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.`;
+
+                    div.innerHTML = `<div class="text-center p-6 text-orange-700 font-medium bg-orange-50 rounded-xl border border-orange-200">
+                        <i class="fas fa-exclamation-triangle text-2xl text-orange-500 mb-2 block"></i>
+                        <b class="text-orange-800 text-base">Atenção: ${tituloAviso}</b><br>
+                        <span class="text-xs text-slate-600 mt-2 block">Sugestão de acordo com a regra: <b class="text-slate-800">${dataInCorreta} a ${dataOutCorreta}</b></span>
+                    </div>`;
+                } else if(conflitoCap) {
+                    div.innerHTML = `<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200"><i class="fas fa-user-times text-3xl mb-2 block opacity-70"></i>Capacidade Excedida.<br>As acomodações cadastradas não comportam ${ps} hóspedes.</div>`;
+                } else if (conflitoReserva) {
+                    div.innerHTML = `<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`;
+                } else {
+                    div.innerHTML = `<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`;
+                }
+            }
         }
-        
-        if(!inf.disponivel || inf.bloqueioMinNoites) { 
-            if(verificarChoqueDatas(im.id, ci, co)) conflitoReserva = true; 
-            return; 
-        }
-        
-        count++;
-        let badgesTarifas = inf.nomesTarifas ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded ml-2">${inf.nomesTarifas}</span>` : '';
-        let nomeExibicao = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
-        
-        if(div) div.insertAdjacentHTML('beforeend', `<div class="bg-white border border-slate-200 p-4 rounded-xl mb-2 flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm hover:border-orange-200 transition-colors"><div><h4 class="font-bold text-[#0071c2]">${nomeExibicao}</h4><p class="text-xs text-slate-500 mt-1 flex items-center">${String(inf.noites).padStart(2,'0')} noites - <span class="text-sm font-normal text-slate-700 ml-1">R$ ${(inf.precoTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span> ${badgesTarifas}</p></div><button onclick="abrirModalGerarOrcamento(${im.id}, ${inf.precoTotal}, '${ci}', '${co}', ${ps})" class="bg-slate-800 text-white hover:bg-slate-900 px-4 py-2 rounded-xl text-sm font-bold shadow-md active:scale-95 transition-all w-full sm:w-auto">Gerar Orçamento</button></div>`);
-    });
-    
-    if(count === 0 && div) {
-        if(conflitoCap) {
-            div.innerHTML = `<div class="text-center p-6 text-orange-600 font-bold bg-orange-50 rounded-xl border border-orange-200"><i class="fas fa-user-times text-3xl mb-2 block opacity-70"></i>Capacidade Excedida.<br>As acomodações cadastradas não comportam ${ps} hóspedes.</div>`;
-        } else if(minNoitesBloqueio) {
-            let dataInCorreta = sugInStr ? sugInStr.split('-').reverse().join('/') : ci.split('-').reverse().join('/');
-            let dataOutCorreta = sugOutStr ? sugOutStr.split('-').reverse().join('/') : co.split('-').reverse().join('/');
-
-            let tituloAviso = (totalNoitesPesquisadas >= minNoitesBloqueio) 
-                ? "Período selecionado incompleto para a regra tarifária deste pacote."
-                : `A regra tarifária exige no mínimo ${minNoitesBloqueio} diárias para este período.`;
-
-            div.innerHTML = `<div class="text-center p-6 text-orange-700 font-medium bg-orange-50 rounded-xl border border-orange-200">
-                <i class="fas fa-exclamation-triangle text-2xl text-orange-500 mb-2 block"></i>
-                <b class="text-orange-800 text-base">Atenção: ${tituloAviso}</b><br>
-                <span class="text-xs text-slate-600 mt-2 block">Sugestão de acordo com a regra: <b class="text-slate-800">${dataInCorreta} a ${dataOutCorreta}</b></span>
-            </div>`;
-        } else if (conflitoReserva) {
-            div.innerHTML = `<div class="text-center p-6 text-red-500 font-bold bg-red-50 rounded-xl border border-red-100"><i class="fas fa-calendar-times text-3xl mb-2 block"></i>Sem disponibilidade.<br>As datas selecionadas já possuem reservas para as acomodações que atendem aos seus critérios.</div>`;
-        } else {
-            div.innerHTML = `<div class="text-center p-6 text-slate-500 font-bold bg-slate-50 rounded-xl border border-slate-200">Nenhum imóvel disponível. Verifique se há tarifas geradas no calendário para este período.</div>`;
-        }
-    }
-}function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
+        function abrirModalGerarOrcamento(id, v, ci, co, ps) { sv('orc-id', ''); sv('orc-cliente-nome', ''); sv('orc-cliente-zap', ''); sv('orc-imovel-id', id); sv('orc-valor', v); sv('orc-checkin', ci); sv('orc-checkout', co); sv('orc-hospedes', ps); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
 function fecharModalGerarOrcamento() { hide('modal-gerar-orcamento'); }
 function editarOrcamento(id) { const o = orcamentosDB.find(x => x.id === id); if (!o) return; sv('orc-id', o.id); sv('orc-imovel-id', o.imovelId); sv('orc-checkin', o.checkin); sv('orc-checkout', o.checkout); sv('orc-hospedes', o.hospedes); sv('orc-valor', o.valorTotal); sv('orc-cliente-nome', o.clienteNome); sv('orc-cliente-zap', o.clienteZap); if(el('orc-display-valor')) el('orc-display-valor').innerText=`R$ ${parseFloat(o.valorTotal || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`; show('modal-gerar-orcamento'); }
 
