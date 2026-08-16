@@ -2068,82 +2068,87 @@ function gerarRelatorioFinanceiro() {
         }        function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
 
         function realizarBusca() {
-    const cid = val('busca-cidade').toLowerCase().trim(); 
-    const pes = parseInt(val('busca-pessoas')) || 1; 
-    
-    // Leitura ultra segura das datas diretamente do Flatpickr
-    let cIn = null; 
-    let cOut = null; 
-    const fpRange = el('busca-datas-range')?._flatpickr;
+            const cid = val('busca-cidade').toLowerCase().trim();
+            const pes = parseInt(val('busca-pessoas')) || 1;
 
-    if (fpRange && fpRange.selectedDates.length === 2) {
-        cIn = formatarDataLocalISO(fpRange.selectedDates[0]);
-        cOut = formatarDataLocalISO(fpRange.selectedDates[1]);
-    } else {
-        const dr = val('busca-datas-range');
-        if (dr.includes(" a ")) { cIn = dr.split(" a ")[0].trim(); cOut = dr.split(" a ")[1].trim(); } 
-        else if (dr.includes(" até ")) { cIn = dr.split(" até ")[0].trim(); cOut = dr.split(" até ")[1].trim(); } 
-        else if (dr.includes(" to ")) { cIn = dr.split(" to ")[0].trim(); cOut = dr.split(" to ")[1].trim(); } 
-        else if (dr.includes(" - ")) { cIn = dr.split(" - ")[0].trim(); cOut = dr.split(" - ")[1].trim(); }
-        if (cIn) cIn = parseInputDateSafe(cIn);
-        if (cOut) cOut = parseInputDateSafe(cOut);
-    }
-    
-    let bk = false; 
-    let minNoitesSugestao = 0; 
-    let conflitoCap = false;
-    let sugIn = null; 
-    let sugOut = null;
-    let totalNoitesPesquisadas = 0;
-    
-    let flt = imoveisDB.filter(im => { 
-        // Filtro inteligente de destino (ignora se tem ou não '- GO', compara a raiz do nome)
-        if (cid) {
-            let cidImovel = (im.cidade || '').toLowerCase().trim();
-            let termoBusca = cid.split('-')[0].trim();
-            let raizImovel = cidImovel.split('-')[0].trim();
-            if (!cidImovel.includes(termoBusca) && !termoBusca.includes(raizImovel)) return false;
+            // Leitura ultra segura das datas diretamente do Flatpickr
+            let cIn = null;
+            let cOut = null;
+            const fpRange = el('busca-datas-range')?.flatpickr;
+
+            if (fpRange && fpRange.selectedDates.length === 2) {
+                cIn = formatarDataLocalISO(fpRange.selectedDates[0]);
+                cOut = formatarDataLocalISO(fpRange.selectedDates[1]);
+            } else {
+                const dr = val('busca-datas-range');
+                if (dr.includes(" a ")) { cIn = dr.split(" a ")[0].trim(); cOut = dr.split(" a ")[1].trim(); }
+                else if (dr.includes(" até ")) { cIn = dr.split(" até ")[0].trim(); cOut = dr.split(" até ")[1].trim(); }
+                else if (dr.includes(" to ")) { cIn = dr.split(" to ")[0].trim(); cOut = dr.split(" to ")[1].trim(); }
+                else if (dr.includes(" - ")) { cIn = dr.split(" - ")[0].trim(); cOut = dr.split(" - ")[1].trim(); }
+                if (cIn) cIn = parseInputDateSafe(cIn);
+                if (cOut) cOut = parseInputDateSafe(cOut);
+            }
+
+            let bk = false;
+            let minNoitesSugestao = 0;
+            let conflitoCap = false;
+            let sugIn = null;
+            let sugOut = null;
+            let totalNoitesPesquisadas = 0;
+
+            let flt = imoveisDB.filter(im => {
+                // Filtro de destino
+                if (cid) {
+                    let cidImovel = (im.cidade || '').toLowerCase().trim();
+                    let termoBusca = cid.split('-')[0].trim();
+                    let raizImovel = cidImovel.split('-')[0].trim();
+                    if (!cidImovel.includes(termoBusca) && !termoBusca.includes(raizImovel)) return false;
+                }
+
+                let cap = parseInt(im.capacidadeTotal);
+                if (isNaN(cap) || cap === 0) cap = 10;
+                if (pes > cap) {
+                    conflitoCap = true;
+                    return false;
+                }
+
+                if (cIn && cOut) {
+                    let i = calcularPrecoDinamico(im, cIn, cOut);
+                    if (i.noites) totalNoitesPesquisadas = i.noites;
+                    if (i.bloqueioMinNoites) {
+                        bk = true;
+                        if ((i.minNoites || 1) >= minNoitesSugestao) {
+                            minNoitesSugestao = i.minNoites || 1;
+                            sugIn = i.dataEntradaSugerida;
+                            sugOut = i.dataSaidaSugerida;
+                        }
+                        return false;
+                    }
+                    if (!i.disponivel) return false;
+                }
+                return true;
+            });
+
+            if (cIn && cOut && !flt.length && bk && sugIn && sugOut) {
+                let dIn = new Date(parseInputDateSafe(cIn) + 'T12:00:00');
+                let dOut = new Date(parseInputDateSafe(cOut) + 'T12:00:00');
+                let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                let dataOutDigitada = dOut.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+                let inSug = new Date(parseInputDateSafe(sugIn) + 'T12:00:00');
+                let outSug = new Date(parseInputDateSafe(sugOut) + 'T12:00:00');
+                let dataInCorreta = inSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                let dataOutCorreta = outSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+                let tituloAviso = (totalNoitesPesquisadas >= minNoitesSugestao)
+                    ? "Período selecionado incompleto para a regra tarifária deste pacote."
+                    : `A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este pacote, iniciando em <b>${dataInCorreta}</b>.`;
+
+                mostrarAlerta(`Atenção: ${tituloAviso}<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInCorreta} a ${dataOutCorreta}</b>`);
+            }
+
+            renderizarVitrine(flt, cIn, cOut, pes, conflitoCap);
         }
-        
-        let cap = parseInt(im.capacidadeTotal); 
-        if (isNaN(cap) || cap === 0) cap = 10; 
-        if (cap < pes) { conflitoCap = true; return false; } 
-        
-        if (cIn && cOut) { 
-            let i = calcularPrecoDinamico(im, cIn, cOut); 
-            if (i.noites) totalNoitesPesquisadas = i.noites;
-            if (i.bloqueioMinNoites) { 
-                bk = true; 
-                if (i.minNoites > minNoitesSugestao) minNoitesSugestao = i.minNoites; 
-                sugIn = i.dataEntradaSugerida;
-                sugOut = i.dataSaidaSugerida;
-                return false; 
-            } 
-            if (!i.disponivel) return false; 
-        } 
-        return true; 
-    });
-    
-    if (cIn && cOut && !flt.length && bk) { 
-        let dIn = new Date(parseInputDateSafe(cIn)+'T12:00:00'); 
-        let dataInFormatada = dIn.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); 
-        let dataOutDigitada = new Date(parseInputDateSafe(cOut)+'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }); 
-        
-        let inSug = sugIn ? new Date(parseInputDateSafe(sugIn)+'T12:00:00') : dIn;
-        let outSug = sugOut ? new Date(parseInputDateSafe(sugOut)+'T12:00:00') : new Date(inSug.getTime() + (minNoitesSugestao * 86400000));
-        
-        let dataInCorreta = inSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-        let dataOutCorreta = outSug.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-
-        let tituloAviso = (totalNoitesPesquisadas >= minNoitesSugestao) 
-            ? "Período selecionado incompleto para a regra tarifária deste pacote."
-            : `A regra tarifária exige no mínimo <b>${minNoitesSugestao} noites</b> para este pacote, iniciando em <b>${dataInCorreta}</b>.`;
-
-        mostrarAlerta(`Atenção: ${tituloAviso}<br><br>Você pesquisou: ${dataInFormatada} a ${dataOutDigitada}<br><br>Sugestão de acordo com a regra:<br><b>${dataInCorreta} a ${dataOutCorreta}</b>`); 
-    }
-    
-    renderizarVitrine(flt, cIn, cOut, pes, conflitoCap);
-}
 
         function renderizarVitrine(lista, ci, co, pes, conflitoCapacidade = false) {
             const div = el('lista-imoveis-vitrine'); if(!div) return; div.innerHTML = '';
