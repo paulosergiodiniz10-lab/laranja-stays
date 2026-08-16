@@ -1978,16 +1978,21 @@ function gerarRelatorioFinanceiro() {
             let total = 0; 
             let indisp = false; 
 
-            // A entrada sugerida é rigorosamente o primeiro dia pesquisado
-            let entradaSugerida = new Date(dI);
+            // Check-in digitado
             let dtCheckinStr = formatarDataLocalISO(dI);
             let diaCheckinTarifa = im.calendario.find(x => x.data === dtCheckinStr);
-            let minExigido = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
+            let minCheckin = diaCheckinTarifa ? (diaCheckinTarifa.minNoites || 1) : 1;
 
-            let saidaSugerida = new Date(dI);
-            saidaSugerida.setDate(dI.getDate() + minExigido);
+            // Saída mínima inicial baseada no check-in
+            let saidaMinimaObrigatoria = new Date(dI);
+            saidaMinimaObrigatoria.setDate(dI.getDate() + minCheckin);
 
-            // Soma os valores das diárias e checa disponibilidade
+            let quebrouPacote = false;
+            let minExigidoGeral = minCheckin;
+
+            // Percorre as noites da estadia somando valores e validando pacotes intermediários
+            let diaAnteriorMin = null;
+
             for(let d = new Date(dI); d < dO; d.setDate(d.getDate()+1)) { 
                 let dtStr = formatarDataLocalISO(d); 
                 let diaTarifado = im.calendario.find(x => x.data === dtStr); 
@@ -1995,28 +2000,43 @@ function gerarRelatorioFinanceiro() {
                 total += diaTarifado.valor;
                 
                 let minDesteDia = diaTarifado.minNoites || 1;
-                if (minDesteDia > minExigido) {
-                    minExigido = minDesteDia;
-                    let dNovaSaida = new Date(dI);
-                    dNovaSaida.setDate(dI.getDate() + minExigido);
-                    if (dNovaSaida > saidaSugerida) saidaSugerida = dNovaSaida;
+
+                // Identifica se o dia é início de pacote ou se é a primeira diária
+                let ehInicioDePacote = (diaAnteriorMin === null) ? true : (minDesteDia > diaAnteriorMin);
+
+                if (ehInicioDePacote && minDesteDia > 1) {
+                    let dFimPacote = new Date(d);
+                    dFimPacote.setDate(d.getDate() + minDesteDia);
+                    if (dFimPacote > saidaMinimaObrigatoria) {
+                        saidaMinimaObrigatoria = dFimPacote;
+                    }
+                    if (minDesteDia > minExigidoGeral) {
+                        minExigidoGeral = minDesteDia;
+                    }
                 }
+
+                diaAnteriorMin = minDesteDia;
             }
             
             if(indisp) return {disponivel:false};
 
-            let quebrouPacote = (noites < minExigido);
+            // Se o check-out for anterior ao término exigido pelo pacote
+            if (dO < saidaMinimaObrigatoria) {
+                quebrouPacote = true;
+            }
+
+            let noitesSugeridas = Math.round((saidaMinimaObrigatoria - dI)/86400000);
 
             return { 
                 disponivel: true, 
                 precoCalculado: Math.round(total/noites), 
                 isAPartirDe: false, 
-                minNoites: minExigido, 
+                minNoites: Math.max(minExigidoGeral, noitesSugeridas), 
                 precoTotal: total, 
                 noites: noites, 
                 bloqueioMinNoites: quebrouPacote,
-                dataEntradaSugerida: formatarDataLocalISO(entradaSugerida),
-                dataSaidaSugerida: formatarDataLocalISO(saidaSugerida)
+                dataEntradaSugerida: formatarDataLocalISO(dI),
+                dataSaidaSugerida: formatarDataLocalISO(saidaMinimaObrigatoria)
             };
         }
         function mudarFoto(event, imovelId, direcao, total) { event.stopPropagation(); const carrossel = el(`carousel-${imovelId}`); if(!carrossel) return; let atual = parseInt(carrossel.getAttribute('data-current')); el(`img-${imovelId}-${atual}`).classList.remove('opacity-100', 'z-10'); el(`img-${imovelId}-${atual}`).classList.add('opacity-0', 'z-0'); atual += direcao; if(atual < 0) atual = total - 1; if(atual >= total) atual = 0; el(`img-${imovelId}-${atual}`).classList.remove('opacity-0', 'z-0'); el(`img-${imovelId}-${atual}`).classList.add('opacity-100', 'z-10'); carrossel.setAttribute('data-current', atual); }
