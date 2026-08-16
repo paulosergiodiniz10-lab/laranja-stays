@@ -2025,22 +2025,28 @@ function gerarRelatorioFinanceiro() {
             const cid = val('busca-cidade').toLowerCase().trim();
             const pes = parseInt(val('busca-pessoas')) || 1;
 
-            // Leitura ultra segura das datas diretamente do Flatpickr
             let cIn = null;
             let cOut = null;
             const fpRange = el('busca-datas-range')?.flatpickr;
 
-            if (fpRange && fpRange.selectedDates.length === 2) {
+            if (fpRange && fpRange.selectedDates && fpRange.selectedDates.length === 2) {
                 cIn = formatarDataLocalISO(fpRange.selectedDates[0]);
                 cOut = formatarDataLocalISO(fpRange.selectedDates[1]);
             } else {
                 const dr = val('busca-datas-range');
-                if (dr.includes(" a ")) { cIn = dr.split(" a ")[0].trim(); cOut = dr.split(" a ")[1].trim(); }
-                else if (dr.includes(" até ")) { cIn = dr.split(" até ")[0].trim(); cOut = dr.split(" até ")[1].trim(); }
-                else if (dr.includes(" to ")) { cIn = dr.split(" to ")[0].trim(); cOut = dr.split(" to ")[1].trim(); }
-                else if (dr.includes(" - ")) { cIn = dr.split(" - ")[0].trim(); cOut = dr.split(" - ")[1].trim(); }
-                if (cIn) cIn = parseInputDateSafe(cIn);
-                if (cOut) cOut = parseInputDateSafe(cOut);
+                if (dr) {
+                    let separador = null;
+                    if (dr.includes(" até ")) separador = " até ";
+                    else if (dr.includes(" a ")) separador = " a ";
+                    else if (dr.includes(" to ")) separador = " to ";
+                    else if (dr.includes(" - ")) separador = " - ";
+
+                    if (separador) {
+                        const partes = dr.split(separador);
+                        cIn = parseInputDateSafe(partes[0].trim());
+                        cOut = parseInputDateSafe(partes[1].trim());
+                    }
+                }
             }
 
             let bk = false;
@@ -2051,7 +2057,6 @@ function gerarRelatorioFinanceiro() {
             let totalNoitesPesquisadas = 0;
 
             let flt = imoveisDB.filter(im => {
-                // Filtro de destino
                 if (cid) {
                     let cidImovel = (im.cidade || '').toLowerCase().trim();
                     let termoBusca = cid.split('-')[0].trim();
