@@ -1219,7 +1219,7 @@ function montarDropdownHospedesOrcamento() {
         function processarLogoEmpresa(e) { const file = e.target.files[0]; if(!file || !file.type.match(/image.*/)) return; mostrarNotificacao("Lendo cores da logo..."); const reader = new FileReader(); reader.onload = function(ev) { const img = new Image(); img.onload = function() { const canvas = document.createElement('canvas'); canvas.width = 400; canvas.height = 400; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, 400, 400); empresaDB.logo = canvas.toDataURL('image/png', 0.9); const cor = extrairCorPredominante(img); if(cor) empresaDB.corTema = cor; carregarEmpresa(); el('input-logo-empresa').value = ""; mostrarNotificacao("Logo e Tema atualizados! Não esqueça de Salvar."); }; img.src = ev.target.result; }; reader.readAsDataURL(file); }
         function removerLogoEmpresa() { empresaDB.logo = ""; empresaDB.corTema = ""; carregarEmpresa(); }
 
-        function gerarVoucher(imovelId, reservaId, isPreVoucher = false) {
+        function gerarVoucher(imovelId, reservaId, modoDoc = 'voucher') {
             const im = imoveisDB.find(i => i.id == imovelId); 
             const res = im?.reservas.find(r => r.id == reservaId); 
             if(!im || !res) return;
@@ -1300,8 +1300,16 @@ function montarDropdownHospedesOrcamento() {
             if (typeof polCanc === 'string') polCanc = polCanc.replace(/\r?\n/g, '<br>');
             if (typeof polInfo === 'string') polInfo = polInfo.replace(/\r?\n/g, '<br>');
 
-            let tituloDocumento = isPreVoucher ? "PRÉ-VOUCHER" : "VOUCHER";
-            let avisoPreVoucher = isPreVoucher ? `<div style="background-color: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>` : '';
+            let tituloDocumento = "VOUCHER OFICIAL";
+            let avisoDocumento = "";
+
+            if (modoDoc === 'confirmacao') {
+                tituloDocumento = "CONFIRMAÇÃO DE RESERVA";
+                avisoDocumento = `<div style="background-color: #f0fdf4; border: 2px solid #bbf7d0; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>✅ PRÉ-RESERVA REALIZADA COM SUCESSO:</strong><br>Sua acomodação está pré-bloqueada em nosso sistema. Para efetivação definitiva e emissão do seu Voucher de entrada, siga as instruções de pagamento enviadas pelo nosso atendimento.</div>`;
+            } else if (modoDoc === 'prevoucher' || modoDoc === true) {
+                tituloDocumento = "PRÉ-VOUCHER";
+                avisoDocumento = `<div style="background-color: #fef2f2; border: 2px solid #fecaca; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; line-height: 1.4;"><strong>⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:</strong><br>Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.</div>`;
+            }
 
             let html = `<!DOCTYPE html>
 <html>
@@ -1335,7 +1343,7 @@ function montarDropdownHospedesOrcamento() {
                 <h1 style="margin: 10px 0 0 0; font-size: 24px; letter-spacing: 1px;">${tituloDocumento}</h1>
             </div>
         </div>
-        ${avisoPreVoucher}
+        ${avisoDocumento}
         <div class="bdr">
             <h3 class="im-font">${nomeImovelExibicao}</h3>
             <p class="tr-color">${endIm}</p>
