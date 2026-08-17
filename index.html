@@ -2903,13 +2903,22 @@ function excluirReservaConfirmacao() {
                 if (res.statusPagamento === 'pago') {
                     bdg = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`;
                     addI = `<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
-                    bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id})" title="Voucher" class="bg-orange-100 hover:bg-orange-200 text-orange-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+                    bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'voucher')" title="Voucher Oficial" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
                 } else if (res.statusPagamento === 'pendente') {
-    bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
-    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-    if (pg > 0) bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, true)" title="Pré-Voucher (Sinal)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
-    addI = pg > 0 ? `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
-} else if (res.statusPagamento === 'devolucao') {
+                    bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
+                    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+                    
+                    if (pg > 0) {
+                        // Pagou parcial -> Pré-Voucher
+                        bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'prevoucher')" title="Pré-Voucher (Sinal Pago)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
+                        addI = `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+                    } else {
+                        // Não pagou nada ainda -> Confirmação de Reserva
+                        bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'confirmacao')" title="Confirmação de Reserva" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-signature"></i></button>`;
+                        addI = `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
+                    }
+                }
+                else if (res.statusPagamento === 'devolucao') {
     bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
     if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
     addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
