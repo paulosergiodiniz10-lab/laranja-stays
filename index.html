@@ -2401,11 +2401,18 @@ function gerarRelatorioFinanceiro() {
             let pg = res.statusPagamento==='pago' ? (res.valorPago!==undefined?res.valorPago:res.valorTotal) : (res.valorPago||0); setVal('reserva-valor-pago', pg);
             if(res.statusPagamento==='pago') show('opt-status-pago'); if(res.statusPagamento==='cancelada') show('opt-status-cancelada');
             setVal('reserva-status', res.statusPagamento); hide('opt-status-devolucao');
-            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada' || res.statusPagamento==='proprietario' || res.statusPagamento==='bloqueio') setVal('reserva-valor', 0);            if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
-            acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva();
+            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada' || res.statusPagamento==='proprietario' || res.statusPagamento==='bloqueio') setVal('reserva-valor', 0);
+            if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
+            acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva(); 
             
-            // TRAVA DE SEGURANÇA: Corretor não pode mudar o status financeiro nem excluir/cancelar a ficha
-            if (userRole === 'parceiro') {
+            // Validação em tempo real se é parceiro ou gestor/admin
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                let meuCad = empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === (auth.currentUser.email || '').toLowerCase().trim());
+                if (meuCad) ehParceiro = (meuCad.role === 'parceiro');
+            }
+
+            if (ehParceiro) {
                 if(el('reserva-status')) el('reserva-status').disabled = true;
                 hide('btn-excluir-reserva');
                 hide('btn-cancelar-reserva');
@@ -2429,12 +2436,14 @@ function gerarRelatorioFinanceiro() {
             setVal('reserva-valor', ''); setVal('reserva-titular-nome', ''); setVal('reserva-titular-cpf', ''); setVal('reserva-titular-nasc', ''); setVal('reserva-titular-zap', ''); setVal('reserva-titular-email', ''); 
             acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva(); 
             
-            // TRAVA DE SEGURANÇA: Nova reserva feita por corretor já nasce bloqueada para edição financeira
-            if (userRole === 'parceiro') {
-                if(el('reserva-status')) el('reserva-status').disabled = true;
-            } else {
-                if(el('reserva-status')) el('reserva-status').disabled = false;
+            // Validação em tempo real se é parceiro ou gestor/admin
+            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+            if (typeof empresaDB !== 'undefined' && empresaDB.equipe && auth.currentUser) {
+                let meuCad = empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === (auth.currentUser.email || '').toLowerCase().trim());
+                if (meuCad) ehParceiro = (meuCad.role === 'parceiro');
             }
+
+            if (el('reserva-status')) el('reserva-status').disabled = ehParceiro;
         }
         function toggleCamposReserva() { const s = val('reserva-status'); const b = el('bloco-acompanhantes'); if(b) { if(s==='bloqueio'){ b.classList.add('opacity-50','pointer-events-none'); } else { b.classList.remove('opacity-50','pointer-events-none'); } } }
         function iniciarCancelamentoTotal() { const pg = parseFloat(val('reserva-valor-pago'))||0; show('opt-status-cancelada'); setVal('reserva-status', 'cancelada'); setVal('reserva-valor', 0); verificarDiferencaPagamento(); hide('btn-cancelar-reserva'); mostrarNotificacao(pg>0?"Reserva Cancelada! Ajuste a multa.":"Ficha Cancelada. Datas livres!"); }
