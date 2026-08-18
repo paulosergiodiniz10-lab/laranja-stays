@@ -2765,8 +2765,10 @@ function excluirReservaConfirmacao() {
                     <option value="todos">Todos</option>
                     <option value="admin">Apenas Gestor</option>
                     <option value="corretores">Apenas Corretores (Geral)</option>
-                    <option value="pago">Status: Pago (Quitado)</option>
-                    <option value="pendente">Status: Pendente (A Receber)</option>
+                   <option value="pago">Status: Pago (Quitado)</option>
+<option value="pendente">Status: Pendente (A Receber)</option>
+<option value="proprietario">Status: Proprietário</option>
+<option value="bloqueio">Status: Manutenção</option>
                 `;
                 
                 let nomesCorretores = new Set();
@@ -2854,22 +2856,26 @@ function excluirReservaConfirmacao() {
                 }
 
                 if (!ehParceiro && fCorrValue !== 'todos') {
-                    if (fCorrValue === 'pago') {
-                        if (r.statusPagamento !== 'pago') return false;
-                    } else if (fCorrValue === 'pendente') {
-                        if (r.statusPagamento !== 'pendente') return false;
-                    } else if (fCorrValue === 'admin') {
-                        if (!ehGestor) return false;
-                    } else if (fCorrValue === 'corretores') {
-                        if (ehGestor) return false;
-                    } else {
-                        let fLower = fCorrValue.toLowerCase().trim();
-                        let badgeLower = badgeNome.toLowerCase();
-                        if (badgeLower !== fLower && !badgeLower.includes(fLower) && !fLower.includes(badgeLower)) {
-                            return false;
-                        }
-                    }
+            if (fCorrValue === 'pago') {
+                if (r.statusPagamento !== 'pago') return false;
+            } else if (fCorrValue === 'pendente') {
+                if (r.statusPagamento !== 'pendente') return false;
+            } else if (fCorrValue === 'proprietario') {
+                if (r.statusPagamento !== 'proprietario') return false;
+            } else if (fCorrValue === 'bloqueio') {
+                if (r.statusPagamento !== 'bloqueio') return false;
+            } else if (fCorrValue === 'admin') {
+                if (!ehGestor) return false;
+            } else if (fCorrValue === 'corretores') {
+                if (ehGestor) return false;
+            } else {
+                let fLower = fCorrValue.toLowerCase().trim();
+                let badgeLower = badgeNome.toLowerCase();
+                if (badgeLower !== fLower && !badgeLower.includes(fLower) && !fLower.includes(badgeLower)) {
+                    return false;
                 }
+            }
+        }
 
                 if (p !== 'todas' && (dI || dF)) {
                     let rCheckinStr = parseInputDateSafe(r.checkin);
