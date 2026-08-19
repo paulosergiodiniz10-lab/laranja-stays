@@ -708,30 +708,35 @@ function povoarSelectCategorias() {
                         // Proteção anti-falha para o Multi-empresas
                         let pData = null;
                         try {
-            const userProfileSnap = await db.collection("usuarios").doc(user.uid).get();
-            if (userProfileSnap.exists) {
-                pData = userProfileSnap.data();
-            } else if (user.email) {
-                // Checa se o e-mail foi convidado pela equipe de outra empresa
-                const pendenteSnap = await db.collection("usuarios_pendentes").doc(user.email.toLowerCase().trim()).get();
+            // Prioridade 1: Verifica se o e-mail do usuário está cadastrado na equipe de uma agência
+            if (user.email) {
+                const emailNormalizado = user.email.toLowerCase().trim();
+                const pendenteSnap = await db.collection("usuarios_pendentes").doc(emailNormalizado).get();
                 if (pendenteSnap.exists) {
                     pData = pendenteSnap.data();
-                    // Salva a amarração permanente deste usuário à empresa principal
+                    // Atualiza a amarração deste UID diretamente para a empresa certa
                     await db.collection("usuarios").doc(user.uid).set({
                         agenciaId: pData.agenciaId,
                         role: pData.role || 'dono',
-                        email: user.email.toLowerCase().trim()
+                        email: emailNormalizado
                     }, { merge: true });
                 }
             }
+
+            // Prioridade 2: Se não encontrou convite pendente, busca o registro do usuário
+            if (!pData) {
+                const userProfileSnap = await db.collection("usuarios").doc(user.uid).get();
+                if (userProfileSnap.exists) {
+                    pData = userProfileSnap.data();
+                }
+            }
         } catch (err) {
-            console.warn("Firebase bloqueou a leitura de usuários. Entrando no modo fallback de dono.");
+            console.warn("Firebase fallback:", err);
         }
 
-        if (pData) {
+        if (pData && pData.agenciaId) {
             currentAgenciaId = pData.agenciaId;
             userRole = pData.role || 'dono';
-            // VERIFICAÇÃO DE PRIMEIRO ACESSO (TROCA DE SENHA OBRIGATÓRIA)
             if (pData.primeiroAcesso === true) {
                 show('modal-trocar-senha-obrigatorio');
             }
