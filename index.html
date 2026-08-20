@@ -2570,33 +2570,13 @@ acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
     if (!dl) return;
     dl.innerHTML = '';
     
-    // Lista de inativos sincronizada no banco
-    const inativos = (typeof empresaDB !== 'undefined' && Array.isArray(empresaDB.parceirosInativos)) 
-        ? empresaDB.parceirosInativos.map(n => n.trim().toLowerCase()) 
-        : [];
+    garantirEstruturaParceiros();
 
-    const mapa = new Map();
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
-        (im.reservas || []).forEach(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
-                const k = r.parceiroNome.trim().toLowerCase();
-                
-                // Se o corretor estiver inativado, ignora e não adiciona na sugestão
-                if (inativos.includes(k)) return;
+    const inativos = (empresaDB.parceirosInativos || []).map(n => n.trim().toLowerCase());
+    const listaFixa = empresaDB.parceirosCadastrados || [];
 
-                const existente = mapa.get(k);
-                if (!existente || (!existente.zap && r.parceiroZap) || (!existente.email && r.parceiroEmail)) {
-                    mapa.set(k, {
-                        nome: r.parceiroNome.trim(),
-                        zap: r.parceiroZap || (existente?.zap || ''),
-                        email: r.parceiroEmail || (existente?.email || '')
-                    });
-                }
-            }
-        });
-    });
-
-    mapa.forEach(p => {
+    listaFixa.forEach(p => {
+        if (!p.nome || inativos.includes(p.nome.trim().toLowerCase())) return;
         const opt = document.createElement('option');
         opt.value = p.nome;
         dl.appendChild(opt);
@@ -2605,22 +2585,55 @@ acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
 
 function autoPreencherDadosParceiro(valDigitado) {
     if (!valDigitado) return;
+    garantirEstruturaParceiros();
     const busca = valDigitado.trim().toLowerCase();
-    let melhorMatch = null;
+    
+    const parceiro = (empresaDB.parceirosCadastrados || []).find(p => p.nome && p.nome.trim().toLowerCase() === busca);
+    if (parceiro) {
+        if (parceiro.zap) setVal('reserva-parceiro-zap', parceiro.zap);
+        if (parceiro.email) setVal('reserva-parceiro-email', parceiro.email);
+    }
+}
 
+function garantirEstruturaParceiros() {
+    if (typeof empresaDB === 'undefined') window.empresaDB = {};
+    if (!Array.isArray(empresaDB.parceirosCadastrados)) empresaDB.parceirosCadastrados = [];
+    if (!Array.isArray(empresaDB.parceirosInativos)) empresaDB.parceirosInativos = [];
+
+    // Migra automaticamente os parceiros antigos das reservas para a lista fixa permanente
     (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
         (im.reservas || []).forEach(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
-                if (!melhorMatch || (!melhorMatch.parceiroZap && r.parceiroZap) || (!melhorMatch.parceiroEmail && r.parceiroEmail)) {
-                    melhorMatch = r;
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
+                const k = r.parceiroNome.trim().toLowerCase();
+                const existe = empresaDB.parceirosCadastrados.find(p => p.nome.trim().toLowerCase() === k);
+                if (!existe) {
+                    empresaDB.parceirosCadastrados.push({
+                        nome: r.parceiroNome.trim(),
+                        zap: r.parceiroZap || '',
+                        email: r.parceiroEmail || ''
+                    });
                 }
             }
         });
     });
+}
 
-    if (melhorMatch) {
-        if (melhorMatch.parceiroZap) setVal('reserva-parceiro-zap', melhorMatch.parceiroZap);
-        if (melhorMatch.parceiroEmail) setVal('reserva-parceiro-email', melhorMatch.parceiroEmail);
+function registrarParceiroPermanente(nome, zap, email) {
+    if (!nome || !nome.trim()) return;
+    garantirEstruturaParceiros();
+    
+    const k = nome.trim().toLowerCase();
+    const idx = empresaDB.parceirosCadastrados.findIndex(p => p.nome.trim().toLowerCase() === k);
+
+    if (idx > -1) {
+        if (zap) empresaDB.parceirosCadastrados[idx].zap = zap;
+        if (email) empresaDB.parceirosCadastrados[idx].email = email;
+    } else {
+        empresaDB.parceirosCadastrados.push({
+            nome: nome.trim(),
+            zap: zap || '',
+            email: email || ''
+        });
     }
 }
 
@@ -2629,29 +2642,17 @@ function abrirModalGerenciarParceiros() {
     const container = el('lista-parceiros-gerenciamento');
     if (!modal || !container) return;
 
-    if (typeof empresaDB !== 'undefined' && !empresaDB.parceirosInativos) {
-        empresaDB.parceirosInativos = [];
-    }
-    const inativos = (empresaDB?.parceirosInativos || []).map(n => n.trim().toLowerCase());
+    garantirEstruturaParceiros();
+    const inativos = (empresaDB.parceirosInativos || []).map(n => n.trim().toLowerCase());
+    const lista = empresaDB.parceirosCadastrados || [];
 
-    const mapa = new Map();
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
-        (im.reservas || []).forEach(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
-                const k = r.parceiroNome.trim().toLowerCase();
-                if (!mapa.has(k)) {
-                    mapa.set(k, r.parceiroNome.trim());
-                }
-            }
-        });
-    });
-
-    if (mapa.size === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum corretor parceiro registrado no histórico.</p>`;
+    if (lista.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum corretor parceiro cadastrado.</p>`;
     } else {
         let html = '';
-        mapa.forEach((nomeOriginal, nomeKey) => {
-            const isInativo = inativos.includes(nomeKey);
+        lista.forEach((p, idx) => {
+            const nomeOriginal = p.nome;
+            const isInativo = inativos.includes(nomeOriginal.trim().toLowerCase());
             html += `
                 <div class="flex items-center justify-between p-2 rounded-lg border ${isInativo ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-indigo-50/50 border-indigo-100'}">
                     <div>
@@ -2659,10 +2660,16 @@ function abrirModalGerenciarParceiros() {
                         <span class="text-[10px] ml-2 px-1.5 py-0.5 rounded ${isInativo ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700 font-bold'}">
                             ${isInativo ? 'Inativo' : 'Ativo'}
                         </span>
+                        ${p.zap ? `<div class="text-[10px] text-slate-400 mt-0.5"><i class="fab fa-whatsapp mr-1"></i>${p.zap}</div>` : ''}
                     </div>
-                    <button type="button" onclick="alternarStatusParceiro('${nomeOriginal.replace(/'/g, "\\'")}')" class="text-xs px-2.5 py-1 rounded-md transition-colors ${isInativo ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'}">
-                        ${isInativo ? 'Reativar' : 'Inativar'}
-                    </button>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="alternarStatusParceiro('${nomeOriginal.replace(/'/g, "\\'")}')" class="text-xs px-2.5 py-1 rounded-md transition-colors ${isInativo ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'}">
+                            ${isInativo ? 'Reativar' : 'Inativar'}
+                        </button>
+                        <button type="button" onclick="excluirParceiroPermanente(${idx})" title="Excluir do cadastro" class="text-xs px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-md border border-red-200">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         });
@@ -2679,11 +2686,7 @@ function fecharModalGerenciarParceiros() {
 }
 
 function alternarStatusParceiro(nome) {
-    if (typeof empresaDB === 'undefined') return;
-    if (!Array.isArray(empresaDB.parceirosInativos)) {
-        empresaDB.parceirosInativos = [];
-    }
-
+    garantirEstruturaParceiros();
     const busca = nome.trim().toLowerCase();
     const idx = empresaDB.parceirosInativos.findIndex(n => n.trim().toLowerCase() === busca);
 
@@ -2695,11 +2698,24 @@ function alternarStatusParceiro(nome) {
         mostrarNotificacao(`Parceiro "${nome}" inativado.`);
     }
 
-    if (typeof salvarBancoNoStorage === 'function') {
-        salvarBancoNoStorage();
-    }
-
+    salvarBancoNoStorage();
     abrirModalGerenciarParceiros();
+}
+
+function excluirParceiroPermanente(index) {
+    garantirEstruturaParceiros();
+    const nome = empresaDB.parceirosCadastrados[index]?.nome || 'Parceiro';
+    
+    confirmarExclusao(() => {
+        const busca = nome.trim().toLowerCase();
+        empresaDB.parceirosCadastrados.splice(index, 1);
+        empresaDB.parceirosInativos = (empresaDB.parceirosInativos || []).filter(n => n.trim().toLowerCase() !== busca);
+        
+        salvarBancoNoStorage();
+        abrirModalGerenciarParceiros();
+        carregarSugestoesParceiros();
+        mostrarNotificacao(`"${nome}" excluído do cadastro com sucesso!`);
+    }, "Excluir Corretor", `Deseja remover ${nome} da lista permanente de corretores?`);
 }
         function toggleCamposParceiroModal() {
     const chk = el('reserva-modo-parceiro');
@@ -2742,16 +2758,21 @@ function alternarStatusParceiro(nome) {
             const st = val('reserva-status'); 
             let vT = parseFloat(val('reserva-valor')) || 0;
             const ehParceiroDoc = el('reserva-modo-parceiro') && el('reserva-modo-parceiro').checked;
-    const nomeParceiroInformado = val('reserva-parceiro-nome').trim();
-    if (ehParceiroDoc && !nomeParceiroInformado) {
-        mostrarAlerta("Por favor, preencha o Nome do Corretor Parceiro.");
-        return;
-    }
-            if(!imId || !ci || !co) { mostrarAlerta("Preencha o imóvel e as datas de entrada e saída."); return; } 
-            if(new Date(ci) >= new Date(co)){ mostrarAlerta("A data de saída deve ser maior que a data de entrada."); return; }
-            if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado! Este período já está ocupado."); return; }
-            
-            const im = imoveisDB.find(i => i.id == imId); 
+        const nomeParceiroInformado = val('reserva-parceiro-nome').trim();
+        if (ehParceiroDoc && !nomeParceiroInformado) {
+            mostrarAlerta("Por favor, preencha o Nome do Corretor Parceiro.");
+            return;
+        }
+
+        if (ehParceiroDoc && nomeParceiroInformado) {
+            registrarParceiroPermanente(nomeParceiroInformado, val('reserva-parceiro-zap').trim(), val('reserva-parceiro-email').trim());
+        }
+
+        if(!imId || !ci || !co) { mostrarAlerta("Preencha o imóvel e as datas de entrada e saída."); return; } 
+        if(new Date(ci) >= new Date(co)){ mostrarAlerta("A data de saída deve ser maior que a data de entrada."); return; }
+        if(verificarChoqueDatas(imId, ci, co, rId)) { mostrarAlerta("Choque de datas detectado! Este período já está ocupado."); return; }
+        
+        const im = imoveisDB.find(i => i.id == imId); 
             if(!im) { mostrarAlerta("Imóvel não encontrado."); return; }
             if(!im.reservas) im.reservas = [];
 
