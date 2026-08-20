@@ -4384,23 +4384,6 @@ window.gerarPDFReciboDirect = function() {
         }
 let acaoConfirmadaDeletar = null;
 
-function confirmarExclusao(funcaoConfirmacao, titulo = "Excluir Registro", mensagem = "Deseja realmente excluir este item? Esta ação é irreversível!") {
-    acaoConfirmadaDeletar = funcaoConfirmacao;
-    
-    const modal = el('modal-confirmar-deletar');
-    if(!modal) return;
-    
-    el('modal-deletar-titulo').innerText = titulo;
-    el('modal-deletar-mensagem').innerHTML = mensagem + '<br><strong class="text-red-500 font-semibold">Esta ação não poderá ser revertida!</strong>';
-    
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        modal.querySelector('.id-modal-box').classList.remove('scale-95');
-        modal.querySelector('.id-modal-box').classList.add('scale-100');
-    }, 10);
-}
-
 function fecharModalDeletar() {
     const modal = el('modal-confirmar-deletar');
     if(!modal) return;
