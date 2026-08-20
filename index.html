@@ -2874,8 +2874,9 @@ function excluirReservaConfirmacao() {
 
                 selectCorr.innerHTML = `
                     <option value="todos">Todos</option>
-                    <option value="admin">Apenas Gestor</option>
-                    <option value="corretores">Apenas Corretores (Geral)</option>
+            <option value="admin">Apenas Gestor</option>
+            <option value="parceiros">Apenas Parceiros / Freelancers</option>
+            <option value="corretores">Apenas Corretores (Geral)</option>
                    <option value="pago">Status: Pago (Quitado)</option>
 <option value="pendente">Status: Pendente (A Receber)</option>
 <option value="proprietario">Status: Proprietário</option>
@@ -2982,6 +2983,8 @@ function excluirReservaConfirmacao() {
                 if (r.statusPagamento !== 'bloqueio') return false;
             } else if (fCorrValue === 'admin') {
                 if (!ehGestor) return false;
+            } else if (fCorrValue === 'parceiros') {
+                if (!r.modoParceiro) return false;
             } else if (fCorrValue === 'corretores') {
                 if (ehGestor) return false;
             } else {
