@@ -970,37 +970,45 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
             hide('btn-cancelar-edicao-equipe');
         }
         function removerMembroEquipe(index) {
-    const membro = empresaDB.equipe[index];
+    const membro = empresaDB.equipe && empresaDB.equipe[index];
     if (!membro) return;
 
     confirmarExclusao(async () => {
         const emailRemovido = (membro.email || '').toLowerCase().trim();
         
+        // 1. Remove do array local e atualiza a interface
         empresaDB.equipe.splice(index, 1);
         renderizarEquipe();
         mostrarNotificacao("Acesso removido com sucesso!");
 
+        // 2. Grava a lista atualizada diretamente na nuvem
         try {
             let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
             
             if (idEmp && typeof db !== 'undefined') {
-                await db.collection("sistema_saas").doc(idEmp).set({
-                    empresaDB: empresaDB
-                }, { merge: true });
+                await db.collection("sistema_saas").doc(idEmp).update({
+                    "empresaDB.equipe": empresaDB.equipe
+                }).catch(async () => {
+                    await db.collection("sistema_saas").doc(idEmp).set({ empresaDB: empresaDB }, { merge: true });
+                });
             }
 
             if (emailRemovido && typeof db !== 'undefined') {
+                // Deleta pendência
                 await db.collection("usuarios_pendentes").doc(emailRemovido).delete().catch(()=>{});
                 
-                const snapshot = await db.collection("usuarios").where("email", "==", emailRemovido).get().catch(()=>null);
-                if (snapshot && !snapshot.empty) {
-                    snapshot.forEach(docSnap => docSnap.ref.delete().catch(()=>{}));
+                // Deleta registros de acesso em usuarios
+                const qSnap = await db.collection("usuarios").where("email", "==", emailRemovido).get().catch(()=>null);
+                if (qSnap && !qSnap.empty) {
+                    const promises = [];
+                    qSnap.forEach(docSnap => promises.push(docSnap.ref.delete()));
+                    await Promise.all(promises);
                 }
             }
         } catch (e) {
             console.error("Erro ao remover parceiro no banco:", e);
         }
-    }, "Remover Parceiro", "Deseja realmente remover o acesso de " + (membro.nome || "este parceiro") + "?");
+    }, "Remover Parceiro", `Deseja realmente remover o acesso de ${membro.nome || 'este parceiro'}?`);
 }
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
         function enviarEmailRecuperacao() { const e = val('recuperar-email'); const msg = el('recuperar-mensagem'); if(!e) { msg.innerText = "Por favor, digite seu e-mail."; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); return; } auth.sendPasswordResetEmail(e).then(() => { msg.innerText = "Link de recuperação enviado para " + e + ". Verifique sua caixa de entrada."; msg.className = "text-sm mt-4 font-bold text-green-600"; msg.classList.remove('hidden-view'); setTimeout(() => fecharRecuperarSenha(), 4000); }).catch((error) => { let txtErro = "Erro ao enviar e-mail."; if(error.code === 'auth/user-not-found') txtErro = "E-mail não encontrado no sistema."; if(error.code === 'auth/invalid-email') txtErro = "E-mail inválido."; msg.innerText = txtErro; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); }); }
