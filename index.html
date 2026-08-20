@@ -116,7 +116,8 @@
     <div id="box-dados-corretor-parceiro" class="hidden-view mt-3 p-3 bg-white rounded-xl border border-indigo-100 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
             <label class="block text-[11px] font-bold text-indigo-700 mb-1">Nome do Corretor *</label>
-            <input type="text" id="reserva-parceiro-nome" placeholder="Ex: Pedro Silva" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <input type="text" id="reserva-parceiro-nome" list="datalist-parceiros-salvos" oninput="autoPreencherDadosParceiro(this.value)" placeholder="Ex: Pedro Silva (digite para buscar)" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-400 outline-none">
+<datalist id="datalist-parceiros-salvos"></datalist>
         </div>
         <div>
             <label class="block text-[11px] font-medium text-slate-600 mb-1">WhatsApp (Opcional)</label>
@@ -2534,19 +2535,155 @@ acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
 
             if (el('reserva-status')) el('reserva-status').disabled = ehParceiro;
         }
+function carregarSugestoesParceiros() {
+    const dl = el('datalist-parceiros-salvos');
+    if (!dl) return;
+    dl.innerHTML = '';
+    const mapa = new Map();
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
+        (im.reservas || []).forEach(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
+                const k = r.parceiroNome.trim();
+                if (!mapa.has(k.toLowerCase())) {
+                    mapa.set(k.toLowerCase(), {
+                        nome: k,
+                        zap: r.parceiroZap || '',
+                        email: r.parceiroEmail || ''
+                    });
+                }
+            }
+        });
+    });
+    mapa.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.nome;
+        dl.appendChild(opt);
+    });
+}
+
+function autoPreencherDadosParceiro(valDigitado) {
+    if (!valDigitado) return;
+    const busca = valDigitado.trim().toLowerCase();
+    let encontrado = null;
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
+        return (im.reservas || []).some(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
+                encontrado = r;
+                return true;
+            }
+            return false;
+        });
+    });
+    if (encontrado) {
+        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
+        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
+    }
+}
+
+function carregarSugestoesParceiros() {
+    const dl = el('datalist-parceiros-salvos');
+    if (!dl) return;
+    dl.innerHTML = '';
+    const mapa = new Map();
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
+        (im.reservas || []).forEach(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
+                const k = r.parceiroNome.trim();
+                if (!mapa.has(k.toLowerCase())) {
+                    mapa.set(k.toLowerCase(), {
+                        nome: k,
+                        zap: r.parceiroZap || '',
+                        email: r.parceiroEmail || ''
+                    });
+                }
+            }
+        });
+    });
+    mapa.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.nome;
+        dl.appendChild(opt);
+    });
+}
+
+function autoPreencherDadosParceiro(valDigitado) {
+    if (!valDigitado) return;
+    const busca = valDigitado.trim().toLowerCase();
+    let encontrado = null;
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
+        return (im.reservas || []).some(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
+                encontrado = r;
+                return true;
+            }
+            return false;
+        });
+    });
+    if (encontrado) {
+        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
+        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
+    }
+}
+
+function carregarSugestoesParceiros() {
+    const dl = el('datalist-parceiros-salvos');
+    if (!dl) return;
+    dl.innerHTML = '';
+    const mapa = new Map();
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
+        (im.reservas || []).forEach(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
+                const k = r.parceiroNome.trim();
+                if (!mapa.has(k.toLowerCase())) {
+                    mapa.set(k.toLowerCase(), {
+                        nome: k,
+                        zap: r.parceiroZap || '',
+                        email: r.parceiroEmail || ''
+                    });
+                }
+            }
+        });
+    });
+    mapa.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.nome;
+        dl.appendChild(opt);
+    });
+}
+
+function autoPreencherDadosParceiro(valDigitado) {
+    if (!valDigitado) return;
+    const busca = valDigitado.trim().toLowerCase();
+    let encontrado = null;
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
+        return (im.reservas || []).some(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
+                encontrado = r;
+                return true;
+            }
+            return false;
+        });
+    });
+    if (encontrado) {
+        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
+        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
+    }
+}
+
 function toggleCamposParceiroModal() {
     const chk = el('reserva-modo-parceiro');
     const box = el('box-dados-corretor-parceiro');
     if (!box) return;
     if (chk && chk.checked) {
         box.classList.remove('hidden-view');
+        carregarSugestoesParceiros();
     } else {
         box.classList.add('hidden-view');
         setVal('reserva-parceiro-nome', '');
         setVal('reserva-parceiro-zap', '');
         setVal('reserva-parceiro-email', '');
     }
-}
+}       
         function toggleCamposReserva() { const s = val('reserva-status'); const b = el('bloco-acompanhantes'); if(b) { if(s==='bloqueio'){ b.classList.add('opacity-50','pointer-events-none'); } else { b.classList.remove('opacity-50','pointer-events-none'); } } }
         function iniciarCancelamentoTotal() { const pg = parseFloat(val('reserva-valor-pago'))||0; show('opt-status-cancelada'); setVal('reserva-status', 'cancelada'); setVal('reserva-valor', 0); verificarDiferencaPagamento(); hide('btn-cancelar-reserva'); mostrarNotificacao(pg>0?"Reserva Cancelada! Ajuste a multa.":"Ficha Cancelada. Datas livres!"); }
         
