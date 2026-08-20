@@ -1353,9 +1353,9 @@ function montarDropdownHospedesOrcamento() {
 
     // SE A RESERVA FOI MARCADA COMO MODO PARCEIRO / FREELANCER (DOCUMENTO TOTALMENTE NEUTRO)
     if (res.modoParceiro) {
-        nEmp = res.parceiroNome ? `${res.parceiroNome} (Parceiro)` : "";
+        nEmp = "";
         docEmp = "";
-        cidEmp = res.parceiroZap ? `Contato: ${res.parceiroZap}` : "";
+        cidEmp = "";
         lgHtml = "";
         assinaturaHtml = `Att,<br><strong>${res.parceiroNome || 'Central de Reservas'}</strong><br>${res.parceiroZap ? `WhatsApp: ${res.parceiroZap}<br>` : ''}${res.parceiroEmail ? `E-mail: ${res.parceiroEmail}` : ''}`;
     }
