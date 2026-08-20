@@ -1460,7 +1460,12 @@ function montarDropdownHospedesOrcamento() {
         </div>
         ${avisoDocumento}
         <div class="bdr">
-            <h3 class="im-font">${nomeImovelExibicao}</h3>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <h3 class="im-font" style="margin: 0;">${nomeImovelExibicao}</h3>
+                <span style="background-color: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap;">
+                    Capacidade: Até ${im.capacidadeTotal || 1} pessoas
+                </span>
+            </div>
             <p class="tr-color">${endIm}</p>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr>
