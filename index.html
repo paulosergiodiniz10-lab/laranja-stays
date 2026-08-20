@@ -2364,9 +2364,7 @@ function gerarRelatorioFinanceiro() {
     if(!cont) return; 
     const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
     
-    const mesesAbrev = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
     const diasSemanaAbrev = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const nomeMesAtualAbrev = mesesAbrev[mapaMes - 1];
 
     let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa font-bold text-slate-700 text-xs">Acomodação</div>`; 
     for (let i = 1; i <= dias; i++) {
@@ -2378,14 +2376,12 @@ function gerarRelatorioFinanceiro() {
 
         h += `
             <div class="mapa-celula ${ehFimDeSemana}">
-                <span class="text-[9px] font-semibold opacity-70 uppercase tracking-tighter">${nomeMesAtualAbrev}</span>
                 <span class="text-xs font-bold text-slate-800">${diaFormatado}</span>
-                <span class="text-[9px] font-semibold text-slate-500">${diaSemanaTexto}</span>
+                <span class="text-[9px] font-semibold text-slate-500 uppercase">${diaSemanaTexto}</span>
             </div>
         `;
     } 
     h += `</div>`;
-
     // Identificação Múltipla do Usuário Logado
     let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
     let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
