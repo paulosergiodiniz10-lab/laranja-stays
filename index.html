@@ -970,32 +970,28 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
             hide('btn-cancelar-edicao-equipe');
         }
         function removerMembroEquipe(index) {
+    const membro = empresaDB.equipe[index];
+    if (!membro) return;
+
     confirmarExclusao(async () => {
-        const membro = empresaDB.equipe[index];
-        if (!membro) return;
-        
         const emailRemovido = (membro.email || '').toLowerCase().trim();
-        empresaDB.equipe.splice(index, 1);
         
-        // Atualiza a visualização na hora
+        empresaDB.equipe.splice(index, 1);
         renderizarEquipe();
-        mostrarNotificacao("Acesso removido!");
+        mostrarNotificacao("Acesso removido com sucesso!");
 
         try {
             let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
             
             if (idEmp && typeof db !== 'undefined') {
-                // Atualiza o documento principal no banco
                 await db.collection("sistema_saas").doc(idEmp).set({
                     empresaDB: empresaDB
                 }, { merge: true });
             }
 
             if (emailRemovido && typeof db !== 'undefined') {
-                // Remove pendência
                 await db.collection("usuarios_pendentes").doc(emailRemovido).delete().catch(()=>{});
                 
-                // Remove vínculo de login antigo
                 const snapshot = await db.collection("usuarios").where("email", "==", emailRemovido).get().catch(()=>null);
                 if (snapshot && !snapshot.empty) {
                     snapshot.forEach(docSnap => docSnap.ref.delete().catch(()=>{}));
@@ -1004,7 +1000,7 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
         } catch (e) {
             console.error("Erro ao remover parceiro no banco:", e);
         }
-    }, "Remover Parceiro", "Deseja realmente remover o acesso deste parceiro?");
+    }, "Remover Parceiro", "Deseja realmente remover o acesso de " + (membro.nome || "este parceiro") + "?");
 }
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
         function enviarEmailRecuperacao() { const e = val('recuperar-email'); const msg = el('recuperar-mensagem'); if(!e) { msg.innerText = "Por favor, digite seu e-mail."; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); return; } auth.sendPasswordResetEmail(e).then(() => { msg.innerText = "Link de recuperação enviado para " + e + ". Verifique sua caixa de entrada."; msg.className = "text-sm mt-4 font-bold text-green-600"; msg.classList.remove('hidden-view'); setTimeout(() => fecharRecuperarSenha(), 4000); }).catch((error) => { let txtErro = "Erro ao enviar e-mail."; if(error.code === 'auth/user-not-found') txtErro = "E-mail não encontrado no sistema."; if(error.code === 'auth/invalid-email') txtErro = "E-mail inválido."; msg.innerText = txtErro; msg.className = "text-sm mt-4 font-bold text-red-500"; msg.classList.remove('hidden-view'); }); }
