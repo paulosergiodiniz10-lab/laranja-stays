@@ -4076,17 +4076,7 @@ window.gerarPDFReciboDirect = function() {
             
             sv('novo-equipe-email', ''); renderizarEquipe(); mostrarNotificacao("Parceiro adicionado com sucesso!");
         }
-
-        async function removerMembroEquipe(index) {
-            const emailRemovido = empresaDB.equipe[index].email;
-            empresaDB.equipe.splice(index, 1);
-            salvarBancoNoStorage(); renderizarEquipe(); mostrarNotificacao("Acesso removido!");
-            try {
-                await db.collection("usuarios_pendentes").doc(emailRemovido).delete();
-                const q = await db.collection("usuarios").where("email", "==", emailRemovido).get();
-                if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
-            } catch(e) {}
-        }            
+          
         async function criarSenhaPrimeiroAcesso() {
             const email = val('primeiro-acesso-email').trim().toLowerCase();
             const senha = val('primeiro-acesso-senha').trim();
@@ -4412,62 +4402,41 @@ function confirmarExclusao(funcaoConfirmacao, titulo = "Excluir Registro", mensa
         };
     }
 
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        const box = modal.querySelector('.id-modal-box') || modal.firstElementChild;
-        if (box) {
-            box.classList.remove('scale-95');
-            box.classList.add('scale-100');
-        }
-    }, 10);
+    modal.classList.remove('hidden-view');
 }
 
 function fecharModalDeletar() {
     const modal = el('modal-confirmar-deletar');
     if (!modal) return;
-
-    modal.classList.add('opacity-0');
-    const box = modal.querySelector('.id-modal-box') || modal.firstElementChild;
-    if (box) {
-        box.classList.remove('scale-100');
-        box.classList.add('scale-95');
-    }
-
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        acaoConfirmadaDeletar = null;
-    }, 300);
+    modal.classList.add('hidden-view');
+    acaoConfirmadaDeletar = null;
 }
 </script>   
-    <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
-<div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full mx-4 p-6 transform scale-95 transition-transform duration-300 id-modal-box">
-        <div class="flex flex-col items-center text-center">
-            <!-- Ícone de Alerta Animado -->
-            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 ring-8 ring-red-50/50">
-                <i class="fas fa-trash-alt text-2xl"></i>
-            </div>
-            
-            <h3 class="text-lg font-bold text-slate-800" id="modal-deletar-titulo">Tem certeza?</h3>
-            <p class="text-xs text-slate-500 mt-2 leading-relaxed" id="modal-deletar-mensagem">
-                Deseja realmente excluir este item? <br>
-                <strong class="text-red-500 font-semibold">Esta ação não poderá ser revertida!</strong>
-            </p>
-            
-            <!-- Botões de Ação -->
-            <div class="flex items-center gap-3 w-full mt-6">
-                <button onclick="fecharModalDeletar()" class="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors">
-                    Cancelar
-                </button>
-                <button id="btn-confirmar-deletar-acao" class="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95">
-                    Sim, Excluir
-                </button>
-            </div>
+
+<!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
+<div id="modal-confirmar-deletar" class="hidden-view fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 fade-in">
+    <div class="bg-white rounded-2xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden text-center p-6">
+        <div class="mx-auto w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 ring-8 ring-red-50/50">
+            <i class="fas fa-trash-alt text-2xl"></i>
+        </div>
+        
+        <h3 class="text-lg font-bold text-slate-800" id="modal-deletar-titulo">Tem certeza?</h3>
+        <p class="text-xs text-slate-500 mt-2 leading-relaxed" id="modal-deletar-mensagem">
+            Deseja realmente excluir este item? <br>
+            <strong class="text-red-500 font-semibold">Esta ação não poderá ser revertida!</strong>
+        </p>
+        
+        <div class="flex items-center gap-3 w-full mt-6">
+            <button type="button" onclick="fecharModalDeletar()" class="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirmar-deletar-acao" class="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-95">
+                Sim, Excluir
+            </button>
         </div>
     </div>
-</div>
-    <!-- MODAL ELEGANTE DE EDIÇÃO DE TARIFA INDIVIDUAL -->
+</div> 
+                    <!-- MODAL ELEGANTE DE EDIÇÃO DE TARIFA INDIVIDUAL -->
     <div id="modal-editar-tarifa-dia" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full mx-4 p-6 transform scale-95 transition-transform duration-300 id-modal-box">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
