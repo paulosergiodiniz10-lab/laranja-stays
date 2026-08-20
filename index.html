@@ -4388,31 +4388,57 @@ window.gerarPDFReciboDirect = function() {
         }
 let acaoConfirmadaDeletar = null;
 
+function confirmarExclusao(funcaoConfirmacao, titulo = "Excluir Registro", mensagem = "Deseja realmente excluir este item? Esta ação é irreversível!") {
+    acaoConfirmadaDeletar = funcaoConfirmacao;
+
+    const modal = el('modal-confirmar-deletar');
+    if (!modal) {
+        if (typeof funcaoConfirmacao === 'function') funcaoConfirmacao();
+        return;
+    }
+
+    if (el('modal-deletar-titulo')) el('modal-deletar-titulo').innerText = titulo;
+    if (el('modal-deletar-mensagem')) el('modal-deletar-mensagem').innerHTML = mensagem + '<br><strong class="text-red-500 font-semibold">Esta ação não poderá ser revertida!</strong>';
+
+    const btnConfirmar = el('btn-confirmar-deletar-acao');
+    if (btnConfirmar) {
+        btnConfirmar.onclick = async () => {
+            const acao = acaoConfirmadaDeletar;
+            acaoConfirmadaDeletar = null;
+            fecharModalDeletar();
+            if (typeof acao === 'function') {
+                await acao();
+            }
+        };
+    }
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        const box = modal.querySelector('.id-modal-box') || modal.firstElementChild;
+        if (box) {
+            box.classList.remove('scale-95');
+            box.classList.add('scale-100');
+        }
+    }, 10);
+}
+
 function fecharModalDeletar() {
     const modal = el('modal-confirmar-deletar');
-    if(!modal) return;
-    
+    if (!modal) return;
+
     modal.classList.add('opacity-0');
-    modal.querySelector('.id-modal-box').classList.remove('scale-100');
-    modal.querySelector('.id-modal-box').classList.add('scale-95');
-    
+    const box = modal.querySelector('.id-modal-box') || modal.firstElementChild;
+    if (box) {
+        box.classList.remove('scale-100');
+        box.classList.add('scale-95');
+    }
+
     setTimeout(() => {
         modal.classList.add('hidden');
         acaoConfirmadaDeletar = null;
     }, 300);
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = el('btn-confirmar-deletar-acao');
-    if(btn) {
-        btn.onclick = () => {
-            if(typeof acaoConfirmadaDeletar === 'function') {
-                acaoConfirmadaDeletar();
-            }
-            fecharModalDeletar();
-        };
-    }
-});
 </script>   
     <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[99999] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
