@@ -2990,157 +2990,158 @@ function excluirReservaConfirmacao() {
         }
 
         function renderizarListaReservasAdmin() {
-            const tb = el('lista-reservas-tbody'); 
-            if (!tb) return; 
-            tb.innerHTML = ''; 
-            let lista = [];
-            
-            // Coleta todas as reservas
-            imoveisDB.forEach(im => { 
-                if (im.reservas && im.reservas.length) { 
-                    im.reservas.forEach(r => lista.push({ 
-                        ...r, 
-                        nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, 
-                        imovelId: im.id 
-                    })); 
-                } 
-            });
+    const tb = el('lista-reservas-tbody'); 
+    if (!tb) return; 
+    tb.innerHTML = ''; 
+    let lista = [];
+    
+    // Coleta todas as reservas
+    imoveisDB.forEach(im => { 
+        if (im.reservas && im.reservas.length) { 
+            im.reservas.forEach(r => lista.push({ 
+                ...r, 
+                nIn: im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome, 
+                imovelId: im.id 
+            })); 
+        } 
+    });
 
-            // Dados do usuário logado
-            let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
-            let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
-            let nomePerfil = (el('perfil-nome-usuario')?.innerText || '').toLowerCase().trim();
+    // Dados do usuário logado
+    let userEmail = (auth.currentUser?.email || '').toLowerCase().trim();
+    let userUid = auth.currentUser?.uid || currentUserUid || window.uidUsuarioLogado;
+    let nomePerfil = (el('perfil-nome-usuario')?.innerText || '').toLowerCase().trim();
 
-            let meuCadastro = (typeof empresaDB !== 'undefined' && empresaDB.equipe && userEmail) 
-                ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === userEmail) 
-                : null;
+    let meuCadastro = (typeof empresaDB !== 'undefined' && empresaDB.equipe && userEmail) 
+        ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === userEmail) 
+        : null;
 
-            let nomeEquipe = (meuCadastro?.nome || '').toLowerCase().trim();
-            let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
-            if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
-            if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
+    let nomeEquipe = (meuCadastro?.nome || '').toLowerCase().trim();
+    let ehParceiro = (typeof userRole !== 'undefined' && userRole === 'parceiro');
+    if (meuCadastro && meuCadastro.role === 'parceiro') ehParceiro = true;
+    if (meuCadastro && meuCadastro.role === 'dono') ehParceiro = false;
 
-            // Injeta o dropdown de corretor se ainda não existir
-            const containerFiltros = el('bloco-filtro-datas');
-            if (containerFiltros && !el('filtro-corretor-select-container') && !ehParceiro) {
-                containerFiltros.insertAdjacentHTML('afterend', `
-                    <div id="filtro-corretor-select-container" class="ml-2">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
-                        <select id="filtro-corretor-select" onchange="renderizarListaReservasAdmin()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500">
-                            <option value="todos">Todos</option>
-                        </select>
-                    </div>
-                `);
-            }
-
-            // Popula opções de corretores
-            const selectCorr = el('filtro-corretor-select');
-            let fCorrValue = selectCorr ? selectCorr.value : 'todos';
-
-            if (selectCorr && !ehParceiro) {
-                let valorSelecionadoAnterior = selectCorr.value || 'todos';
-
-                selectCorr.innerHTML = `
+    // Injeta o dropdown de corretor se ainda não existir
+    const containerFiltros = el('bloco-filtro-datas');
+    if (containerFiltros && !el('filtro-corretor-select-container') && !ehParceiro) {
+        containerFiltros.insertAdjacentHTML('afterend', `
+            <div id="filtro-corretor-select-container" class="ml-2">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Corretor</label>
+                <select id="filtro-corretor-select" onchange="renderizarListaReservasAdmin()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500">
                     <option value="todos">Todos</option>
+                </select>
+            </div>
+        `);
+    }
+
+    // Popula opções de corretores
+    const selectCorr = el('filtro-corretor-select');
+    let fCorrValue = selectCorr ? selectCorr.value : 'todos';
+
+    if (selectCorr && !ehParceiro) {
+        let valorSelecionadoAnterior = selectCorr.value || 'todos';
+
+        selectCorr.innerHTML = `
+            <option value="todos">Todos</option>
             <option value="admin">Apenas Gestor</option>
             <option value="parceiros">Apenas Parceiros / Freelancers</option>
             <option value="corretores">Apenas Corretores (Geral)</option>
-                   <option value="pago">Status: Pago (Quitado)</option>
-<option value="pendente">Status: Pendente (A Receber)</option>
-<option value="proprietario">Status: Proprietário</option>
-<option value="bloqueio">Status: Manutenção</option>
-                `;
-                
-                let nomesCorretores = new Set();
-                
-                if (empresaDB && empresaDB.equipe) {
-                    empresaDB.equipe.forEach(m => {
-                        if (m.nome && m.nome.trim() !== '' && m.role !== 'dono') {
-                            nomesCorretores.add(m.nome.trim());
-                        }
-                    });
+            <option value="pago">Status: Pago (Quitado)</option>
+            <option value="pendente">Status: Pendente (A Receber)</option>
+            <option value="proprietario">Status: Proprietário</option>
+            <option value="bloqueio">Status: Manutenção</option>
+        `;
+        
+        let nomesCorretores = new Set();
+        
+        if (empresaDB && empresaDB.equipe) {
+            empresaDB.equipe.forEach(m => {
+                if (m.nome && m.nome.trim() !== '' && m.role !== 'dono') {
+                    nomesCorretores.add(m.nome.trim());
                 }
-                
-                lista.forEach(r => {
-                    let c = (r.criadoPor || '').trim();
-                    let membroDono = (typeof empresaDB !== 'undefined' && empresaDB.equipe) 
-                        ? empresaDB.equipe.find(m => m.nome === c && m.role === 'dono') 
-                        : null;
-
-                    if (c && c !== 'Gestor' && c !== 'Painel Gestor' && c.toLowerCase() !== 'gestor' && !membroDono) {
-                        nomesCorretores.add(c);
-                    }
-                });
-
-                nomesCorretores.forEach(nome => {
-                    selectCorr.insertAdjacentHTML('beforeend', `<option value="${nome}">${nome}</option>`);
-                });
-                
-                selectCorr.value = valorSelecionadoAnterior;
-                fCorrValue = selectCorr.value;
-            }
-
-            // FILTRO DE PERÍODO (DATA DE CRIAÇÃO DA RESERVA)
-        const p = val('filtro-periodo-reservas') || 'todas';
-        let dI = null;
-        let dF = null;
-        let hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
-        if (p === 'hoje') {
-            dI = new Date(hoje);
-            dF = new Date(hoje);
-            dF.setHours(23, 59, 59, 999);
-        } else if (p === 'ontem') {
-            let ontem = new Date(hoje);
-            ontem.setDate(ontem.getDate() - 1);
-            dI = new Date(ontem);
-            dF = new Date(ontem);
-            dF.setHours(23, 59, 59, 999);
-        } else if (p === 'ultimos7' || p === '7') {
-            dI = new Date(hoje);
-            dI.setDate(dI.getDate() - 7);
-            dF = new Date(hoje);
-            dF.setHours(23, 59, 59, 999);
-        } else if (p === 'ultimos30' || p === '30') {
-            dI = new Date(hoje);
-            dI.setDate(dI.getDate() - 30);
-            dF = new Date(hoje);
-            dF.setHours(23, 59, 59, 999);
-        } else if (p === 'mes_atual') {
-            dI = new Date(hoje.getFullYear(), hoje.getMonth(), 1, 0, 0, 0);
-            dF = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999);
-        } else if (p === 'personalizado') {
-            let valIn = val('filtro-reserva-inicio');
-            let valOut = val('filtro-reserva-fim');
-            if (valIn) dI = new Date(parseInputDateSafe(valIn) + 'T00:00:00');
-            if (valOut) dF = new Date(parseInputDateSafe(valOut) + 'T23:59:59');
+            });
         }
-            // FILTRAGEM FINAL
-            let fit = lista.filter(r => {
-                let rCriador = (r.criadoPor || '').trim();
-                let rCriadorLower = rCriador.toLowerCase();
-                let rCriadorUid = r.criadoPorUid || '';
+        
+        lista.forEach(r => {
+            let c = (r.criadoPor || '').trim();
+            let membroDono = (typeof empresaDB !== 'undefined' && empresaDB.equipe) 
+                ? empresaDB.equipe.find(m => m.nome === c && m.role === 'dono') 
+                : null;
 
-                if (ehParceiro) {
-                    let pertence = false;
-                    if (userUid && rCriadorUid === userUid) pertence = true;
-                    if (userEmail && rCriadorLower === userEmail) pertence = true;
-                    if (nomeEquipe && (rCriadorLower === nomeEquipe || rCriadorLower.includes(nomeEquipe) || nomeEquipe.includes(rCriadorLower))) pertence = true;
-                    if (nomePerfil && nomePerfil !== 'painel gestor' && (rCriadorLower === nomePerfil || rCriadorLower.includes(nomePerfil))) pertence = true;
-                    if (!pertence) return false;
-                }
+            if (c && c !== 'Gestor' && c !== 'Painel Gestor' && c.toLowerCase() !== 'gestor' && !membroDono) {
+                nomesCorretores.add(c);
+            }
+        });
 
-                let badgeNome = (r.criadoPor || 'Gestor').trim();
-                let ehGestor = (badgeNome === 'Gestor' || badgeNome === 'Painel Gestor' || badgeNome.toLowerCase() === 'gestor');
-                if (!ehGestor && typeof empresaDB !== 'undefined' && empresaDB.equipe) {
-                    let membroEquipe = empresaDB.equipe.find(m => m.nome === badgeNome || m.email === badgeNome);
-                    if (membroEquipe && membroEquipe.role === 'dono') {
-                        ehGestor = true;
-                    }
-                }
+        nomesCorretores.forEach(nome => {
+            selectCorr.insertAdjacentHTML('beforeend', `<option value="${nome}">${nome}</option>`);
+        });
+        
+        selectCorr.value = valorSelecionadoAnterior;
+        fCorrValue = selectCorr.value;
+    }
 
-                if (!ehParceiro && fCorrValue !== 'todos') {
+    // FILTRO DE PERÍODO (DATA DE CRIAÇÃO DA RESERVA) - FORMATO SEGURO YYYY-MM-DD
+    const p = val('filtro-periodo-reservas') || 'todas';
+    let strDataInicioFiltro = null;
+    let strDataFimFiltro = null;
+
+    const agora = new Date();
+    const obterStrData = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    if (p === 'hoje') {
+        strDataInicioFiltro = obterStrData(agora);
+        strDataFimFiltro = strDataInicioFiltro;
+    } else if (p === 'ontem') {
+        let ontem = new Date(agora);
+        ontem.setDate(ontem.getDate() - 1);
+        strDataInicioFiltro = obterStrData(ontem);
+        strDataFimFiltro = strDataInicioFiltro;
+    } else if (p === 'ultimos7' || p === '7') {
+        let d7 = new Date(agora);
+        d7.setDate(d7.getDate() - 7);
+        strDataInicioFiltro = obterStrData(d7);
+        strDataFimFiltro = obterStrData(agora);
+    } else if (p === 'ultimos30' || p === '30') {
+        let d30 = new Date(agora);
+        d30.setDate(d30.getDate() - 30);
+        strDataInicioFiltro = obterStrData(d30);
+        strDataFimFiltro = obterStrData(agora);
+    } else if (p === 'mes_atual') {
+        strDataInicioFiltro = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`;
+        let ultimoDiaMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0);
+        strDataFimFiltro = obterStrData(ultimoDiaMes);
+    } else if (p === 'personalizado') {
+        let valIn = val('filtro-reserva-inicio');
+        let valOut = val('filtro-reserva-fim');
+        if (valIn) strDataInicioFiltro = parseInputDateSafe(valIn);
+        if (valOut) strDataFimFiltro = parseInputDateSafe(valOut);
+    }
+
+    // FILTRAGEM FINAL
+    let fit = lista.filter(r => {
+        let rCriador = (r.criadoPor || '').trim();
+        let rCriadorLower = rCriador.toLowerCase();
+        let rCriadorUid = r.criadoPorUid || '';
+
+        if (ehParceiro) {
+            let pertence = false;
+            if (userUid && rCriadorUid === userUid) pertence = true;
+            if (userEmail && rCriadorLower === userEmail) pertence = true;
+            if (nomeEquipe && (rCriadorLower === nomeEquipe || rCriadorLower.includes(nomeEquipe) || nomeEquipe.includes(rCriadorLower))) pertence = true;
+            if (nomePerfil && nomePerfil !== 'painel gestor' && (rCriadorLower === nomePerfil || rCriadorLower.includes(nomePerfil))) pertence = true;
+            if (!pertence) return false;
+        }
+
+        let badgeNome = (r.criadoPor || 'Gestor').trim();
+        let ehGestor = (badgeNome === 'Gestor' || badgeNome === 'Painel Gestor' || badgeNome.toLowerCase() === 'gestor');
+        if (!ehGestor && typeof empresaDB !== 'undefined' && empresaDB.equipe) {
+            let membroEquipe = empresaDB.equipe.find(m => m.nome === badgeNome || m.email === badgeNome);
+            if (membroEquipe && membroEquipe.role === 'dono') {
+                ehGestor = true;
+            }
+        }
+
+        if (!ehParceiro && fCorrValue !== 'todos') {
             if (fCorrValue === 'pago') {
                 if (r.statusPagamento !== 'pago') return false;
             } else if (fCorrValue === 'pendente') {
@@ -3164,98 +3165,111 @@ function excluirReservaConfirmacao() {
             }
         }
 
-                if (p !== 'todas' && (dI || dF)) {
-            let dtCriacao = null;
+        // Validação de Período por String de Data
+        if (p !== 'todas' && (strDataInicioFiltro || strDataFimFiltro)) {
+            let strCriacao = '';
             if (r.dataCriacao) {
-                dtCriacao = new Date(r.dataCriacao);
-                if (isNaN(dtCriacao.getTime()) && typeof r.dataCriacao === 'string') {
-                    dtCriacao = new Date(parseInputDateSafe(r.dataCriacao) + 'T12:00:00');
+                let dObj = new Date(r.dataCriacao);
+                if (!isNaN(dObj.getTime())) {
+                    strCriacao = obterStrData(dObj);
+                } else if (typeof r.dataCriacao === 'string') {
+                    strCriacao = parseInputDateSafe(r.dataCriacao);
                 }
             } else if (r.id && Number(r.id) > 1000000000000) {
-                dtCriacao = new Date(Number(r.id));
+                strCriacao = obterStrData(new Date(Number(r.id)));
             }
 
-            if (dtCriacao && !isNaN(dtCriacao.getTime())) {
-                if (dI && dtCriacao < dI) return false;
-                if (dF && dtCriacao > dF) return false;
+            if (strCriacao) {
+                if (strDataInicioFiltro && strCriacao < strDataInicioFiltro) return false;
+                if (strDataFimFiltro && strCriacao > strDataFimFiltro) return false;
             }
         }
 
-                return true;
-            });
-            reservasAtuaisExportacao = fit;
+        return true;
+    });
+    
+    reservasAtuaisExportacao = fit;
 
-            if (!fit.length) { 
-                tb.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas encontradas para os filtros selecionados.</td></tr>`; 
-                return; 
+    if (!fit.length) { 
+        tb.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-400 font-bold">Sem reservas encontradas para os filtros selecionados.</td></tr>`; 
+        return; 
+    }
+
+    fit.sort((a,b) => (b.numeroReserva || b.id) - (a.numeroReserva || a.id));
+
+    fit.forEach(res => {
+        let dC = '-';
+        if (res.dataCriacao) {
+            let dObj = new Date(res.dataCriacao);
+            if (!isNaN(dObj.getTime())) {
+                dC = `${String(dObj.getDate()).padStart(2,'0')}/${String(dObj.getMonth()+1).padStart(2,'0')}/${dObj.getFullYear()}`;
+            } else {
+                dC = parseInputDateSafe(res.dataCriacao).split('-').reverse().join('/');
             }
-
-            fit.sort((a,b) => (b.numeroReserva || b.id) - (a.numeroReserva || a.id));
-
-            fit.forEach(res => {
-                let dC = res.dataCriacao ? new Date(res.dataCriacao).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-                let bdg = ''; 
-                let bP = ''; 
-                let bV = '';
-                let pg = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0; 
-                if (res.statusPagamento === 'pago' && pg === 0) pg = parseFloat(res.valorTotal || 0); 
-                let dif = parseFloat(res.valorTotal || 0) - pg; 
-                let addI = '';
-
-                if (res.statusPagamento === 'pago') {
-                    bdg = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`;
-                    addI = `<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
-                    bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'voucher')" title="Voucher Oficial" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
-                } else if (res.statusPagamento === 'pendente') {
-                    bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
-                    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-                    
-                    if (pg > 0) {
-                        // Pagou parcial -> Pré-Voucher
-                        bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'prevoucher')" title="Pré-Voucher (Sinal Pago)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
-                        addI = `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
-                    } else {
-                        // Não pagou nada ainda -> Confirmação de Reserva
-                        bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'confirmacao')" title="Confirmação de Reserva" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-signature"></i></button>`;
-                        addI = `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
-                    }
-                }
-                else if (res.statusPagamento === 'devolucao') {
-    bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
-    if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-    addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
-} else if (res.statusPagamento === 'cancelada') {
-    bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
-    if (!ehParceiro && pg > res.valorTotal) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
-    addI = pg > res.valorTotal ? `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : '<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
-                } else if (res.statusPagamento === 'proprietario') {
-                    bdg = `<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;
-                } else {
-                    bdg = `<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;
-                }
-
-                let badgeNome = res.criadoPor || 'Gestor';
-let tagParceiroHtml = (res.modoParceiro && res.parceiroNome) 
-    ? ` <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold px-1 py-0.5 rounded ml-1 inline-flex items-center gap-1"><i class="fas fa-handshake"></i> ${res.parceiroNome}</span>` 
-    : '';
-let nomeCriador = `<div class="text-[10px] mt-1 flex items-center flex-wrap gap-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><span class="inline-flex items-center"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</span>${tagParceiroHtml}</div>`;
-                let numExibicao = res.numeroReserva || res.numReserva || '-';
-                let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
-
-                tb.insertAdjacentHTML('beforeend', `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="p-3 text-xs font-bold text-slate-500">${dC}</td>
-                        <td class="p-3 font-bold text-slate-700 text-xs">#${numExibicao}</td>
-                        <td class="p-3">${bdg}</td>
-                        <td class="p-3"><div class="font-bold text-slate-700 text-xs">${res.titular?.nome || res.finalidade || 'Uso Próprio'}</div>${nomeCriador}</td>
-                        <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
-                        <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
-                        <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
-                        <td class="p-3 text-right whitespace-nowrap">${bP}${bV}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-edit"></i></button></td>
-                    </tr>
-                `);
-            });
+        } else if (res.id && Number(res.id) > 1000000000000) {
+            let dObj = new Date(Number(res.id));
+            dC = `${String(dObj.getDate()).padStart(2,'0')}/${String(dObj.getMonth()+1).padStart(2,'0')}/${dObj.getFullYear()}`;
         }
+
+        let bdg = ''; 
+        let bP = ''; 
+        let bV = '';
+        let pg = res.valorPago !== undefined ? parseFloat(res.valorPago) : 0; 
+        if (res.statusPagamento === 'pago' && pg === 0) pg = parseFloat(res.valorTotal || 0); 
+        let dif = parseFloat(res.valorTotal || 0) - pg; 
+        let addI = '';
+
+        if (res.statusPagamento === 'pago') {
+            bdg = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pago</span>`;
+            addI = `<div class="text-[10px] font-bold text-green-600">Quitado</div>`;
+            bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'voucher')" title="Voucher Oficial" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-ticket-alt"></i></button>`;
+        } else if (res.statusPagamento === 'pendente') {
+            bdg = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Pendente</span>`;
+            if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Pagar / Financeiro" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            
+            if (pg > 0) {
+                bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'prevoucher')" title="Pré-Voucher (Sinal Pago)" class="bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-invoice"></i></button>`;
+                addI = `<div class="text-[10px] font-bold text-orange-600">Falta R$ ${dif.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+            } else {
+                bV = `<button onclick="gerarVoucher(${res.imovelId}, ${res.id}, 'confirmacao')" title="Confirmação de Reserva" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-file-signature"></i></button>`;
+                addI = `<div class="text-[10px] font-medium text-slate-400">À receber</div>`;
+            }
+        } else if (res.statusPagamento === 'devolucao') {
+            bdg = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Reembolso</span>`;
+            if (!ehParceiro) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Devolução" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            addI = `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+        } else if (res.statusPagamento === 'cancelada') {
+            bdg = `<span class="bg-slate-200 text-slate-500 px-2 py-1 rounded text-[10px] font-bold uppercase">Cancelada</span>`;
+            if (!ehParceiro && pg > res.valorTotal) bP = `<button onclick="abrirModalPagamento(${res.imovelId}, ${res.id})" title="Reembolso / Financeiro" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-hand-holding-usd"></i></button>`;
+            addI = pg > res.valorTotal ? `<div class="text-[10px] font-bold text-red-600">Dev R$ ${Math.abs(dif).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>` : '<div class="text-[10px] font-medium text-slate-400 line-through">Encerrada</div>';
+        } else if (res.statusPagamento === 'proprietario') {
+            bdg = `<span class="bg-sky-100 text-sky-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Proprietário</span>`;
+        } else {
+            bdg = `<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">Manutenção</span>`;
+        }
+
+        let badgeNome = res.criadoPor || 'Gestor';
+        let tagParceiroHtml = (res.modoParceiro && res.parceiroNome) 
+            ? ` <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-bold px-1 py-0.5 rounded ml-1 inline-flex items-center gap-1"><i class="fas fa-handshake"></i> ${res.parceiroNome}</span>` 
+            : '';
+        let nomeCriador = `<div class="text-[10px] mt-1 flex items-center flex-wrap gap-1 ${badgeNome==='Gestor'?'text-slate-400':'text-orange-500 font-bold'}"><span class="inline-flex items-center"><i class="fas fa-user-tag mr-1"></i>${badgeNome}</span>${tagParceiroHtml}</div>`;
+        let numExibicao = res.numeroReserva || res.numReserva || '-';
+        let dataFormatada = `${parseInputDateSafe(res.checkin).split('-').reverse().join('/')} a ${parseInputDateSafe(res.checkout).split('-').reverse().join('/')}`;
+
+        tb.insertAdjacentHTML('beforeend', `
+            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 text-xs font-bold text-slate-500">${dC}</td>
+                <td class="p-3 font-bold text-slate-700 text-xs">#${numExibicao}</td>
+                <td class="p-3">${bdg}</td>
+                <td class="p-3"><div class="font-bold text-slate-700 text-xs">${res.titular?.nome || res.finalidade || 'Uso Próprio'}</div>${nomeCriador}</td>
+                <td class="p-3 text-xs text-slate-600 font-medium">${res.nIn}</td>
+                <td class="p-3 text-xs text-slate-600">${dataFormatada}</td>
+                <td class="p-3 text-right"><div class="font-bold text-slate-800 text-xs">R$ ${(parseFloat(res.valorTotal)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>${addI}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bP}${bV}<button onclick="abrirEdicaoReservaMapa(${res.imovelId}, ${res.id})" title="Editar" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg mr-1"><i class="fas fa-edit"></i></button></td>
+            </tr>
+        `);
+    });
+}
 function exportarExcelReservas() {
     if(!reservasAtuaisExportacao.length) return; 
     let h = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"></head><body><table border="1" cellpadding="5" cellspacing="0" style="font-family: Arial, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan="8" style="background-color: #f97316; color: white; font-size: 18px; font-weight: bold; text-align: center; height: 40px;">RELATÓRIO DE RESERVAS</th></tr><tr style="background-color: #fff7ed; color: #ea580c; font-weight: bold; text-align: center;"><td>DATA</td><td>STATUS</td><td>CLIENTE</td><td>ACOMODAÇÃO</td><td>CHECK-IN</td><td>CHECK-OUT</td><td>VALOR</td><td>SITUAÇÃO</td></tr>`;
