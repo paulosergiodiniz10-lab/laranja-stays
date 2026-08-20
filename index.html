@@ -2543,12 +2543,13 @@ function carregarSugestoesParceiros() {
     (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
         (im.reservas || []).forEach(r => {
             if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
-                const k = r.parceiroNome.trim();
-                if (!mapa.has(k.toLowerCase())) {
-                    mapa.set(k.toLowerCase(), {
-                        nome: k,
-                        zap: r.parceiroZap || '',
-                        email: r.parceiroEmail || ''
+                const k = r.parceiroNome.trim().toLowerCase();
+                const existente = mapa.get(k);
+                if (!existente || (!existente.zap && r.parceiroZap) || (!existente.email && r.parceiroEmail)) {
+                    mapa.set(k, {
+                        nome: r.parceiroNome.trim(),
+                        zap: r.parceiroZap || (existente?.zap || ''),
+                        email: r.parceiroEmail || (existente?.email || '')
                     });
                 }
             }
@@ -2564,112 +2565,23 @@ function carregarSugestoesParceiros() {
 function autoPreencherDadosParceiro(valDigitado) {
     if (!valDigitado) return;
     const busca = valDigitado.trim().toLowerCase();
-    let encontrado = null;
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
-        return (im.reservas || []).some(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
-                encontrado = r;
-                return true;
-            }
-            return false;
-        });
-    });
-    if (encontrado) {
-        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
-        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
-    }
-}
+    let melhorMatch = null;
 
-function carregarSugestoesParceiros() {
-    const dl = el('datalist-parceiros-salvos');
-    if (!dl) return;
-    dl.innerHTML = '';
-    const mapa = new Map();
     (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
         (im.reservas || []).forEach(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
-                const k = r.parceiroNome.trim();
-                if (!mapa.has(k.toLowerCase())) {
-                    mapa.set(k.toLowerCase(), {
-                        nome: k,
-                        zap: r.parceiroZap || '',
-                        email: r.parceiroEmail || ''
-                    });
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
+                if (!melhorMatch || (!melhorMatch.parceiroZap && r.parceiroZap) || (!melhorMatch.parceiroEmail && r.parceiroEmail)) {
+                    melhorMatch = r;
                 }
             }
         });
     });
-    mapa.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.nome;
-        dl.appendChild(opt);
-    });
-}
 
-function autoPreencherDadosParceiro(valDigitado) {
-    if (!valDigitado) return;
-    const busca = valDigitado.trim().toLowerCase();
-    let encontrado = null;
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
-        return (im.reservas || []).some(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
-                encontrado = r;
-                return true;
-            }
-            return false;
-        });
-    });
-    if (encontrado) {
-        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
-        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
+    if (melhorMatch) {
+        if (melhorMatch.parceiroZap) setVal('reserva-parceiro-zap', melhorMatch.parceiroZap);
+        if (melhorMatch.parceiroEmail) setVal('reserva-parceiro-email', melhorMatch.parceiroEmail);
     }
 }
-
-function carregarSugestoesParceiros() {
-    const dl = el('datalist-parceiros-salvos');
-    if (!dl) return;
-    dl.innerHTML = '';
-    const mapa = new Map();
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
-        (im.reservas || []).forEach(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
-                const k = r.parceiroNome.trim();
-                if (!mapa.has(k.toLowerCase())) {
-                    mapa.set(k.toLowerCase(), {
-                        nome: k,
-                        zap: r.parceiroZap || '',
-                        email: r.parceiroEmail || ''
-                    });
-                }
-            }
-        });
-    });
-    mapa.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.nome;
-        dl.appendChild(opt);
-    });
-}
-
-function autoPreencherDadosParceiro(valDigitado) {
-    if (!valDigitado) return;
-    const busca = valDigitado.trim().toLowerCase();
-    let encontrado = null;
-    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).some(im => {
-        return (im.reservas || []).some(r => {
-            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim().toLowerCase() === busca) {
-                encontrado = r;
-                return true;
-            }
-            return false;
-        });
-    });
-    if (encontrado) {
-        if (encontrado.parceiroZap) setVal('reserva-parceiro-zap', encontrado.parceiroZap);
-        if (encontrado.parceiroEmail) setVal('reserva-parceiro-email', encontrado.parceiroEmail);
-    }
-}
-
 function toggleCamposParceiroModal() {
     const chk = el('reserva-modo-parceiro');
     const box = el('box-dados-corretor-parceiro');
