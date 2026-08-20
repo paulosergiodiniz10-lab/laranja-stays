@@ -971,22 +971,39 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
         }
         function removerMembroEquipe(index) {
     confirmarExclusao(async () => {
-        const emailRemovido = empresaDB.equipe[index].email;
+        const membro = empresaDB.equipe[index];
+        if (!membro) return;
+        
+        const emailRemovido = (membro.email || '').toLowerCase().trim();
         empresaDB.equipe.splice(index, 1);
-        salvarBancoNoStorage();
-        try {
-            let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
-            if (idEmp && typeof db !== 'undefined') {
-                await db.collection("sistema_saas").doc(idEmp).set({ empresaDB: empresaDB }, { merge: true });
-            }
-            await db.collection("usuarios_pendentes").doc(emailRemovido).delete();
-            const q = await db.collection("usuarios").where("email", "==", emailRemovido).get();
-            if(!q.empty) { await db.collection("usuarios").doc(q.docs[0].id).delete(); }
-        } catch(e) {
-            console.error("Erro ao remover parceiro no banco:", e);
-        }
+        
+        // Atualiza a visualização na hora
         renderizarEquipe();
         mostrarNotificacao("Acesso removido!");
+
+        try {
+            let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
+            
+            if (idEmp && typeof db !== 'undefined') {
+                // Atualiza o documento principal no banco
+                await db.collection("sistema_saas").doc(idEmp).set({
+                    empresaDB: empresaDB
+                }, { merge: true });
+            }
+
+            if (emailRemovido && typeof db !== 'undefined') {
+                // Remove pendência
+                await db.collection("usuarios_pendentes").doc(emailRemovido).delete().catch(()=>{});
+                
+                // Remove vínculo de login antigo
+                const snapshot = await db.collection("usuarios").where("email", "==", emailRemovido).get().catch(()=>null);
+                if (snapshot && !snapshot.empty) {
+                    snapshot.forEach(docSnap => docSnap.ref.delete().catch(()=>{}));
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao remover parceiro no banco:", e);
+        }
     }, "Remover Parceiro", "Deseja realmente remover o acesso deste parceiro?");
 }
         function mostrarRecuperarSenha() { hide('login-erro'); sv('recuperar-email', val('login-email')); el('recuperar-mensagem').classList.add('hidden-view'); show('modal-recuperar-senha'); }        function fecharRecuperarSenha() { hide('modal-recuperar-senha'); }
