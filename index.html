@@ -26,13 +26,16 @@
         .tabs-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="text"].flatpickr-input::-webkit-calendar-picker-indicator { display: none; }
-        .mapa-container-master { display: flex; flex-direction: column; width: 100%; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: white; }
-        .mapa-row { display: flex; min-width: max-content; border-bottom: 1px solid #f1f5f9; }
-        .mapa-col-fixa { width: 250px; flex-shrink: 0; position: sticky; left: 0; background: white; z-index: 10; border-right: 2px solid #e2e8f0; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; padding: 0.5rem 1rem; }
-        .mapa-celula { width: 44px; flex-shrink: 0; border-right: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: center; height: 48px; font-size: 0.70rem; font-weight: bold; transition: all 0.2s; cursor: pointer; text-align: center; line-height: 1.1; }
-        .mapa-celula:hover { opacity: 0.8; background-color: #f8fafc; }
-        .header-mapa .mapa-celula { background: #f8fafc; color: #64748b; height: 40px; cursor: default; }
-        .header-mapa .mapa-celula:hover { background: #f8fafc; opacity: 1; }
+        .mapa-container-master { display: flex; flex-direction: column; width: 100%; max-height: calc(100vh - 280px); overflow: auto; border: 1px solid #e2e8f0; border-radius: 0.5rem; background: white; }
+    .mapa-row { display: flex; min-width: max-content; border-bottom: 1px solid #f1f5f9; }
+    .mapa-col-fixa { width: 250px; flex-shrink: 0; position: sticky; left: 0; background: white; z-index: 20; border-right: 2px solid #e2e8f0; box-shadow: 4px 0 6px -2px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; padding: 0.5rem 1rem; }
+    .mapa-celula { width: 44px; flex-shrink: 0; border-right: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: center; height: 48px; font-size: 0.70rem; font-weight: bold; transition: all 0.2s; cursor: pointer; text-align: center; line-height: 1.1; }
+    .mapa-celula:hover { opacity: 0.8; background-color: #f8fafc; }
+    .header-mapa { position: sticky; top: 0; z-index: 30; background: #f8fafc; }
+    .header-mapa .mapa-col-fixa { position: sticky; left: 0; top: 0; z-index: 40; background: #f8fafc; }
+    .header-mapa .mapa-celula { background: #f8fafc; color: #475569; height: 52px; cursor: default; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.1; padding: 2px 0; border-bottom: 2px solid #e2e8f0; }
+    .header-mapa .mapa-celula:hover { background: #f8fafc; opacity: 1; }
+    .header-mapa .celula-fim-semana { background-color: #f1f5f9; color: #ea580c; }      
         .status-livre { background-color: #fff; color: #cbd5e1; }
         .status-pendente { background-color: #fef08a; color: #854d0e; border-right-color: #fde047; } 
         .status-pago { background-color: #bbf7d0; color: #166534; border-right-color: #86efac; } 
@@ -2361,8 +2364,26 @@ function gerarRelatorioFinanceiro() {
     if(!cont) return; 
     const dias = new Date(mapaAno, mapaMes, 0).getDate(); 
     
-    let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa">Acomodação</div>`; 
-    for (let i=1; i<=dias; i++) h += `<div class="mapa-celula">${i}</div>`; 
+    const mesesAbrev = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const diasSemanaAbrev = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const nomeMesAtualAbrev = mesesAbrev[mapaMes - 1];
+
+    let h = `<div class="mapa-row header-mapa"><div class="mapa-col-fixa font-bold text-slate-700 text-xs">Acomodação</div>`; 
+    for (let i = 1; i <= dias; i++) {
+        let dataDia = new Date(mapaAno, mapaMes - 1, i, 12, 0, 0);
+        let diaSemanaNum = dataDia.getDay();
+        let diaSemanaTexto = diasSemanaAbrev[diaSemanaNum];
+        let ehFimDeSemana = (diaSemanaNum === 0 || diaSemanaNum === 6) ? 'celula-fim-semana' : '';
+        let diaFormatado = String(i).padStart(2, '0');
+
+        h += `
+            <div class="mapa-celula ${ehFimDeSemana}">
+                <span class="text-[9px] font-semibold opacity-70 uppercase tracking-tighter">${nomeMesAtualAbrev}</span>
+                <span class="text-xs font-bold text-slate-800">${diaFormatado}</span>
+                <span class="text-[9px] font-semibold text-slate-500">${diaSemanaTexto}</span>
+            </div>
+        `;
+    } 
     h += `</div>`;
 
     // Identificação Múltipla do Usuário Logado
