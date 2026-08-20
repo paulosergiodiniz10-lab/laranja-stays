@@ -937,7 +937,7 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
     try {
         let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
         if (idEmp && typeof db !== 'undefined') {
-            await db.collection("sistema_saas").doc(idEmp).set({ equipe: empresaDB.equipe }, { merge: true });
+            await db.collection("sistema_saas").doc(idEmp).set({ empresaDB: empresaDB }, { merge: true });
         }
         await db.collection("usuarios_pendentes").doc(email).set({ agenciaId: idEmp, role: role, email: email });
     } catch(e) {
@@ -977,7 +977,7 @@ if (ehParceiro) mudarAbaInternaAdmin('mapa');
         try {
             let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
             if (idEmp && typeof db !== 'undefined') {
-                await db.collection("sistema_saas").doc(idEmp).set({ equipe: empresaDB.equipe }, { merge: true });
+                await db.collection("sistema_saas").doc(idEmp).set({ empresaDB: empresaDB }, { merge: true });
             }
             await db.collection("usuarios_pendentes").doc(emailRemovido).delete();
             const q = await db.collection("usuarios").where("email", "==", emailRemovido).get();
