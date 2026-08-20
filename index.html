@@ -115,10 +115,15 @@
     </label>
     <div id="box-dados-corretor-parceiro" class="hidden-view mt-3 p-3 bg-white rounded-xl border border-indigo-100 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
-            <label class="block text-[11px] font-bold text-indigo-700 mb-1">Nome do Corretor *</label>
-            <input type="text" id="reserva-parceiro-nome" list="datalist-parceiros-salvos" oninput="autoPreencherDadosParceiro(this.value)" placeholder="Ex: Pedro Silva (digite para buscar)" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-400 outline-none">
-<datalist id="datalist-parceiros-salvos"></datalist>
-        </div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[11px] font-bold text-indigo-700">Nome do Corretor *</label>
+                        <button type="button" onclick="abrirModalGerenciarParceiros()" class="text-[10px] text-indigo-600 hover:text-indigo-800 underline font-semibold flex items-center gap-1">
+                            <i class="fas fa-user-slash text-[9px]"></i> Inativar Parceiros
+                        </button>
+                    </div>
+                    <input type="text" id="reserva-parceiro-nome" list="datalist-parceiros-salvos" oninput="autoPreencherDadosParceiro(this.value)" placeholder="Ex: Pedro Silva (digite para buscar)" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-400 outline-none">
+                    <datalist id="datalist-parceiros-salvos"></datalist>
+                </div>
         <div>
             <label class="block text-[11px] font-medium text-slate-600 mb-1">WhatsApp (Opcional)</label>
             <input type="text" id="reserva-parceiro-zap" placeholder="(00) 00000-0000" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 focus:ring-2 focus:ring-slate-400 outline-none">
@@ -132,7 +137,32 @@
                 <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center"><div class="flex gap-2"><button id="btn-excluir-reserva" onclick="excluirReservaConfirmacao()" class="hidden-view text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg font-bold text-sm transition-colors"><i class="fas fa-trash-alt mr-1"></i> Lixeira</button><button id="btn-cancelar-reserva" onclick="iniciarCancelamentoTotal()" class="hidden-view text-slate-600 hover:bg-slate-100 px-3 py-2 rounded-lg font-bold text-sm transition-colors"><i class="fas fa-ban mr-1"></i> Cancelar</button></div><div class="flex gap-2"><button onclick="fecharModalReserva()" class="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors text-sm">Fechar</button><button onclick="salvarReservaManual()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-save mr-2"></i> Salvar</button></div></div>
             </div>
         </div>
-
+<!-- MODAL GERENCIAR / INATIVAR CORRETORES PARCEIROS -->
+<div id="modal-gerenciar-parceiros" class="hidden-view fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
+        <div class="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+            <h3 class="font-bold text-sm text-indigo-900 flex items-center gap-2">
+                <i class="fas fa-users-cog text-indigo-600"></i> Gerenciar Corretores Parceiros
+            </h3>
+            <button type="button" onclick="fecharModalGerenciarParceiros()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <p class="text-xs text-slate-500 mb-3">
+                Inative parceiros para removê-los da lista de auto-preenchimento. <b>As reservas antigas continuam salvas normalmente.</b>
+            </p>
+            <div id="lista-parceiros-gerenciamento" class="max-h-60 overflow-y-auto space-y-2 pr-1">
+                <!-- Lista gerada via JS -->
+            </div>
+        </div>
+        <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="fecharModalGerenciarParceiros()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
         <div id="modal-cadastro" class="hidden-view fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 fade-in">
             <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
                 <div class="p-4 border-b border-slate-100 bg-white flex justify-between items-center"><h3 id="titulo-modal-cadastro" class="text-lg font-bold text-slate-800">Configuração</h3><button onclick="fecharModalCadastro()" class="text-slate-400 hover:text-orange-500 w-8 h-8 rounded-full hover:bg-orange-50 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button></div>
@@ -2535,15 +2565,25 @@ acompanhantesTemp=[]; renderizarAcompanhantes(); toggleCamposReserva();
 
             if (el('reserva-status')) el('reserva-status').disabled = ehParceiro;
         }
-function carregarSugestoesParceiros() {
+        function carregarSugestoesParceiros() {
     const dl = el('datalist-parceiros-salvos');
     if (!dl) return;
     dl.innerHTML = '';
+    
+    // Lista de inativos sincronizada no banco
+    const inativos = (typeof empresaDB !== 'undefined' && Array.isArray(empresaDB.parceirosInativos)) 
+        ? empresaDB.parceirosInativos.map(n => n.trim().toLowerCase()) 
+        : [];
+
     const mapa = new Map();
     (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
         (im.reservas || []).forEach(r => {
             if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
                 const k = r.parceiroNome.trim().toLowerCase();
+                
+                // Se o corretor estiver inativado, ignora e não adiciona na sugestão
+                if (inativos.includes(k)) return;
+
                 const existente = mapa.get(k);
                 if (!existente || (!existente.zap && r.parceiroZap) || (!existente.email && r.parceiroEmail)) {
                     mapa.set(k, {
@@ -2555,6 +2595,7 @@ function carregarSugestoesParceiros() {
             }
         });
     });
+
     mapa.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.nome;
@@ -2582,7 +2623,85 @@ function autoPreencherDadosParceiro(valDigitado) {
         if (melhorMatch.parceiroEmail) setVal('reserva-parceiro-email', melhorMatch.parceiroEmail);
     }
 }
-function toggleCamposParceiroModal() {
+
+function abrirModalGerenciarParceiros() {
+    const modal = el('modal-gerenciar-parceiros');
+    const container = el('lista-parceiros-gerenciamento');
+    if (!modal || !container) return;
+
+    if (typeof empresaDB !== 'undefined' && !empresaDB.parceirosInativos) {
+        empresaDB.parceirosInativos = [];
+    }
+    const inativos = (empresaDB?.parceirosInativos || []).map(n => n.trim().toLowerCase());
+
+    const mapa = new Map();
+    (typeof imoveisDB !== 'undefined' ? imoveisDB : []).forEach(im => {
+        (im.reservas || []).forEach(r => {
+            if (r.modoParceiro && r.parceiroNome && r.parceiroNome.trim()) {
+                const k = r.parceiroNome.trim().toLowerCase();
+                if (!mapa.has(k)) {
+                    mapa.set(k, r.parceiroNome.trim());
+                }
+            }
+        });
+    });
+
+    if (mapa.size === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum corretor parceiro registrado no histórico.</p>`;
+    } else {
+        let html = '';
+        mapa.forEach((nomeOriginal, nomeKey) => {
+            const isInativo = inativos.includes(nomeKey);
+            html += `
+                <div class="flex items-center justify-between p-2 rounded-lg border ${isInativo ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-indigo-50/50 border-indigo-100'}">
+                    <div>
+                        <span class="text-xs font-semibold ${isInativo ? 'line-through text-slate-500' : 'text-slate-800'}">${nomeOriginal}</span>
+                        <span class="text-[10px] ml-2 px-1.5 py-0.5 rounded ${isInativo ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700 font-bold'}">
+                            ${isInativo ? 'Inativo' : 'Ativo'}
+                        </span>
+                    </div>
+                    <button type="button" onclick="alternarStatusParceiro('${nomeOriginal.replace(/'/g, "\\'")}')" class="text-xs px-2.5 py-1 rounded-md transition-colors ${isInativo ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'}">
+                        ${isInativo ? 'Reativar' : 'Inativar'}
+                    </button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    modal.classList.remove('hidden-view');
+}
+
+function fecharModalGerenciarParceiros() {
+    const modal = el('modal-gerenciar-parceiros');
+    if (modal) modal.classList.add('hidden-view');
+    carregarSugestoesParceiros();
+}
+
+function alternarStatusParceiro(nome) {
+    if (typeof empresaDB === 'undefined') return;
+    if (!Array.isArray(empresaDB.parceirosInativos)) {
+        empresaDB.parceirosInativos = [];
+    }
+
+    const busca = nome.trim().toLowerCase();
+    const idx = empresaDB.parceirosInativos.findIndex(n => n.trim().toLowerCase() === busca);
+
+    if (idx > -1) {
+        empresaDB.parceirosInativos.splice(idx, 1);
+        mostrarNotificacao(`Parceiro "${nome}" reativado!`);
+    } else {
+        empresaDB.parceirosInativos.push(nome.trim());
+        mostrarNotificacao(`Parceiro "${nome}" inativado.`);
+    }
+
+    if (typeof salvarBancoNoStorage === 'function') {
+        salvarBancoNoStorage();
+    }
+
+    abrirModalGerenciarParceiros();
+}
+        function toggleCamposParceiroModal() {
     const chk = el('reserva-modo-parceiro');
     const box = el('box-dados-corretor-parceiro');
     if (!box) return;
