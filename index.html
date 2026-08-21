@@ -1462,15 +1462,20 @@ function montarDropdownHospedesOrcamento() {
         <div class="bdr">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <h3 class="im-font" style="margin: 0;">${nomeImovelExibicao}</h3>
-                <span style="background-color: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap;">
-                    Capacidade: Até ${im.capacidadeTotal || 1} pessoas
-                </span>
+                <div style="text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                    <span style="background-color: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; white-space: nowrap;">
+                        Capacidade: Até ${im.capacidadeTotal || 1} pessoas
+                    </span>
+                    <span style="background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 600; white-space: nowrap;">
+                        Entrada: ${im.checkin || '14:00'} | Saída: ${im.checkout || '11:00'}
+                    </span>
+                </div>
             </div>
-            <p class="tr-color">${endIm}</p>
+            <p class="tr-color" style="margin-bottom: 12px;">${endIm}</p>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr>
-                    <td><strong>Check-in:</strong> ${dIn}</td>
-                    <td><strong>Check-out:</strong> ${dOut}</td>
+                    <td><strong>Check-in:</strong> ${dIn} <span style="font-size: 12px; color: #64748b;">(a partir das ${im.checkin || '14:00'})</span></td>
+                    <td><strong>Check-out:</strong> ${dOut} <span style="font-size: 12px; color: #64748b;">(até às ${im.checkout || '11:00'})</span></td>
                     <td><strong>Diárias:</strong> ${noites} noite(s)</td>
                 </tr>
             </table>
