@@ -1461,7 +1461,18 @@ function montarDropdownHospedesOrcamento() {
         ${avisoDocumento}
         <div class="bdr">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                <h3 class="im-font" style="margin: 0; font-size: 16px; line-height: 1.35; padding-right: 15px;">${nomeImovelExibicao}</h3>
+                <div style="flex: 1; padding-right: 15px;">
+                    ${(() => {
+                        const partes = (nomeImovelExibicao || '').split(':');
+                        if (partes.length > 1) {
+                            return `
+                                <h3 class="im-font" style="margin: 0; font-size: 17px; font-weight: 700; line-height: 1.2;">${partes[0].trim()}</h3>
+                                <div style="font-size: 13px; color: #475569; font-weight: 600; margin-top: 3px;">${partes.slice(1).join(':').trim()}</div>
+                            `;
+                        }
+                        return `<h3 class="im-font" style="margin: 0; font-size: 16px; line-height: 1.35;">${nomeImovelExibicao}</h3>`;
+                    })()}
+                </div>
                 <span style="background-color: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; white-space: nowrap;">
                     Capacidade: Até ${im.capacidadeTotal || 1} pessoas
                 </span>
