@@ -1335,11 +1335,14 @@ function montarDropdownHospedesOrcamento() {
             let noites = Math.round((new Date(parseInputDateSafe(res.checkout)+'T12:00:00') - new Date(parseInputDateSafe(res.checkin)+'T12:00:00')) / (1000*60*60*24));
 
             // Número do Apartamento no Título
-            const numeroApto = im.numeroApto || im.apto || im.apartamento || '';
-            let nomeImovelExibicao = im.nome || '';
-            if (numeroApto && !nomeImovelExibicao.toLowerCase().includes(String(numeroApto).toLowerCase())) {
-                nomeImovelExibicao += ` - Apto ${numeroApto}`;
-            }
+            const numeroAptoRaw = String(im.numeroApto || im.apto || im.apartamento || im.unidade || '').trim();
+    const ocultarAptoDoc = numeroAptoRaw.includes('#');
+    const numeroApto = numeroAptoRaw.replace(/#/g, '').trim();
+
+    let nomeImovelExibicao = (im.nome || '').replace(/#/g, '').trim();
+    if (!ocultarAptoDoc && numeroApto && !nomeImovelExibicao.toLowerCase().includes(numeroApto.toLowerCase())) {
+        nomeImovelExibicao += ` - Apto ${numeroApto}`;
+    }
 
             let endIm = `${im.endereco?.rua || ''}, ${im.endereco?.numero || 'S/N'}`; 
             if(im.endereco?.bairro) endIm += ` - ${im.endereco.bairro}`; 
