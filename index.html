@@ -3994,7 +3994,15 @@ window.gerarPDFDRE = function() {
             let taxaLimpezaUnit = parseFloat(im.proprietario?.limpeza) || parseFloat(im.taxaLimpeza) || 0;
             let qtdReservasPagasMes = 0;
             let nomeAptoDisplay = im.numeroApto ? `${im.nome} (Apto ${im.numeroApto})` : im.nome;
-
+let despesasExtrasImovel = 0;
+        if (im.despesas) {
+            im.despesas.forEach(d => {
+                let dSeg = typeof parseInputDateSafe === 'function' ? parseInputDateSafe(d.data) : d.data;
+                if (!mSt || dSeg.startsWith(mSt)) {
+                    despesasExtrasImovel += parseFloat(d.valor) || 0;
+                }
+            });
+        }
             if (im.reservas) {
                 im.reservas.forEach(x => {
                     let checkinSeguro = (typeof parseInputDateSafe === 'function') ? parseInputDateSafe(x.checkin) : x.checkin;
@@ -4025,7 +4033,7 @@ window.gerarPDFDRE = function() {
         <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
         <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #ea580c; font-weight: bold;">R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
         <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #16a34a; font-weight: bold;">R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ 0,00</td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ ${despesasExtrasImovel.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
     </tr>`;
                         }
                     }
