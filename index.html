@@ -4015,17 +4015,18 @@ window.gerarPDFDRE = function() {
                             let colImovel = eTodos ? `<td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
 
                             linhasEntradasHTML += `
-                                <tr style="border-bottom: 1px solid #cbd5e1;">
-                                    ${colImovel}
-                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1;">
-                                        <strong>${x.titular?.nome || '-'}</strong>
-                                        <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:5px;">${x.statusPagamento.toUpperCase()}</span>
-                                    </td>
-                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center;">${din} a ${dout}</td>
-                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #ea580c; font-weight: bold;">R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #16a34a; font-weight: bold;">R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
-                                </tr>`;
+    <tr style="border-bottom: 1px solid #cbd5e1;">
+        ${colImovel}
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1;">
+            <strong>${(x.titular?.nome || x.nomeHospede || '-').split('-')[0].trim()}</strong>
+            <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:5px;">${(x.statusPagamento || '').toUpperCase()}</span>
+        </td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center;">${din} a ${dout}</td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; font-weight: bold;">R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #ea580c; font-weight: bold;">R$ ${comissaoReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #16a34a; font-weight: bold;">R$ ${limpezaReserva.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ 0,00</td>
+    </tr>`;
                         }
                     }
                 });
@@ -4161,15 +4162,16 @@ window.gerarPDFDRE = function() {
                     <thead>
                         <tr>
                             ${colImovelHeader}
-                            <th style="text-align: left; border-bottom: 2px solid #94a3b8;">Hóspede / Status</th>
-                            <th style="text-align: center; border-bottom: 2px solid #94a3b8;">Período</th>
-                            <th style="text-align: right; border-bottom: 2px solid #94a3b8;">Valor Bruto</th>
-                            <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #c2410c;">Comissão</th>
-                            <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #15803d;">Taxa Limpeza</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${linhasEntradasHTML || '<tr><td colspan="6" style="text-align:center; padding:12px; color:#64748b;">Nenhuma entrada registrada neste mês.</td></tr>'}
+                            <th style="text-align: left; border-bottom: 2px solid #94a3b8;">Hóspede</th>
+                    <th style="text-align: center; border-bottom: 2px solid #94a3b8;">Período</th>
+                    <th style="text-align: right; border-bottom: 2px solid #94a3b8;">Reservas</th>
+                    <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #c2410c;">Taxa ADM</th>
+                    <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #15803d;">Taxa Limpeza</th>
+                    <th style="text-align: right; border-bottom: 2px solid #94a3b8; color: #dc2626;">Despesas Extras</th>
+                </tr>
+            </thead>
+            <tbody>
+                        ${linhasEntradasHTML || '<tr><td colspan="7" style="text-align:center; padding:12px; color:#64748b;">Nenhuma entrada registrada neste mês.</td></tr>'}
                     </tbody>
                 </table>
 
