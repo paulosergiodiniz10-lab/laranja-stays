@@ -4026,7 +4026,7 @@ let despesasExtrasImovel = 0;
     <tr style="border-bottom: 1px solid #cbd5e1;">
         ${colImovel}
         <td style="padding: 9px; border-bottom: 1px solid #cbd5e1;">
-            <strong>${(x.titular?.nome || x.nomeHospede || '-').split('-')[0].trim()}</strong>
+            <strong>${(x.titular?.nome || x.nomeHospede || '-').split('-')[0].replace(/\d[\d\.\-\/\s]*/g, '').trim()}</strong>
             <span style="font-size:9px; background:#dcfce7; color:#15803d; padding:2px 6px; border-radius:4px; font-weight:bold; margin-left:5px;">${(x.statusPagamento || '').toUpperCase()}</span>
         </td>
         <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center;">${din} a ${dout}</td>
