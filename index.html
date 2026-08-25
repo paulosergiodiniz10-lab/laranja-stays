@@ -2918,7 +2918,16 @@ parceiroEmail: ehParceiroDoc ? val('reserva-parceiro-email').trim() : ''
                 im.reservas.unshift(obj);
             }
             
-            salvarBancoNoStorage();
+            const btnSalvar = document.activeElement;
+    let textoOriginal = '';
+    if (btnSalvar && btnSalvar.tagName === 'BUTTON') {
+      textoOriginal = btnSalvar.innerHTML;
+      btnSalvar.disabled = true;
+      btnSalvar.classList.add('opacity-75', 'bg-orange-500');
+      btnSalvar.innerHTML = `<i class="fa fa-spinner fa-spin mr-1"></i> Salvando...`;
+    }
+
+    salvarBancoNoStorage();
 
     try {
       let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
@@ -2927,6 +2936,12 @@ parceiroEmail: ehParceiroDoc ? val('reserva-parceiro-email').trim() : ''
       }
     } catch (e) {
       console.error("Erro ao sincronizar reserva no Firebase:", e);
+    } finally {
+      if (btnSalvar && btnSalvar.tagName === 'BUTTON') {
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('opacity-75', 'bg-orange-500');
+        btnSalvar.innerHTML = textoOriginal;
+      }
     }
 
     renderizarMapaDisponibilidade();
