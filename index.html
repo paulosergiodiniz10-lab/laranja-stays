@@ -2880,7 +2880,7 @@ function excluirParceiroPermanente(index) {
             else if(st === 'pago') vPago = vTF;
             
             let nomeNaTela = el('perfil-nome-usuario')?.innerText;
-            let criador = rOrig?.criadoPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' ? nomeNaTela : (window.nomeUsuarioLogado || 'Gestor'));
+            let criador = rOrig?.criadorPor || (userRole === 'dono' ? (empresaDB.nome || 'Maurilio Porto') : (nomeNaTela && nomeNaTela !== 'Painel Gestor' ? nomeNaTela : (window.nomeUsuarioLogado || 'Maurilio Porto')));
             let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
 
             const obj = { 
