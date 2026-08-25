@@ -2787,7 +2787,7 @@ function excluirParceiroPermanente(index) {
         function atualizarAcompanhanteTemp(id, c, obj) { let a=acompanhantesTemp.find(x=>x.id==id); if(a) a[c]=obj.value; }
         function renderizarAcompanhantes() { const cont = el('container-lista-acompanhantes'); const msg = el('msg-sem-acompanhantes'); if(!cont) return; cont.innerHTML=''; if(!acompanhantesTemp.length){ if(msg) msg.classList.remove('hidden-view'); return; } if(msg) msg.classList.add('hidden-view'); acompanhantesTemp.forEach(a => cont.insertAdjacentHTML('beforeend', `<div class="bg-white p-3 rounded-lg border border-slate-200 relative pr-10 mb-2"><button type="button" onclick="removerAcompanhanteAdmin(${a.id})" class="absolute top-1/2 -translate-y-1/2 right-3 text-red-500 hover:scale-110 transition-transform"><i class="fas fa-trash"></i></button><div class="grid grid-cols-1 md:grid-cols-3 gap-2"><div><input type="text" placeholder="Nome" value="${a.nome}" oninput="atualizarAcompanhanteTemp(${a.id}, 'nome', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="text" placeholder="CPF" value="${a.cpf}" oninput="mascaraCpfCnpj(this);atualizarAcompanhanteTemp(${a.id}, 'cpf', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium"></div><div><input type="date" value="${a.dataNasc}" onchange="atualizarAcompanhanteTemp(${a.id}, 'dataNasc', this)" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 outline-none text-xs font-medium text-slate-500"></div></div></div>`)); }
 
-        function salvarReservaManual() {
+       async function salvarReservaManual() {
             const imId = parseInt(val('reserva-imovel-select')); 
             const rId = val('reserva-id'); 
             const ci = parseInputDateSafe(val('reserva-checkin')); 
@@ -2880,7 +2880,7 @@ function excluirParceiroPermanente(index) {
             else if(st === 'pago') vPago = vTF;
             
             let nomeNaTela = el('perfil-nome-usuario')?.innerText;
-            let criador = rOrig?.criadorPor || (userRole === 'dono' ? (empresaDB.nome || 'Maurilio Porto') : (nomeNaTela && nomeNaTela !== 'Painel Gestor' ? nomeNaTela : (window.nomeUsuarioLogado || 'Maurilio Porto')));
+            let criador = rOrig?.criadorPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' && nomeNaTela !== 'Maurilio Porto Temporada' ? nomeNaTela : (window.nomeUsuarioLogado || 'Maurilio Porto'));
             let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
 
             const obj = { 
@@ -2918,12 +2918,22 @@ parceiroEmail: ehParceiroDoc ? val('reserva-parceiro-email').trim() : ''
                 im.reservas.unshift(obj);
             }
             
-            salvarBancoNoStorage(); 
-            renderizarMapaDisponibilidade(); 
-            renderizarListaReservasAdmin(); 
-            renderizarVitrine(imoveisDB); 
-            fecharModalReserva(); 
-            mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
+            salvarBancoNoStorage();
+
+    try {
+      let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
+      if (idEmp && typeof db !== 'undefined') {
+        await db.collection("sistema_saas").doc(idEmp).set({ imoveisDB: imoveisDB }, { merge: true });
+      }
+    } catch (e) {
+      console.error("Erro ao sincronizar reserva no Firebase:", e);
+    }
+
+    renderizarMapaDisponibilidade();
+    renderizarListaReservasAdmin();
+    renderizarVitrine(imoveisDB);
+    fecharModalReserva();
+    mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
         }
 function excluirReservaConfirmacao() { 
             const imId = val('reserva-imovel-select'); 
