@@ -787,16 +787,36 @@ function povoarSelectCategorias() {
             console.warn("Firebase fallback:", err);
         }
 
+        if (!pData || !pData.agenciaId) {
+            try {
+                const uEmail = (user.email || '').toLowerCase().trim();
+                const qEquipe = await db.collection("sistema_saas").get();
+                qEquipe.forEach(docSnap => {
+                    const dadosSaas = docSnap.data();
+                    if (dadosSaas.empresaDB && dadosSaas.empresaDB.equipe) {
+                        const achouMembro = dadosSaas.empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === uEmail);
+                        if (achouMembro) {
+                            currentAgenciaId = docSnap.id;
+                            userRole = achouMembro.role || 'dono';
+                            db.collection("usuarios").doc(user.uid).set({ agenciaId: docSnap.id, role: userRole, email: uEmail }, { merge: true }).catch(()=>{});
+                        }
+                    }
+                });
+            } catch (errEq) {
+                console.warn("Erro ao buscar agência por equipe:", errEq);
+            }
+        }
+
         if (pData && pData.agenciaId) {
             currentAgenciaId = pData.agenciaId;
             userRole = pData.role || 'dono';
             if (pData.primeiroAcesso === true) {
                 show('modal-trocar-senha-obrigatorio');
             }
-        } else {
+        } else if (!currentAgenciaId) {
             currentAgenciaId = user.uid;
             userRole = 'dono';
-            db.collection("usuarios").doc(user.uid).set({ agenciaId: user.uid, role: 'dono', email: user.email }).catch(()=>{});
+            db.collection("usuarios").doc(user.uid).set({ agenciaId: user.uid, role: 'dono', email: user.email }, { merge: true }).catch(()=>{});
         }
                         // Aplica as permissões logo depois que o sistema descobre o cargo no banco de dados
                         setTimeout(() => { aplicarPermissoesDeAcesso(); }, 500);
@@ -2879,10 +2899,18 @@ function excluirParceiroPermanente(index) {
             else if(vPago > vTF) sF = 'devolucao'; 
             else if(st === 'pago') vPago = vTF;
             
-            let nomeNaTela = el('perfil-nome-usuario')?.innerText;
-            let criador = rOrig?.criadorPor || (nomeNaTela && nomeNaTela !== 'Painel Gestor' && nomeNaTela !== 'Maurilio Porto Temporada' ? nomeNaTela : (window.nomeUsuarioLogado || 'Maurilio Porto'));
-            let criadorUid = rOrig?.criadoPorUid || window.uidUsuarioLogado || (auth.currentUser ? auth.currentUser.uid : 'admin');
+            let uEmailLogado = (auth.currentUser?.email || '').toLowerCase().trim();
+let membroCadastrado = (typeof empresaDB !== 'undefined' && empresaDB.equipe) 
+    ? empresaDB.equipe.find(m => m.email && m.email.toLowerCase().trim() === uEmailLogado)
+    : null;
 
+let nomeRealCriador = membroCadastrado?.nome || window.nomeUsuarioLogado || el('perfil-nome-usuario')?.innerText || auth.currentUser?.email || 'Gestor';
+if (nomeRealCriador === 'Painel Gestor' || nomeRealCriador === 'Maurilio Porto Temporada') {
+    nomeRealCriador = membroCadastrado?.nome || auth.currentUser?.email || 'Gestor';
+}
+
+let criador = rOrig?.criadoPor || nomeRealCriador;
+let criadorUid = rOrig?.criadoPorUid || (auth.currentUser ? auth.currentUser.uid : 'admin');
             const obj = { 
                 id: rId ? parseInt(rId) : Date.now(), 
                 dataCriacao: rOrig?.dataCriacao || new Date().toISOString(), 
