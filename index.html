@@ -739,7 +739,7 @@ function povoarSelectCategorias() {
         function mostrarTelaErro(mensagem) { document.body.innerHTML = `<div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #f8fafc; font-family: sans-serif; padding: 20px; text-align: center;"><i class="fas fa-exclamation-triangle" style="font-size: 60px; color: #f97316; margin-bottom: 20px;"></i><h2 style="font-size: 24px; font-weight: bold; color: #1e293b; margin-bottom: 12px;">Página Indisponível</h2><p style="color: #64748b; font-size: 16px; max-width: 400px; line-height: 1.5;">${mensagem}</p></div>`; }
 
         const dbMockInicial = [{ id: 1, proprietario: { nome: "Paulo Sergio", cpf: "111", zap: "48999", email: "p@e", comissao: 20 }, nome: "Flat Premium Vista Mar", numeroApto: "402", cidade: "Florianópolis - SC", endereco: { cep: "88015-200", cidade: "Florianópolis", uf: "SC", rua: "Av", numero: "100", bairro: "Centro", complemento: "" }, tipo: "Apartamento", checkin: "14:00", checkout: "11:00", pagamento: "PIX", estrutura: "Wi-Fi.", fotos: ["https://placehold.co/600"], capacidadeTotal: 5, pacotes: [], calendario: [], reservas: [], despesas: [] }];
-        let imoveisDB = []; let empresaDB = { nome: "", cnpj: "", zap: "", email: "", creci: "", logo: "", endereco: {}, politicaCancelamento: "", infoGerais: "" }; let orcamentosDB = []; let categoriasDB = ["Faxina", "Lavanderia", "Manutenção", "Luz", "Condomínio", "Outros"];
+        let imoveisDB = []; let empresaDB = { nome: "", cnpj: "", zap: "", email: "", creci: "", logo: "", endereco: {}, politicaCancelamento: "", infoGerais: "", equipe: [] }; let orcamentosDB = []; let categoriasDB = ["Faxina", "Lavanderia", "Manutenção", "Luz", "Condomínio", "Outros"];
         let currentUserUid = null; let currentAgenciaId = null; let userRole = 'dono'; let isPublicVitrine = false; let calendarioEmCriacao = []; let fotosEmCriacao = []; let abaAtivaCadastro = 'proprietario'; let imovelEditandoId = null; let imovelExcluirId = null;
         let mapaMes = new Date().getMonth() + 1; let mapaAno = new Date().getFullYear(); let acompanhantesTemp = []; let financeiroImovelSelectId = null; let financeiroMesStr = ""; let categoriaEditandoIndex = null;
         let despesaMes = new Date().getMonth() + 1; let despesaAno = new Date().getFullYear(); let reservasAtuaisExportacao = []; 
@@ -824,7 +824,8 @@ function povoarSelectCategorias() {
                 if (docSnap.exists) { 
                     const data = docSnap.data(); 
                     imoveisDB = data.imoveisDB || []; 
-                    empresaDB = data.empresaDB || empresaDB; 
+                   empresaDB = data.empresaDB || empresaDB;
+if (!empresaDB.equipe) empresaDB.equipe = [];
                     orcamentosDB = data.orcamentosDB || []; 
                     categoriasDB = data.categoriasDB || categoriasDB; 
                 } else if (!isPublicVitrine) { 
