@@ -4039,7 +4039,24 @@ let despesasExtrasImovel = 0;
                     }
                 });
             }
+let teveReservaNoMes = im.reservas?.some(r => {
+            let cSafe = (typeof parseInputDateSafe === 'function') ? parseInputDateSafe(r.checkin) : r.checkin;
+            return (!mSt || cSafe.startsWith(mSt)) && (r.statusPagamento === 'pago' || (r.statusPagamento === 'cancelada' && parseFloat(r.valorTotal) > 0) || r.statusPagamento === 'devolucao');
+        });
 
+        if (!teveReservaNoMes && despesasExtrasImovel > 0) {
+            let colImovel = eTodos ? `<td style="padding: 9px; border-bottom: 1px solid #cbd5e1; font-size: 11px; font-weight: bold; color: #2563eb;">${nomeAptoDisplay}</td>` : '';
+            linhasEntradasHTML += `
+                <tr style="border-bottom: 1px solid #cbd5e1;">
+                    ${colImovel}
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; color: #64748b;">-</td>
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: center; color: #64748b;">-</td>
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; font-weight: bold;">R$ 0,00</td>
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #ea580c; font-weight: bold;">R$ 0,00</td>
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #16a34a; font-weight: bold;">R$ 0,00</td>
+                    <td style="padding: 9px; border-bottom: 1px solid #cbd5e1; text-align: right; color: #dc2626; font-weight: bold;">R$ ${despesasExtrasImovel.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+                </tr>`;
+        }
             if (im.despesas) {
                 im.despesas.forEach(x => {
                     let dataSegura = (typeof parseInputDateSafe === 'function') ? parseInputDateSafe(x.data) : x.data;
