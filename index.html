@@ -2919,17 +2919,21 @@ parceiroEmail: ehParceiroDoc ? val('reserva-parceiro-email').trim() : ''
             }
             
             salvarBancoNoStorage();
+
+    try {
+      let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
+      if (idEmp && typeof db !== 'undefined') {
+        await db.collection("sistema_saas").doc(idEmp).set({ imoveisDB: imoveisDB }, { merge: true });
+      }
+    } catch (e) {
+      console.error("Erro ao sincronizar reserva no Firebase:", e);
+    }
+
     renderizarMapaDisponibilidade();
     renderizarListaReservasAdmin();
     renderizarVitrine(imoveisDB);
     fecharModalReserva();
     mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
-
-    let idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : (typeof currentUserUid !== 'undefined' ? currentUserUid : null);
-if (idEmp && typeof db !== 'undefined') {
-  db.collection("sistema_saas").doc(idEmp).set({ imoveisDB: imoveisDB }, { merge: true })
-    .catch(e => console.error("Erro ao sincronizar reserva no Firebase:", e));
-}
 }
 function excluirReservaConfirmacao() { 
             const imId = val('reserva-imovel-select'); 
