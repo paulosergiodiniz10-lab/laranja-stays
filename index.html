@@ -5523,6 +5523,43 @@ function emitirDocumentoParceiro(modoDoc) {
         });
     }
 
+    // Alertas específicos por documento
+    let boxStatusDocHTML = '';
+    if (modoDoc === 'prevoucher') {
+        boxStatusDocHTML = `
+            <div style="background: #fff5f5; border: 1.5px solid #fecaca; border-radius: 10px; padding: 14px 18px; margin-top: 18px; font-size: 13px; line-height: 1.5;">
+                <div style="color: #991b1b; font-weight: 800; font-size: 13px; margin-bottom: 3px;">
+                    ⚠️ RESERVA CONFIRMADA - PAGAMENTO PARCIAL:
+                </div>
+                <div style="color: #7f1d1d;">
+                    Esta reserva está pré-confirmada via pagamento de sinal. O envio do Voucher Oficial de Liberação e autorização de entrada será realizado mediante a quitação do saldo restante, que deverá ocorrer até 48 horas antes do check-in.
+                </div>
+            </div>
+        `;
+    } else if (modoDoc === 'confirmacao') {
+        boxStatusDocHTML = `
+            <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 14px 18px; margin-top: 18px; font-size: 13px; line-height: 1.5;">
+                <div style="color: #166534; font-weight: 800; font-size: 13px; margin-bottom: 3px;">
+                    ☑️ PRÉ-RESERVA REALIZADA COM SUCESSO:
+                </div>
+                <div style="color: #14532d;">
+                    Sua acomodação está pré-bloqueada em nosso sistema. Para efetivação definitiva e emissão do seu Voucher de entrada, siga as instruções de pagamento enviadas pelo nosso atendimento.
+                </div>
+            </div>
+        `;
+    } else {
+        boxStatusDocHTML = `
+            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 14px 18px; margin-top: 18px; font-size: 13px; line-height: 1.5;">
+                <div style="color: #15803d; font-weight: 800; font-size: 13px; margin-bottom: 3px;">
+                    ✔ RESERVA QUITADA:
+                </div>
+                <div style="color: #166534;">
+                    Pagamento 100% liquidado. Acesso autorizado e liberado para entrada no condomínio.
+                </div>
+            </div>
+        `;
+    }
+
     const win = window.open('', '_blank');
     win.document.write(`
         <!DOCTYPE html>
@@ -5544,7 +5581,7 @@ function emitirDocumentoParceiro(modoDoc) {
                 .table-hospedes { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
                 .table-hospedes th { background: #f8fafc; text-align: left; padding: 10px 12px; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
                 .box-financeiro { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-top: 24px; }
-                .grid-fin { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+                .grid-fin { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
                 .fin-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
                 .fin-lbl { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; }
                 .fin-val { font-size: 16px; font-weight: bold; margin-top: 2px; }
@@ -5608,20 +5645,15 @@ function emitirDocumentoParceiro(modoDoc) {
                             <div class="fin-lbl">Saldo a Pagar</div>
                             <div class="fin-val" style="color: #dc2626;">${formatarGrana(totFalta)}</div>
                         </div>
-                    </div>
-                    <div style="font-size: 12px; color: #b45309; margin-top: 10px; text-align: center;">
-                        <strong>Atenção:</strong> Reserva com pagamento parcial confirmado. O saldo devedor restante deverá ser quitado antes da liberação do check-in.
                     </div>` : `
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 800;">
                         <span>Valor Total do Pacote:</span>
                         <span style="color: #16a34a; font-size: 18px;">${formatarGrana(totVenda)}</span>
                     </div>
-                    ${modoDoc === 'oficial' ? `
-                    <div style="font-size: 12px; color: #15803d; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                        ✔ <strong>Reserva Quitada:</strong> Pagamento 100% liquidado. Acesso liberado para entrada.
-                    </div>` : ''}
                     `}
                 </div>
+
+                ${boxStatusDocHTML}
 
                 ${r.obs ? `
                 <div style="margin-top: 16px; font-size: 12px; color: #475569; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
@@ -5637,7 +5669,6 @@ function emitirDocumentoParceiro(modoDoc) {
     `);
     win.document.close();
 }
-
 // --- MODAL DE CAIXA / FINANCEIRO ---
 function abrirModalCaixaParceiro(idRes) {
     reservaParceiroCaixaSelecionada = reservasParceirosDB.find(item => item.id == idRes);
