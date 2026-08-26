@@ -5813,7 +5813,43 @@ async function salvarRecebimentoParceiro() {
 
         <button type="button" onclick="fecharModalDocParceiro()" class="mt-5 text-xs text-slate-400 hover:text-slate-600 font-semibold">Cancelar</button>
     </div>
-</div>                 
+</div>    
+                    <!-- MODAL DE CAIXA / FINANCEIRO (PARCEIROS) -->
+<div id="modal-caixa-parceiro" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-sm w-full p-6 text-center">
+        <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+            <i class="fas fa-hand-holding-usd"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Caixa / Financeiro</h3>
+        <p class="text-xs text-slate-500 mb-4">Registrar pagamento parcial ou quitação:</p>
+
+        <div id="caixa-parceiro-resumo" class="bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold py-2 px-3 rounded-xl mb-4">
+            Já Pago: R$ 0,00 | Falta: R$ 0,00
+        </div>
+
+        <div class="space-y-3 text-left">
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Valor do Lançamento (R$)</label>
+                <input type="number" step="0.01" id="caixa-parceiro-valor" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-center font-extrabold text-slate-800 text-lg focus:bg-white focus:border-emerald-500 focus:outline-none transition-all" placeholder="0,00">
+            </div>
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Forma de Pagamento</label>
+                <select id="caixa-parceiro-forma" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:bg-white focus:border-emerald-500 focus:outline-none transition-all">
+                    <option value="Pix">Pix</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Transferência">Transferência Bancária</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 mt-5">
+            <button type="button" onclick="fecharModalCaixaParceiro()" class="py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">Cancelar</button>
+            <button type="button" onclick="salvarRecebimentoParceiro()" class="py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/30 transition-all">Confirmar</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
 
