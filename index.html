@@ -140,7 +140,126 @@
                 <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center"><div class="flex gap-2"><button id="btn-excluir-reserva" onclick="excluirReservaConfirmacao()" class="hidden-view text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg font-bold text-sm transition-colors"><i class="fas fa-trash-alt mr-1"></i> Lixeira</button><button id="btn-cancelar-reserva" onclick="iniciarCancelamentoTotal()" class="hidden-view text-slate-600 hover:bg-slate-100 px-3 py-2 rounded-lg font-bold text-sm transition-colors"><i class="fas fa-ban mr-1"></i> Cancelar</button></div><div class="flex gap-2"><button onclick="fecharModalReserva()" class="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors text-sm">Fechar</button><button onclick="salvarReservaManual()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-md active:scale-95"><i class="fas fa-save mr-2"></i> Salvar</button></div></div>
             </div>
         </div>
-<!-- MODAL GERENCIAR / INATIVAR CORRETORES PARCEIROS -->
+<!-- MODAL RESERVA PARCEIRO (REVENDA / MANUAL) -->
+<div id="modal-reserva-parceiro" class="hidden-view fixed inset-0 z-[85] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 fade-in">
+    <div class="bg-slate-50 rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl overflow-hidden max-h-[90vh]">
+        <div class="p-4 border-b border-slate-100 bg-white flex justify-between items-center">
+            <h3 id="titulo-modal-reserva-parceiro" class="text-lg font-bold text-slate-800">
+                <i class="fas fa-handshake text-orange-500 mr-1.5"></i> Nova Reserva Parceiro (Revenda)
+            </h3>
+            <button onclick="fecharModalReservaParceiro()" class="text-slate-400 hover:text-red-500 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-5 overflow-y-auto custom-scroll space-y-4">
+            <input type="hidden" id="revenda-id">
+
+            <!-- DADOS DO FORNECEDOR / ACOMODAÇÃO -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1.5">Dados da Acomodação & Parceiro</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Empresa / Fornecedor Parceiro *</label>
+                        <input type="text" id="revenda-empresa" placeholder="Ex: Operadora X / Corretor João" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Condomínio / Hotel *</label>
+                        <input type="text" id="revenda-condominio" placeholder="Ex: Golden Dolphin Grand Hotel" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Número do Apto / Bloco</label>
+                        <input type="text" id="revenda-apto" placeholder="Ex: Apto 402 - Bloco B" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Cidade / UF</label>
+                        <input type="text" id="revenda-cidade" value="Caldas Novas - GO" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Check-in *</label>
+                        <input type="date" id="revenda-checkin" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Check-out *</label>
+                        <input type="date" id="revenda-checkout" class="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 outline-none text-sm font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <!-- VALORES E LUCRO AUTOMÁTICO -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1.5">Financeiro & Lucro Líquido</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Custo Compra (R$) *</label>
+                        <input type="number" step="0.01" id="revenda-valor-compra" oninput="calcularLucroRevendaModal()" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-red-200 bg-red-50/50 text-red-600 outline-none font-bold text-base">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Valor Venda Cliente (R$) *</label>
+                        <input type="number" step="0.01" id="revenda-valor-venda" oninput="calcularLucroRevendaModal()" placeholder="0.00" class="w-full px-3 py-2 rounded-lg border border-green-200 bg-green-50/50 text-green-600 outline-none font-bold text-base">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-orange-800 mb-1">Lucro Líquido (Spread)</label>
+                        <div id="revenda-display-lucro" class="w-full px-3 py-2 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 font-bold text-base text-center">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Observações Operacionais / Notas</label>
+                    <textarea id="revenda-obs" rows="2" placeholder="Detalhes do parceiro, regras de pagamento, chaves..." class="w-full px-3 py-2 rounded-xl border border-slate-200 outline-none text-sm font-medium resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- DADOS DO HÓSPEDE TITULAR E ACOMPANHANTES -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1.5">Hóspede Titular</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <div class="md:col-span-2">
+                        <input type="text" id="revenda-titular-nome" placeholder="Nome Completo do Titular *" class="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <input type="text" id="revenda-titular-cpf" oninput="mascaraCpfCnpj(this)" placeholder="CPF" class="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <input type="date" id="revenda-titular-nasc" class="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-medium text-slate-500">
+                    </div>
+                    <div>
+                        <input type="tel" id="revenda-titular-zap" oninput="mascaraTelefone(this)" placeholder="WhatsApp" class="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-medium">
+                    </div>
+                    <div>
+                        <input type="email" id="revenda-titular-email" placeholder="E-mail (Opcional)" class="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-medium">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-2 pt-2 border-t border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase">Acompanhantes</h4>
+                    <button type="button" onclick="adicionarAcompanhanteRevenda()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded text-xs font-bold transition-colors">
+                        <i class="fas fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+                <div id="revenda-msg-sem-acomp" class="text-xs text-slate-400 italic mb-2">Nenhum acompanhante adicionado.</div>
+                <div id="revenda-container-acompanhantes" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
+            <div>
+                <button id="btn-excluir-revenda" onclick="excluirReservaParceiroConfirmacao()" class="hidden-view text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg font-bold text-sm transition-colors">
+                    <i class="fas fa-trash-alt mr-1"></i> Excluir
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="fecharModalReservaParceiro()" class="px-4 py-2 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors text-sm">Cancelar</button>
+                <button onclick="salvarReservaParceiroRevenda()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-xl font-bold text-sm shadow-md active:scale-95">
+                    <i class="fas fa-save mr-2"></i> Salvar Reserva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- MODAL GERENCIAR / INATIVAR CORRETORES PARCEIROS -->
 <div id="modal-gerenciar-parceiros" class="hidden-view fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[100] p-4">
     <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
         <div class="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
@@ -319,7 +438,8 @@
                 <div id="admin-sidebar" class="w-full md:w-64 shrink-0 transition-all duration-300 relative z-10">
                     <button onclick="toggleSidebar()" id="btn-toggle-sidebar" class="hidden md:flex absolute top-10 -right-4 z-50 bg-slate-800 text-white hover:bg-orange-500 w-8 h-8 rounded-full items-center justify-center shadow-lg transition-transform hover:scale-110" title="Recolher Menu"><i class="fas fa-chevron-left" id="icon-toggle-sidebar"></i></button>
                     <div id="admin-sidebar-inner" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-y-auto max-h-[calc(100vh-6rem)] sticky top-20 md:w-[256px] transition-opacity duration-300">
-                        <div class="p-5 bg-slate-900 text-white text-center border-b border-slate-800"><div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2"><i class="fas fa-briefcase text-xl text-orange-400"></i></div><h3 id="perfil-nome-usuario" class="font-bold text-lg tracking-tight">Painel Gestor</h3><p id="perfil-cargo-usuario" class="text-xs text-slate-400">Temporada Stays PMS</p></div><div class="p-2 flex flex-col gap-1"><button onclick="mudarAbaInternaAdmin('empresa')" id="btn-admin-empresa" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-id-card w-6 text-center mr-1"></i> Minha Empresa</button><button onclick="mudarAbaInternaAdmin('imoveis')" id="btn-admin-imoveis" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"><i class="fas fa-building w-6 text-center mr-1"></i> Meus Imóveis</button><button onclick="mudarAbaInternaAdmin('mapa')" id="btn-admin-mapa" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-calendar-alt w-6 text-center mr-1"></i> Mapa de Reservas</button><button onclick="mudarAbaInternaAdmin('reservas')" id="btn-admin-reservas" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-list-check w-6 text-center mr-1"></i> Lista de Reservas</button><div class="border-t border-slate-100 my-1 pt-1"></div>
+                        <div class="p-5 bg-slate-900 text-white text-center border-b border-slate-800"><div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2"><i class="fas fa-briefcase text-xl text-orange-400"></i></div><h3 id="perfil-nome-usuario" class="font-bold text-lg tracking-tight">Painel Gestor</h3><p id="perfil-cargo-usuario" class="text-xs text-slate-400">Temporada Stays PMS</p></div><div class="p-2 flex flex-col gap-1"><button onclick="mudarAbaInternaAdmin('empresa')" id="btn-admin-empresa" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-id-card w-6 text-center mr-1"></i> Minha Empresa</button><button onclick="mudarAbaInternaAdmin('imoveis')" id="btn-admin-imoveis" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"><i class="fas fa-building w-6 text-center mr-1"></i> Meus Imóveis</button><button onclick="mudarAbaInternaAdmin('mapa')" id="btn-admin-mapa" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-calendar-alt w-6 text-center mr-1"></i> Mapa de Reservas</button><button onclick="mudarAbaInternaAdmin('reservas')" id="btn-admin-reservas" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-list-check w-6 text-center mr-1"></i> Lista de Reservas</button>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               <button onclick="mudarAbaInternaAdmin('reservas_parceiros')" id="btn-admin-reservas-parceiros" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-handshake w-6 text-center mr-1"></i> Reservas Parceiros</button><div class="border-t border-slate-100 my-1 pt-1"></div>
 <button onclick="mudarAbaInternaAdmin('orcamentos')" id="btn-admin-orcamentos" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-file-invoice-dollar w-6 text-center mr-1"></i> Orçamentos</button>
 <div class="border-t border-slate-100 my-1 pt-1"></div>
 <button onclick="mudarAbaInternaAdmin('equipe')" id="btn-admin-equipe" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-users w-6 text-center mr-1"></i> Minha Equipe</button><div class="border-t border-slate-100 my-1 pt-1"></div><button onclick="mudarAbaInternaAdmin('despesas')" id="btn-admin-despesas" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-receipt w-6 text-center mr-1"></i> Despesas (Gastos)</button><button onclick="mudarAbaInternaAdmin('resultados')" id="btn-admin-resultados" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-chart-line w-6 text-center mr-1"></i> Resultados (DRE)</button><button onclick="mudarAbaInternaAdmin('recibos')" id="btn-admin-recibos" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"><i class="fas fa-file-invoice w-6 text-center mr-1"></i> Recibos</button></div>
@@ -351,7 +471,63 @@
                     <div id="admin-content-imoveis" class="fade-in"><div class="p-6 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4"><h2 class="text-xl font-bold text-slate-800">Gestão de Imóveis</h2><button onclick="abrirModalCadastro()" class="w-full sm:w-auto bg-slate-800 text-white hover:bg-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center active:scale-95"><i class="fas fa-plus mr-2"></i>Novo Imóvel</button></div><div id="lista-imoveis-admin" class="p-6 space-y-4"></div></div>
                     <div id="admin-content-mapa" class="hidden-view fade-in flex flex-col h-full bg-white"><div class="p-6 border-b border-slate-100 flex flex-col justify-between items-start gap-4 md:flex-row md:items-center"><div><h2 class="text-xl font-bold text-slate-800">Mapa de Reservas</h2><p class="text-xs text-slate-500 mt-1">Clique num dia Livre para adicionar reserva ou bloqueio.</p></div><div class="flex items-center justify-between w-full md:w-auto gap-4"><div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg border border-slate-200"><button onclick="mudarMesMapa(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-600 hover:text-orange-500 transition-colors"><i class="fas fa-chevron-left text-xs"></i></button><span id="label-mes-mapa" class="text-sm font-bold text-slate-700 px-3 w-32 text-center uppercase tracking-wide"></span><button onclick="mudarMesMapa(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-600 hover:text-orange-500 transition-colors"><i class="fas fa-chevron-right text-xs"></i></button></div><button onclick="abrirNovaReservaManualLista()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center"><i class="fas fa-calendar-plus mr-2"></i> Nova Reserva</button></div></div><div class="p-6"><div class="flex flex-wrap items-center gap-4 mb-4 text-[11px] font-bold text-slate-500"><div class="flex items-center"><div class="w-3 h-3 bg-white border border-slate-300 rounded-sm mr-1.5"></div> Livre</div><div class="flex items-center"><div class="w-3 h-3 bg-[#fef08a] border border-[#fde047] rounded-sm mr-1.5"></div> Pend</div><div class="flex items-center"><div class="w-3 h-3 bg-[#bbf7d0] border border-[#86efac] rounded-sm mr-1.5"></div> Pago</div><div class="flex items-center"><div class="w-3 h-3 bg-sky-100 border border-sky-300 rounded-sm mr-1.5"></div> Prop</div><div class="flex items-center"><div class="w-3 h-3 bg-slate-100 border border-slate-300 rounded-sm mr-1.5" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, #cbd5e1 3px, #cbd5e1 6px);"></div> Manut</div></div><div id="container-mapa-grid" class="mapa-container-master custom-scroll pb-2"></div></div></div>
                     <div id="admin-content-reservas" class="hidden-view fade-in"><div class="p-6 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4"><div><h2 class="text-xl font-bold text-slate-800">Central de Reservas</h2><p class="text-xs text-slate-500 mt-1">Gerencie todas as locações, usos próprios e manutenções.</p></div><button onclick="abrirNovaReservaManualLista()" class="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-md flex items-center justify-center active:scale-95"><i class="fas fa-calendar-plus mr-2"></i>Nova Reserva</button></div><div class="p-4 bg-white border-b border-slate-100 flex flex-wrap gap-3 items-end"><div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Período</label><select id="filtro-periodo-reservas" onchange="toggleFiltroPersonalizadoReservas()" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 outline-none focus:border-orange-500"><option value="todas">Todas as Datas</option><option value="hoje">Hoje</option><option value="ontem">Ontem</option><option value="ultimos7">Últimos 7 dias</option><option value="ultimos30">Últimos 30 dias</option><option value="mes_atual">Mês Atual</option><option value="personalizado">Personalizado...</option></select></div><div id="bloco-filtro-datas" class="hidden-view flex gap-2 items-end"><div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Início</label><input type="date" id="filtro-reserva-inicio" onchange="atualizarCheckoutAutomatico('filtro-reserva-inicio', 'filtro-reserva-fim')" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium outline-none focus:border-orange-500"></div><div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Fim</label><input type="date" id="filtro-reserva-fim" class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium outline-none focus:border-orange-500"></div></div><button onclick="renderizarListaReservasAdmin()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"><i class="fas fa-filter mr-1"></i> Filtrar</button><div class="ml-auto w-full sm:w-auto mt-2 sm:mt-0"><button onclick="exportarExcelReservas()" class="w-full bg-[#107c41] hover:bg-[#0b5c30] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm flex items-center justify-center"><i class="fas fa-file-excel mr-1.5"></i> Baixar Excel</button></div></div><div class="p-6 overflow-x-auto"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-wider"><th class="p-3 rounded-tl-lg">Data</th><th class="p-3">Reserva Nº</th><th class="p-3">Status</th><th class="p-3">Titular / Finalidade</th><th class="p-3">Acomodação</th><th class="p-3">Datas</th><th class="p-3">Valor Total</th><th class="p-3 rounded-tr-lg text-center">Ações</th></tr></thead><tbody id="lista-reservas-tbody" class="text-sm"></tbody></table></div></div>
-                    
+       <!-- ABA RESERVAS PARCEIROS (REVENDA / INTERMEDIAÇÃO) -->
+<div id="admin-content-reservas_parceiros" class="hidden-view fade-in flex flex-col h-full bg-slate-50">
+    <div class="p-6 border-b border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-handshake text-orange-500"></i> Reservas Parceiros (Revenda)
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Controle de reservas externas, custo de compra, preço de venda e lucro líquido.</p>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <button onclick="exportarExcelReservasParceiros()" class="bg-[#107c41] hover:bg-[#0b5c30] text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                <i class="fas fa-file-excel"></i> Baixar DRE Parceiros
+            </button>
+            <button onclick="abrirModalReservaParceiro()" class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i> Nova Reserva Parceiro
+            </button>
+        </div>
+    </div>
+
+    <!-- CARDS DE RESUMO FINANCEIRO (DRE PARCEIROS) -->
+    <div class="p-6 pb-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-green-500 border border-slate-100">
+            <h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Vendas (Clientes)</h4>
+            <div id="card-parceiro-total-venda" class="text-2xl font-bold text-green-600">R$ 0,00</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-red-500 border border-slate-100">
+            <h4 class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custo Parceiros (Compra)</h4>
+            <div id="card-parceiro-total-custo" class="text-2xl font-bold text-red-600">R$ 0,00</div>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-xl shadow-md border-l-4 border-l-orange-500 text-white">
+            <h4 class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">Lucro Líquido Retido</h4>
+            <div id="card-parceiro-total-lucro" class="text-2xl font-bold text-orange-400">R$ 0,00</div>
+        </div>
+    </div>
+
+    <!-- TABELA DE RESERVAS EXTERNAS -->
+    <div class="p-6 pt-4 overflow-y-auto flex-1 custom-scroll">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse min-w-[950px]">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider">
+                        <th class="p-3.5">Data / Reserva</th>
+                        <th class="p-3.5">Parceiro / Fornecedor</th>
+                        <th class="p-3.5">Acomodação</th>
+                        <th class="p-3.5">Hóspede Titular</th>
+                        <th class="p-3.5 text-center">Período</th>
+                        <th class="p-3.5 text-right">Valor Venda</th>
+                        <th class="p-3.5 text-right">Custo Compra</th>
+                        <th class="p-3.5 text-right text-orange-600">Lucro</th>
+                        <th class="p-3.5 text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-reservas-parceiros-tbody" class="text-sm"></tbody>
+            </table>
+        </div>
+    </div>
+</div>             
     <!-- ABA ORÇAMENTOS COM HISTÓRICO -->
                     <div id="admin-content-orcamentos" class="hidden-view fade-in flex flex-col h-full bg-slate-50">
                         <!-- NAVEGAÇÃO DE ABAS SUPERIORES -->
@@ -848,6 +1024,7 @@ function povoarSelectCategorias() {
 if (!empresaDB.equipe) empresaDB.equipe = [];
                     orcamentosDB = data.orcamentosDB || []; 
                     categoriasDB = data.categoriasDB || categoriasDB; 
+                    reservasParceirosDB = data.reservasParceirosDB || [];
                 } else if (!isPublicVitrine) { 
                     imoveisDB = dbMockInicial; 
                 }
@@ -1277,24 +1454,26 @@ function montarDropdownHospedesOrcamento() {
         }
 
         function mudarAbaInternaAdmin(aba) {
-            const abas = ['empresa', 'imoveis', 'mapa', 'reservas', 'orcamentos', 'equipe', 'despesas', 'resultados', 'recibos'];
-            abas.forEach(a => {
-                let d = el(`admin-content-${a}`); let b = el(`btn-admin-${a}`);
-                if (a === aba) { 
-                    d?.classList.remove('hidden-view'); 
-                    if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"; 
-                    if(a==='mapa') renderizarMapaDisponibilidade(); 
-                    if(a==='reservas') renderizarListaReservasAdmin(); 
-                    if(a==='orcamentos') renderListaOrc(); 
-                    if(a==='resultados') povoarFiltrosResultados(); 
-                    if(a==='equipe') renderizarEquipe(); 
-                    if(a==='despesas'){ povoarFiltrosDespesas(); if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; }
-                } else { 
-                    d?.classList.add('hidden-view'); 
-                    if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"; 
-                }
-            });
+    const abas = ['empresa', 'imoveis', 'mapa', 'reservas', 'reservas_parceiros', 'orcamentos', 'equipe', 'despesas', 'resultados', 'recibos'];
+    abas.forEach(a => {
+        let d = el(`admin-content-${a}`); 
+        let b = el(`btn-admin-${a}`) || el(`btn-admin-${a.replace('_', '-')}`);
+        if (a === aba) { 
+            d?.classList.remove('hidden-view'); 
+            if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all bg-orange-50 text-orange-600"; 
+            if(a==='mapa') renderizarMapaDisponibilidade(); 
+            if(a==='reservas') renderizarListaReservasAdmin(); 
+            if(a==='reservas_parceiros' && typeof renderizarListaReservasParceiros === 'function') renderizarListaReservasParceiros(); 
+            if(a==='orcamentos') renderListaOrc(); 
+            if(a==='resultados') povoarFiltrosResultados(); 
+            if(a==='equipe') renderizarEquipe(); 
+            if(a==='despesas'){ povoarFiltrosDespesas(); if(el('label-mes-despesa')) el('label-mes-despesa').innerText=`${mesesCompletos[despesaMes-1]} ${despesaAno}`; }
+        } else { 
+            d?.classList.add('hidden-view'); 
+            if(b) b.className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all text-slate-500 hover:bg-slate-50"; 
         }
+    });
+}
         let isSidebarOpen = true;
         function toggleSidebar() { isSidebarOpen = !isSidebarOpen; const sidebar = el('admin-sidebar'); const inner = el('admin-sidebar-inner'); const icon = el('icon-toggle-sidebar'); const btn = el('btn-toggle-sidebar'); if (isSidebarOpen) { sidebar.classList.remove('md:w-0', 'md:-mr-6'); sidebar.classList.add('md:w-64'); inner.classList.remove('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-left'; btn.title = 'Recolher Menu'; } else { sidebar.classList.remove('md:w-64'); sidebar.classList.add('md:w-0', 'md:-mr-6'); inner.classList.add('opacity-0', 'pointer-events-none'); icon.className = 'fas fa-chevron-right'; btn.title = 'Expandir Menu'; } }
 
@@ -4809,7 +4988,292 @@ function fecharModalDeletar() {
     modal.classList.add('hidden-view');
     acaoConfirmadaDeletar = null;
 }
-</script>   
+// ==========================================
+// MÓDULO ISOLADO: RESERVAS PARCEIROS (REVENDA)
+// ==========================================
+let reservasParceirosDB = [];
+let acompanhantesRevendaTemp = [];
+
+function calcularLucroRevendaModal() {
+    const compra = parseFloat(val('revenda-valor-compra')) || 0;
+    const venda = parseFloat(val('revenda-valor-venda')) || 0;
+    const lucro = venda - compra;
+    const elDisplay = el('revenda-display-lucro');
+    if (elDisplay) {
+        elDisplay.innerText = formatMoney(lucro);
+        elDisplay.className = lucro >= 0 
+            ? "w-full px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-base text-center"
+            : "w-full px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 font-bold text-base text-center";
+    }
+}
+
+function abrirModalReservaParceiro(id = null) {
+    acompanhantesRevendaTemp = [];
+    if (id) {
+        const item = reservasParceirosDB.find(x => x.id === id);
+        if (!item) return;
+        setVal('revenda-id', item.id);
+        setVal('revenda-empresa', item.empresa || '');
+        setVal('revenda-condominio', item.condominio || '');
+        setVal('revenda-apto', item.apto || '');
+        setVal('revenda-cidade', item.cidade || 'Caldas Novas - GO');
+        setVal('revenda-checkin', item.checkin || '');
+        setVal('revenda-checkout', item.checkout || '');
+        setVal('revenda-valor-compra', item.valorCompra || '');
+        setVal('revenda-valor-venda', item.valorVenda || '');
+        setVal('revenda-obs', item.obs || '');
+
+        setVal('revenda-titular-nome', item.titular?.nome || '');
+        setVal('revenda-titular-cpf', item.titular?.cpf || '');
+        setVal('revenda-titular-nasc', item.titular?.dataNasc || '');
+        setVal('revenda-titular-zap', item.titular?.zap || '');
+        setVal('revenda-titular-email', item.titular?.email || '');
+
+        acompanhantesRevendaTemp = item.acompanhantes ? JSON.parse(JSON.stringify(item.acompanhantes)) : [];
+        if (el('titulo-modal-reserva-parceiro')) el('titulo-modal-reserva-parceiro').innerHTML = `<i class="fas fa-edit text-orange-500 mr-1.5"></i> Editar Reserva Parceiro #${item.numeroReserva || item.id}`;
+        show('btn-excluir-revenda');
+    } else {
+        setVal('revenda-id', '');
+        setVal('revenda-empresa', '');
+        setVal('revenda-condominio', '');
+        setVal('revenda-apto', '');
+        setVal('revenda-cidade', 'Caldas Novas - GO');
+        setVal('revenda-checkin', '');
+        setVal('revenda-checkout', '');
+        setVal('revenda-valor-compra', '');
+        setVal('revenda-valor-venda', '');
+        setVal('revenda-obs', '');
+
+        setVal('revenda-titular-nome', '');
+        setVal('revenda-titular-cpf', '');
+        setVal('revenda-titular-nasc', '');
+        setVal('revenda-titular-zap', '');
+        setVal('revenda-titular-email', '');
+
+        if (el('titulo-modal-reserva-parceiro')) el('titulo-modal-reserva-parceiro').innerHTML = `<i class="fas fa-handshake text-orange-500 mr-1.5"></i> Nova Reserva Parceiro (Revenda)`;
+        hide('btn-excluir-revenda');
+    }
+    calcularLucroRevendaModal();
+    renderizarAcompanhantesRevenda();
+    show('modal-reserva-parceiro');
+}
+
+function fecharModalReservaParceiro() {
+    hide('modal-reserva-parceiro');
+}
+
+function adicionarAcompanhanteRevenda() {
+    acompanhantesRevendaTemp.push({ nome: '', cpf: '', dataNasc: '' });
+    renderizarAcompanhantesRevenda();
+}
+
+function removerAcompanhanteRevenda(index) {
+    acompanhantesRevendaTemp.splice(index, 1);
+    renderizarAcompanhantesRevenda();
+}
+
+function atualizarAcompRevendaCampo(idx, campo, valor) {
+    if (acompanhantesRevendaTemp[idx]) {
+        acompanhantesRevendaTemp[idx][campo] = valor;
+    }
+}
+
+function renderizarAcompanhantesRevenda() {
+    const cont = el('revenda-container-acompanhantes');
+    const msg = el('revenda-msg-sem-acomp');
+    if (!cont) return;
+    cont.innerHTML = '';
+    if (acompanhantesRevendaTemp.length === 0) {
+        if (msg) msg.style.display = 'block';
+        return;
+    }
+    if (msg) msg.style.display = 'none';
+
+    acompanhantesRevendaTemp.forEach((ac, i) => {
+        const div = document.createElement('div');
+        div.className = 'grid grid-cols-1 md:grid-cols-12 gap-2 items-center bg-slate-50 p-2.5 rounded-lg border border-slate-200';
+        div.innerHTML = `
+            <div class="md:col-span-5">
+                <input type="text" placeholder="Nome Completo" value="${ac.nome || ''}" oninput="atualizarAcompRevendaCampo(${i}, 'nome', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none">
+            </div>
+            <div class="md:col-span-3">
+                <input type="text" placeholder="CPF" value="${ac.cpf || ''}" oninput="mascaraCpfCnpj(this); atualizarAcompRevendaCampo(${i}, 'cpf', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none">
+            </div>
+            <div class="md:col-span-3">
+                <input type="date" value="${ac.dataNasc || ''}" oninput="atualizarAcompRevendaCampo(${i}, 'dataNasc', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none text-slate-500">
+            </div>
+            <div class="md:col-span-1 text-right">
+                <button type="button" onclick="removerAcompanhanteRevenda(${i})" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash-alt text-xs"></i></button>
+            </div>
+        `;
+        cont.appendChild(div);
+    });
+}
+
+async function salvarReservaParceiroRevenda() {
+    const empresa = val('revenda-empresa').trim();
+    const condominio = val('revenda-condominio').trim();
+    const checkin = val('revenda-checkin');
+    const checkout = val('revenda-checkout');
+    const valorCompra = parseFloat(val('revenda-valor-compra')) || 0;
+    const valorVenda = parseFloat(val('revenda-valor-venda')) || 0;
+    const titularNome = val('revenda-titular-nome').trim();
+
+    if (!empresa || !condominio || !checkin || !checkout || !titularNome) {
+        mostrarAlerta("Preencha os campos obrigatórios: Empresa Parceira, Condomínio, Check-in, Check-out e Nome do Hóspede Titular.");
+        return;
+    }
+
+    const rId = val('revenda-id');
+    const idNum = rId ? parseInt(rId) : Date.now();
+    let rOrig = rId ? reservasParceirosDB.find(x => x.id == rId) : null;
+
+    let maxNum = 5000;
+    reservasParceirosDB.forEach(r => { if (r.numeroReserva && r.numeroReserva > maxNum) maxNum = r.numeroReserva; });
+    const numRes = rOrig?.numeroReserva || (maxNum + 1);
+
+    const objReserva = {
+        id: idNum,
+        numeroReserva: numRes,
+        dataCriacao: rOrig?.dataCriacao || new Date().toISOString(),
+        empresa: empresa,
+        condominio: condominio,
+        apto: val('revenda-apto').trim(),
+        cidade: val('revenda-cidade').trim(),
+        checkin: checkin,
+        checkout: checkout,
+        valorCompra: valorCompra,
+        valorVenda: valorVenda,
+        lucroLiquido: valorVenda - valorCompra,
+        obs: val('revenda-obs').trim(),
+        titular: {
+            nome: titularNome,
+            cpf: val('revenda-titular-cpf').trim(),
+            dataNasc: val('revenda-titular-nasc'),
+            zap: val('revenda-titular-zap').trim(),
+            email: val('revenda-titular-email').trim()
+        },
+        acompanhantes: JSON.parse(JSON.stringify(acompanhantesRevendaTemp)),
+        criadoPor: (typeof membroCadastrado !== 'undefined' && membroCadastrado?.nome) || window.nomeUsuarioLogado || auth.currentUser?.email || 'Gestor'
+    };
+
+    if (rId) {
+        const idx = reservasParceirosDB.findIndex(x => x.id == rId);
+        if (idx > -1) reservasParceirosDB[idx] = objReserva;
+    } else {
+        reservasParceirosDB.unshift(objReserva);
+    }
+
+    try {
+        const idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
+        if (idEmp && typeof db !== 'undefined') {
+            await db.collection("sistema_saas").doc(idEmp).set({ reservasParceirosDB: reservasParceirosDB }, { merge: true });
+        }
+    } catch (e) {
+        console.error("Erro ao salvar reserva parceiro no Firestore:", e);
+    }
+
+    fecharModalReservaParceiro();
+    renderizarListaReservasParceiros();
+    mostrarNotificacao(`Reserva de Parceiro #${numRes} salva com sucesso!`);
+}
+
+function excluirReservaParceiroConfirmacao() {
+    const rId = val('revenda-id');
+    if (!rId) return;
+    confirmarExclusao(async () => {
+        reservasParceirosDB = reservasParceirosDB.filter(x => x.id != rId);
+        try {
+            const idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
+            if (idEmp && typeof db !== 'undefined') {
+                await db.collection("sistema_saas").doc(idEmp).set({ reservasParceirosDB: reservasParceirosDB }, { merge: true });
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        fecharModalReservaParceiro();
+        renderizarListaReservasParceiros();
+        mostrarNotificacao("Reserva de parceiro excluída com sucesso!");
+    }, "Excluir Reserva", "Deseja realmente apagar esta reserva de parceiro?");
+}
+
+function renderizarListaReservasParceiros() {
+    const tbody = el('lista-reservas-parceiros-tbody');
+    if (!tbody) return;
+
+    let totVenda = 0;
+    let totCusto = 0;
+    let totLucro = 0;
+
+    tbody.innerHTML = '';
+    if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Nenhuma reserva manual de parceiro cadastrada.</td></tr>`;
+        if (el('card-parceiro-total-venda')) el('card-parceiro-total-venda').innerText = "R$ 0,00";
+        if (el('card-parceiro-total-custo')) el('card-parceiro-total-custo').innerText = "R$ 0,00";
+        if (el('card-parceiro-total-lucro')) el('card-parceiro-total-lucro').innerText = "R$ 0,00";
+        return;
+    }
+
+    reservasParceirosDB.forEach(r => {
+        totVenda += (r.valorVenda || 0);
+        totCusto += (r.valorCompra || 0);
+        totLucro += (r.lucroLiquido || 0);
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors font-medium text-slate-700';
+        tr.innerHTML = `
+            <td class="p-3.5">
+                <span class="font-bold text-orange-600 block">#${r.numeroReserva || r.id}</span>
+                <span class="text-[11px] text-slate-400">${r.dataCriacao ? new Date(r.dataCriacao).toLocaleDateString('pt-BR') : '-'}</span>
+            </td>
+            <td class="p-3.5">
+                <span class="font-bold text-slate-800 block">${r.empresa || '-'}</span>
+                <span class="text-[11px] text-slate-400">${r.cidade || ''}</span>
+            </td>
+            <td class="p-3.5">
+                <span class="font-bold text-slate-800 block">${r.condominio || '-'}</span>
+                <span class="text-xs text-slate-500">${r.apto || ''}</span>
+            </td>
+            <td class="p-3.5">
+                <span class="font-bold text-slate-800 block">${r.titular?.nome || '-'}</span>
+                <span class="text-xs text-slate-500"><i class="fab fa-whatsapp text-green-600 mr-1"></i>${r.titular?.zap || '-'}</span>
+            </td>
+            <td class="p-3.5 text-center text-xs">
+                ${formatarDataBr(r.checkin)} <br><span class="text-slate-400 text-[10px]">até</span><br> ${formatarDataBr(r.checkout)}
+            </td>
+            <td class="p-3.5 text-right font-bold text-green-600">${formatMoney(r.valorVenda || 0)}</td>
+            <td class="p-3.5 text-right font-bold text-red-500">${formatMoney(r.valorCompra || 0)}</td>
+            <td class="p-3.5 text-right font-bold text-orange-600">${formatMoney(r.lucroLiquido || 0)}</td>
+            <td class="p-3.5 text-center">
+                <button onclick="abrirModalReservaParceiro(${r.id})" title="Editar" class="p-2 text-slate-400 hover:text-orange-500 transition-colors"><i class="fas fa-edit"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (el('card-parceiro-total-venda')) el('card-parceiro-total-venda').innerText = formatMoney(totVenda);
+    if (el('card-parceiro-total-custo')) el('card-parceiro-total-custo').innerText = formatMoney(totCusto);
+    if (el('card-parceiro-total-lucro')) el('card-parceiro-total-lucro').innerText = formatMoney(totLucro);
+}
+
+function exportarExcelReservasParceiros() {
+    if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
+        mostrarAlerta("Não há reservas de parceiros para exportar.");
+        return;
+    }
+    let csv = "N_Reserva;Data_Criacao;Parceiro_Fornecedor;Condominio;Apto;Cidade;Hospede_Titular;CPF;WhatsApp;Checkin;Checkout;Valor_Venda;Custo_Compra;Lucro_Liquido;Obs\n";
+    reservasParceirosDB.forEach(r => {
+        csv += `"${r.numeroReserva || r.id}";"${r.dataCriacao || ''}";"${r.empresa || ''}";"${r.condominio || ''}";"${r.apto || ''}";"${r.cidade || ''}";"${r.titular?.nome || ''}";"${r.titular?.cpf || ''}";"${r.titular?.zap || ''}";"${r.checkin || ''}";"${r.checkout || ''}";"${(r.valorVenda || 0).toFixed(2)}";"${(r.valorCompra || 0).toFixed(2)}";"${(r.lucroLiquido || 0).toFixed(2)}";"${(r.obs || '').replace(/"/g, '""')}"\n`;
+    });
+    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `DRE_Reservas_Parceiros_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+    </script>   
 
 <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
 <div id="modal-confirmar-deletar" class="hidden-view fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 fade-in">
