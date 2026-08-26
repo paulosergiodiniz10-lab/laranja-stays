@@ -921,7 +921,11 @@ function povoarSelectCategorias() {
         let despesaMes = new Date().getMonth() + 1; let despesaAno = new Date().getFullYear(); let reservasAtuaisExportacao = []; 
         const mesesCompletos = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]; const diasSemanaNomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-        const urlParams = new URLSearchParams(window.location.search); const agenciaId = urlParams.get('agencia'); const linkSlug = urlParams.get('link'); isPublicVitrine = !!(agenciaId || linkSlug); let appInicializado = false;
+        const urlParams = new URLSearchParams(window.location.search);
+const agenciaId = urlParams.get('agencia');
+const linkSlug = urlParams.get('link');
+isPublicVitrine = !!(agenciaId || linkSlug);
+let appInicializado = false;
 
         auth.onAuthStateChanged(async (user) => {
             if (appInicializado) return;
