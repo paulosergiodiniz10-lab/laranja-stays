@@ -489,7 +489,23 @@
             </button>
         </div>
     </div>
+<!-- BARRA DE FILTROS DE DATA (PARCEIROS) -->
+    <div class="px-6 pt-4 pb-0 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+            <button type="button" onclick="filtrarPeriodoParceiros('hoje', this)" class="btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all">Hoje</button>
+            <button type="button" onclick="filtrarPeriodoParceiros('7dias', this)" class="btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all">7 Dias</button>
+            <button type="button" onclick="filtrarPeriodoParceiros('15dias', this)" class="btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all">15 Dias</button>
+            <button type="button" onclick="filtrarPeriodoParceiros('mes', this)" class="btn-filtro-parceiro active bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Este Mês</button>
+            <button type="button" onclick="filtrarPeriodoParceiros('todos', this)" class="btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all">Todos</button>
+        </div>
 
+        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-xs font-medium text-slate-600">
+            <span>De:</span>
+            <input type="date" id="filtro-parceiro-inicio" class="border border-slate-200 rounded-lg px-2 py-1 outline-none text-xs focus:border-orange-500" onchange="filtrarPersonalizadoParceiros()">
+            <span>Até:</span>
+            <input type="date" id="filtro-parceiro-fim" class="border border-slate-200 rounded-lg px-2 py-1 outline-none text-xs focus:border-orange-500" onchange="filtrarPersonalizadoParceiros()">
+        </div>
+    </div>
     <!-- CARDS DE RESUMO FINANCEIRO (DRE PARCEIROS) -->
     <div class="p-6 pb-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-l-green-500 border border-slate-100">
@@ -5274,6 +5290,49 @@ function excluirReservaParceiroConfirmacao() {
     }
 }
 
+let filtroAtualParceiros = 'mes';
+let filtroDataInicioParceiros = null;
+let filtroDataFimParceiros = null;
+
+function filtrarPeriodoParceiros(tipo, btnEl) {
+    filtroAtualParceiros = tipo;
+    filtroDataInicioParceiros = null;
+    filtroDataFimParceiros = null;
+    
+    // Limpa os inputs de data personalizada
+    const inInicio = document.getElementById('filtro-parceiro-inicio');
+    const inFim = document.getElementById('filtro-parceiro-fim');
+    if (inInicio) inInicio.value = '';
+    if (inFim) inFim.value = '';
+
+    // Atualiza estilo dos botões
+    document.querySelectorAll('.btn-filtro-parceiro').forEach(b => {
+        b.className = 'btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all';
+    });
+    if (btnEl) {
+        btnEl.className = 'btn-filtro-parceiro active bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all';
+    }
+
+    renderizarListaReservasParceiros();
+}
+
+function filtrarPersonalizadoParceiros() {
+    const inInicio = document.getElementById('filtro-parceiro-inicio')?.value;
+    const inFim = document.getElementById('filtro-parceiro-fim')?.value;
+
+    if (inInicio && inFim) {
+        filtroAtualParceiros = 'custom';
+        filtroDataInicioParceiros = inInicio;
+        filtroDataFimParceiros = inFim;
+
+        document.querySelectorAll('.btn-filtro-parceiro').forEach(b => {
+            b.className = 'btn-filtro-parceiro px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-all';
+        });
+
+        renderizarListaReservasParceiros();
+    }
+}
+
 function renderizarListaReservasParceiros() {
     const tbody = document.getElementById('lista-reservas-parceiros-tbody');
     if (!tbody) return;
@@ -5291,14 +5350,50 @@ function renderizarListaReservasParceiros() {
 
     tbody.innerHTML = '';
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">Nenhuma reserva manual de parceiro cadastrada.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">Nenhuma reserva manual de parceiro cadastrada.</td></tr>';
         if (document.getElementById('card-parceiro-total-venda')) document.getElementById('card-parceiro-total-venda').innerText = "R$ 0,00";
         if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = "R$ 0,00";
         if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = "R$ 0,00";
         return;
     }
 
-    reservasParceirosDB.forEach(r => {
+    // Filtragem por Período
+    const hoje = new Date();
+    const hojeStr = hoje.toISOString().slice(0, 10);
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = String(hoje.getMonth() + 1).padStart(2, '0');
+
+    const reservasFiltradas = reservasParceirosDB.filter(r => {
+        const dRes = (r.dataCriacao || r.checkin || '').slice(0, 10);
+        if (!dRes) return true;
+
+        if (filtroAtualParceiros === 'hoje') {
+            return dRes === hojeStr;
+        } else if (filtroAtualParceiros === '7dias') {
+            const limite = new Date();
+            limite.setDate(limite.getDate() - 7);
+            return dRes >= limite.toISOString().slice(0, 10) && dRes <= hojeStr;
+        } else if (filtroAtualParceiros === '15dias') {
+            const limite = new Date();
+            limite.setDate(limite.getDate() - 15);
+            return dRes >= limite.toISOString().slice(0, 10) && dRes <= hojeStr;
+        } else if (filtroAtualParceiros === 'mes') {
+            return dRes.startsWith(`${anoAtual}-${mesAtual}`);
+        } else if (filtroAtualParceiros === 'custom' && filtroDataInicioParceiros && filtroDataFimParceiros) {
+            return dRes >= filtroDataInicioParceiros && dRes <= filtroDataFimParceiros;
+        }
+        return true; // 'todos'
+    });
+
+    if (reservasFiltradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">Nenhuma reserva encontrada no período selecionado.</td></tr>';
+        if (document.getElementById('card-parceiro-total-venda')) document.getElementById('card-parceiro-total-venda').innerText = "R$ 0,00";
+        if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = "R$ 0,00";
+        if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = "R$ 0,00";
+        return;
+    }
+
+    reservasFiltradas.forEach(r => {
         totVenda += (r.valorVenda || 0);
         totCusto += (r.valorCompra || 0);
         totLucro += (r.lucroLiquido || 0);
@@ -5339,7 +5434,6 @@ function renderizarListaReservasParceiros() {
     if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = formatarGrana(totCusto);
     if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = formatarGrana(totLucro);
 }
-
 function exportarExcelReservasParceiros() {
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
         alert("Não há reservas de parceiros para exportar.");
