@@ -5423,8 +5423,10 @@ function renderizarListaReservasParceiros() {
             <td class="p-3.5 text-right font-bold text-green-600">${formatarGrana(r.valorVenda)}</td>
             <td class="p-3.5 text-right font-bold text-red-500">${formatarGrana(r.valorCompra)}</td>
             <td class="p-3.5 text-right font-bold text-orange-600">${formatarGrana(r.lucroLiquido)}</td>
-            <td class="p-3.5 text-center">
-                <button onclick="abrirModalReservaParceiro(${r.id})" title="Editar" class="p-2 text-slate-400 hover:text-orange-500 transition-colors"><i class="fas fa-edit"></i></button>
+            <td class="p-3.5 text-center flex items-center justify-center gap-1">
+                <button type="button" onclick="gerarVoucherParceiro(${r.id})" title="Voucher / Recibo Cliente" class="p-2 text-slate-500 hover:text-green-600 transition-colors"><i class="fas fa-file-invoice"></i></button>
+                <button type="button" onclick="gerarAutorizacaoParceiro(${r.id})" title="Autorização de Entrada" class="p-2 text-slate-500 hover:text-blue-600 transition-colors"><i class="fas fa-id-badge"></i></button>
+                <button type="button" onclick="abrirModalReservaParceiro(${r.id})" title="Editar Reserva" class="p-2 text-slate-400 hover:text-orange-500 transition-colors"><i class="fas fa-edit"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -5434,7 +5436,164 @@ function renderizarListaReservasParceiros() {
     if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = formatarGrana(totCusto);
     if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = formatarGrana(totLucro);
 }
-function exportarExcelReservasParceiros() {
+function gerarVoucherParceiro(idRes) {
+    const r = reservasParceirosDB.find(item => item.id == idRes);
+    if (!r) return;
+
+    const dataFormatada = (d) => {
+        if (!d) return '-';
+        const p = d.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+    };
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Voucher de Reserva #${r.numeroReserva || r.id}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 30px; color: #1e293b; }
+                .card { border: 2px solid #e2e8f0; border-radius: 12px; padding: 24px; max-width: 700px; margin: 0 auto; }
+                .header { border-bottom: 2px solid #f97316; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                .title { font-size: 20px; font-weight: bold; color: #f97316; }
+                .badge { background: #ffedd5; color: #c2410c; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 12px; }
+                .section { margin-bottom: 16px; }
+                .label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+                .value { font-size: 15px; font-weight: bold; margin-top: 2px; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+                .total { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 8px; text-align: right; margin-top: 15px; }
+                .total-val { font-size: 18px; font-weight: bold; color: #16a34a; }
+                @media print { .btn-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="header">
+                    <div>
+                        <div class="title">VOUCHER DE CONFIRMAÇÃO</div>
+                        <div style="font-size: 13px; color: #64748b;">Caldas Novas Viagens</div>
+                    </div>
+                    <div class="badge">#${r.numeroReserva || r.id}</div>
+                </div>
+
+                <div class="grid section">
+                    <div>
+                        <div class="label">Hóspede Titular</div>
+                        <div class="value">${r.titular?.nome || '-'}</div>
+                        <div style="font-size: 13px; color: #64748b; margin-top: 2px;">CPF: ${r.titular?.cpf || '-'} | Tel: ${r.titular?.zap || '-'}</div>
+                    </div>
+                    <div>
+                        <div class="label">Acomodação / Empreendimento</div>
+                        <div class="value">${r.condominio || '-'} - Apto ${r.apto || '-'}</div>
+                        <div style="font-size: 13px; color: #64748b; margin-top: 2px;">${r.cidade || 'Caldas Novas - GO'}</div>
+                    </div>
+                </div>
+
+                <div class="grid section" style="background: #f8fafc; padding: 12px; border-radius: 8px;">
+                    <div>
+                        <div class="label">Check-in</div>
+                        <div class="value">${dataFormatada(r.checkin)} (a partir das 14h)</div>
+                    </div>
+                    <div>
+                        <div class="label">Check-out</div>
+                        <div class="value">${dataFormatada(r.checkout)} (até as 11h)</div>
+                    </div>
+                </div>
+
+                ${r.obs ? `
+                <div class="section">
+                    <div class="label">Observações / Instruções</div>
+                    <div style="font-size: 13px; margin-top: 4px; color: #334155;">${r.obs}</div>
+                </div>` : ''}
+
+                <div class="total">
+                    <div class="label" style="color: #16a34a;">Valor Total da Hospedagem</div>
+                    <div class="total-val">R$ ${(r.valorVenda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
+
+                <div style="text-align: center; margin-top: 25px;">
+                    <button class="btn-print" onclick="window.print()" style="background: #ea580c; color: white; border: none; padding: 10px 24px; font-weight: bold; border-radius: 8px; cursor: pointer;">Imprimir Voucher</button>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
+function gerarAutorizacaoParceiro(idRes) {
+    const r = reservasParceirosDB.find(item => item.id == idRes);
+    if (!r) return;
+
+    const dataFormatada = (d) => {
+        if (!d) return '-';
+        const p = d.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+    };
+
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Autorização de Entrada #${r.numeroReserva || r.id}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 30px; color: #0f172a; }
+                .doc { border: 2px solid #0f172a; border-radius: 8px; padding: 30px; max-width: 750px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 20px; }
+                .title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
+                .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; margin-bottom: 15px; }
+                .box-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #475569; margin-bottom: 6px; }
+                .field-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+                .signature-area { margin-top: 40px; display: flex; justify-content: space-around; text-align: center; }
+                .signature-line { border-top: 1px solid #0f172a; width: 220px; margin-top: 40px; padding-top: 5px; font-size: 12px; }
+                @media print { .btn-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="doc">
+                <div class="header">
+                    <div class="title">AUTORIZAÇÃO DE ENTRADA / HOSPEDAGEM</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Controle de Acesso à Portaria e Recepção</div>
+                </div>
+
+                <div class="box">
+                    <div class="box-title">Dados da Acomodação</div>
+                    <div class="field-row"><span><strong>Condomínio:</strong> ${r.condominio || '-'}</span> <span><strong>Apartamento:</strong> ${r.apto || '-'}</span></div>
+                    <div class="field-row"><span><strong>Parceiro Emissor:</strong> ${r.empresa || '-'}</span> <span><strong>Reserva:</strong> #${r.numeroReserva || r.id}</span></div>
+                </div>
+
+                <div class="box">
+                    <div class="box-title">Período de Estadia</div>
+                    <div class="field-row"><span><strong>Entrada:</strong> ${dataFormatada(r.checkin)}</span> <span><strong>Saída:</strong> ${dataFormatada(r.checkout)}</span></div>
+                </div>
+
+                <div class="box">
+                    <div class="box-title">Hóspede Titular</div>
+                    <div class="field-row"><span><strong>Nome:</strong> ${r.titular?.nome || '-'}</span> <span><strong>CPF:</strong> ${r.titular?.cpf || '-'}</span></div>
+                    <div class="field-row"><span><strong>WhatsApp:</strong> ${r.titular?.zap || '-'}</span></div>
+                </div>
+
+                <div class="signature-area">
+                    <div>
+                        <div class="signature-line">Assinatura do Hóspede Titular</div>
+                    </div>
+                    <div>
+                        <div class="signature-line">Carimbo / Visto Recepção</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn-print" onclick="window.print()" style="background: #0f172a; color: white; border: none; padding: 10px 24px; font-weight: bold; border-radius: 8px; cursor: pointer;">Imprimir Autorização</button>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+        function exportarExcelReservasParceiros() {
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
         alert("Não há reservas de parceiros para exportar.");
         return;
