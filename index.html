@@ -928,9 +928,9 @@ isPublicVitrine = !!(agenciaId || linkSlug);
 let appInicializado = false;
 
         auth.onAuthStateChanged(async (user) => {
-            if (appInicializado) return;
-            try {
-                if (isPublicVitrine) {
+    if (appInicializado) return;
+    try {
+        if (isPublicVitrine) {
             // TRAVA DE SEGURANÇA: Oculta botões administrativos e desativa navegação
             const estiloBloqueio = document.createElement('style');
             estiloBloqueio.innerHTML = `
@@ -953,11 +953,21 @@ let appInicializado = false;
                 if (aba === 'admin') return false;
             };
 
-            hide('tela-login'); if (!user) { await auth.signInAnonymously(); return; } let donoId = agenciaId;
-            if (linkSlug) { const docSnap = await db.collection("agencias_urls").doc(linkSlug).get(); if (docSnap.exists) donoId = docSnap.data().uid; else { mostrarTelaErro(`O link <b>${linkSlug}</b> não foi encontrado!`); return; } }
-            if (donoId) { currentAgenciaId = donoId; await carregarDadosFirebase(currentAgenciaId); appInicializado = true; }
-        }
-                    if (user && !user.isAnonymous) { 
+            hide('tela-login'); 
+            if (!user) { await auth.signInAnonymously(); return; } 
+            let donoId = agenciaId;
+            if (linkSlug) { 
+                const docSnap = await db.collection("agencias_urls").doc(linkSlug).get(); 
+                if (docSnap.exists) donoId = docSnap.data().uid; 
+                else { mostrarTelaErro(`O link <b>${linkSlug}</b> não foi encontrado!`); return; } 
+            }
+            if (donoId) { 
+                currentAgenciaId = donoId; 
+                await carregarDadosFirebase(currentAgenciaId); 
+                appInicializado = true; 
+            }
+        } else {
+                                if (user && !user.isAnonymous) { 
                         currentUserUid = user.uid; 
                         
                         // Proteção anti-falha para o Multi-empresas
