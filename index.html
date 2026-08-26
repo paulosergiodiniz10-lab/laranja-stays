@@ -5420,14 +5420,19 @@ function renderizarListaReservasParceiros() {
             <td class="p-3.5 text-center text-xs">
                 ${formatarData(r.checkin)} <br><span class="text-slate-400 text-[10px]">até</span><br> ${formatarData(r.checkout)}
             </td>
-            <td class="p-3.5 text-right font-bold text-green-600">${formatarGrana(r.valorVenda)}</td>
+            <td class="p-3.5 text-right">
+                <div class="font-bold text-slate-800">${formatarGrana(r.valorVenda)}</div>
+                ${(r.valorPago || 0) < (r.valorVenda || 0) 
+                    ? `<div class="text-[11px] font-bold text-red-500">Falta ${formatarGrana((r.valorVenda || 0) - (r.valorPago || 0))}</div>` 
+                    : `<div class="text-[11px] font-bold text-green-600">Quitado</div>`}
+            </td>
             <td class="p-3.5 text-right font-bold text-red-500">${formatarGrana(r.valorCompra)}</td>
             <td class="p-3.5 text-right font-bold text-orange-600">${formatarGrana(r.lucroLiquido)}</td>
-                            <td class="p-3.5 text-center flex items-center justify-center gap-1">
-                <button type="button" onclick="abrirModalDocParceiro(${r.id})" title="Emitir Documentos / Voucher" class="p-2 text-slate-600 hover:text-orange-600 transition-colors"><i class="fas fa-print"></i></button>
-                <button type="button" onclick="abrirModalReservaParceiro(${r.id})" title="Editar Reserva" class="p-2 text-slate-400 hover:text-orange-500 transition-colors"><i class="fas fa-edit"></i></button>
-            </td>
-        `;
+            <td class="p-3.5 text-center flex items-center justify-center gap-1.5">
+                <button type="button" onclick="abrirModalCaixaParceiro(${r.id})" title="Caixa / Lançar Pagamento" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors"><i class="fas fa-hand-holding-usd text-sm"></i></button>
+                <button type="button" onclick="abrirModalDocParceiro(${r.id})" title="Emitir Documentos / Voucher" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"><i class="fas fa-file-invoice text-sm"></i></button>
+                <button type="button" onclick="abrirModalReservaParceiro(${r.id})" title="Editar Reserva" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors"><i class="fas fa-edit text-sm"></i></button>
+            </td>        `;
         tbody.appendChild(tr);
     });
 
@@ -5436,7 +5441,9 @@ function renderizarListaReservasParceiros() {
     if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = formatarGrana(totLucro);
 }
 let reservaParceiroDocSelecionada = null;
+let reservaParceiroCaixaSelecionada = null;
 
+// --- MODAL DE DOCUMENTOS ---
 function abrirModalDocParceiro(idRes) {
     reservaParceiroDocSelecionada = reservasParceirosDB.find(item => item.id == idRes);
     if (!reservaParceiroDocSelecionada) return;
@@ -5460,6 +5467,8 @@ function emitirDocumentoParceiro(modoDoc) {
         return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
     };
 
+    const formatarGrana = (v) => "R$ " + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     const calcularIdade = (dataNasc) => {
         if (!dataNasc) return '';
         const dob = new Date(dataNasc);
@@ -5472,6 +5481,10 @@ function emitirDocumentoParceiro(modoDoc) {
     const dIn = parseData(r.checkin);
     const dOut = parseData(r.checkout);
     const noites = Math.round((new Date(r.checkout + 'T12:00:00') - new Date(r.checkin + 'T12:00:00')) / (1000 * 60 * 60 * 24)) || 1;
+
+    const totVenda = r.valorVenda || 0;
+    const totPago = r.valorPago || 0;
+    const totFalta = Math.max(0, totVenda - totPago);
 
     let docTitulo = 'VOUCHER OFICIAL';
     if (modoDoc === 'confirmacao') {
@@ -5525,14 +5538,16 @@ function emitirDocumentoParceiro(modoDoc) {
                 .badge-reserva { background: #fed7aa; color: #9a3412; padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 13px; text-transform: uppercase; }
                 .titulo-doc { font-size: 22px; font-weight: 900; color: #0f172a; margin-top: 8px; text-transform: uppercase; letter-spacing: -0.5px; }
                 .card-imovel { border: 2px solid #f97316; border-radius: 12px; padding: 20px; margin-bottom: 24px; background: #fff; }
-                .imovel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
                 .imovel-nome { font-size: 17px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
-                .imovel-cap { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 6px; }
-                .imovel-end { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+                .imovel-end { font-size: 13px; color: #64748b; margin-top: 3px; margin-bottom: 16px; }
                 .grid-datas { display: flex; justify-content: space-between; border-top: 1px dashed #fed7aa; padding-top: 14px; font-size: 13px; font-weight: 500; }
                 .table-hospedes { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
                 .table-hospedes th { background: #f8fafc; text-align: left; padding: 10px 12px; color: #475569; font-size: 11px; text-transform: uppercase; font-weight: 700; border-bottom: 1px solid #e2e8f0; }
                 .box-financeiro { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-top: 24px; }
+                .grid-fin { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+                .fin-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
+                .fin-lbl { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; }
+                .fin-val { font-size: 16px; font-weight: bold; margin-top: 2px; }
                 .btn-print { background: #ea580c; color: white; border: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
                 @media print { .no-print { display: none !important; } body { padding: 0; } }
             </style>
@@ -5552,9 +5567,8 @@ function emitirDocumentoParceiro(modoDoc) {
                 </div>
 
                 <div class="card-imovel">
-                    <div class="imovel-header">
+                    <div>
                         <span class="imovel-nome">${r.condominio || '-'} ${r.apto ? `- APTO ${r.apto}` : ''}</span>
-                        <span class="imovel-cap">Fornecedor: ${r.empresa || '-'}</span>
                     </div>
                     <div class="imovel-end">${r.cidade || 'Caldas Novas - GO'}</div>
                     <div class="grid-datas">
@@ -5580,18 +5594,33 @@ function emitirDocumentoParceiro(modoDoc) {
                 </table>
 
                 <div class="box-financeiro">
+                    ${modoDoc === 'prevoucher' ? `
+                    <div class="grid-fin">
+                        <div class="fin-item">
+                            <div class="fin-lbl">Valor Total</div>
+                            <div class="fin-val text-slate-800">${formatarGrana(totVenda)}</div>
+                        </div>
+                        <div class="fin-item">
+                            <div class="fin-lbl">Valor Pago (Sinal)</div>
+                            <div class="fin-val" style="color: #16a34a;">${formatarGrana(totPago)}</div>
+                        </div>
+                        <div class="fin-item">
+                            <div class="fin-lbl">Saldo a Pagar</div>
+                            <div class="fin-val" style="color: #dc2626;">${formatarGrana(totFalta)}</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #b45309; margin-top: 10px; text-align: center;">
+                        <strong>Atenção:</strong> Reserva com pagamento parcial confirmado. O saldo devedor restante deverá ser quitado antes da liberação do check-in.
+                    </div>` : `
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 800;">
                         <span>Valor Total do Pacote:</span>
-                        <span style="color: #16a34a; font-size: 18px;">R$ ${(r.valorVenda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        <span style="color: #16a34a; font-size: 18px;">${formatarGrana(totVenda)}</span>
                     </div>
-                    ${modoDoc === 'prevoucher' ? `
-                    <div style="font-size: 12px; color: #b45309; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                        <strong>Atenção:</strong> Reserva com sinal/pagamento parcial. O saldo devedor restante deverá ser quitado conforme as regras acordadas antes do check-in.
-                    </div>` : ''}
                     ${modoDoc === 'oficial' ? `
                     <div style="font-size: 12px; color: #15803d; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                        ✔ <strong>Reserva Quitada:</strong> Pagamento 100% liquidado. Liberado para emissão e acesso à acomodação.
+                        ✔ <strong>Reserva Quitada:</strong> Pagamento 100% liquidado. Acesso liberado para entrada.
                     </div>` : ''}
+                    `}
                 </div>
 
                 ${r.obs ? `
@@ -5607,7 +5636,74 @@ function emitirDocumentoParceiro(modoDoc) {
         </html>
     `);
     win.document.close();
-}       
+}
+
+// --- MODAL DE CAIXA / FINANCEIRO ---
+function abrirModalCaixaParceiro(idRes) {
+    reservaParceiroCaixaSelecionada = reservasParceirosDB.find(item => item.id == idRes);
+    if (!reservaParceiroCaixaSelecionada) return;
+
+    const r = reservaParceiroCaixaSelecionada;
+    const totVenda = r.valorVenda || 0;
+    const totPago = r.valorPago || 0;
+    const falta = Math.max(0, totVenda - totPago);
+
+    const txtResumo = document.getElementById('caixa-parceiro-resumo');
+    const inValor = document.getElementById('caixa-parceiro-valor');
+    if (txtResumo) {
+        txtResumo.innerHTML = `Já Pago: <strong>R$ ${totPago.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> | Falta: <strong class="text-red-600">R$ ${falta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>`;
+    }
+    if (inValor) {
+        inValor.value = falta > 0 ? falta.toFixed(2) : '';
+    }
+
+    const modal = document.getElementById('modal-caixa-parceiro');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function fecharModalCaixaParceiro() {
+    const modal = document.getElementById('modal-caixa-parceiro');
+    if (modal) modal.classList.add('hidden');
+}
+
+async function salvarRecebimentoParceiro() {
+    if (!reservaParceiroCaixaSelecionada) return;
+    const inValor = document.getElementById('caixa-parceiro-valor');
+    const inForma = document.getElementById('caixa-parceiro-forma');
+
+    const valorLancado = parseFloat(inValor?.value) || 0;
+    if (valorLancado <= 0) {
+        alert("Por favor, digite um valor válido.");
+        return;
+    }
+
+    reservaParceiroCaixaSelecionada.valorPago = (reservaParceiroCaixaSelecionada.valorPago || 0) + valorLancado;
+    if (!reservaParceiroCaixaSelecionada.historicoPagamentos) {
+        reservaParceiroCaixaSelecionada.historicoPagamentos = [];
+    }
+    reservaParceiroCaixaSelecionada.historicoPagamentos.push({
+        data: new Date().toISOString(),
+        valor: valorLancado,
+        forma: inForma ? inForma.value : 'Pix'
+    });
+
+    try {
+        const idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
+        if (idEmp && typeof db !== 'undefined') {
+            await db.collection("sistema_saas").doc(idEmp).set({ reservasParceirosDB: reservasParceirosDB }, { merge: true });
+        }
+    } catch (e) {
+        console.error("Erro ao salvar recebimento:", e);
+    }
+
+    fecharModalCaixaParceiro();
+    renderizarListaReservasParceiros();
+    if (typeof mostrarNotificacao === 'function') {
+        mostrarNotificacao("Recebimento registrado com sucesso!");
+    } else {
+        alert("Recebimento registrado com sucesso!");
+    }
+} 
         function exportarExcelReservasParceiros() {
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
         alert("Não há reservas de parceiros para exportar.");
