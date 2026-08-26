@@ -927,10 +927,32 @@ function povoarSelectCategorias() {
             if (appInicializado) return;
             try {
                 if (isPublicVitrine) {
-                    hide('tela-login'); if (!user) { await auth.signInAnonymously(); return; } let donoId = agenciaId;
-                    if (linkSlug) { const docSnap = await db.collection("agencias_urls").doc(linkSlug).get(); if (docSnap.exists) donoId = docSnap.data().uid; else { mostrarTelaErro(`O link "<b>${linkSlug}</b>" não foi encontrado ou ainda não foi salvo.<br><br><b>O que fazer:</b> Acesse o seu painel, vá em 'Minha Empresa', preencha os dados e clique no botão laranja 'Salvar' no final da página para ativá-lo.`); return; } }
-                    if (donoId) { currentAgenciaId = donoId; await carregarDadosFirebase(currentAgenciaId); appInicializado = true; }
-                } else {
+            // TRAVA DE SEGURANÇA: Oculta botões administrativos e desativa navegação
+            const estiloBloqueio = document.createElement('style');
+            estiloBloqueio.innerHTML = `
+                button[onclick*="admin"], button[onclick*="Admin"], 
+                button[onclick*="mudarAbaPrincipal('admin')"],
+                button[onclick*="logout"], button[onclick*="sair"],
+                header button:has(.fa-cog), header button:has(.fa-sign-out-alt) { 
+                    display: none !important; 
+                }
+                button[onclick*="vitrine"], button[onclick*="Vitrine"] {
+                    pointer-events: none !important;
+                    cursor: default !important;
+                    box-shadow: none !important;
+                }
+            `;
+            document.head.appendChild(estiloBloqueio);
+
+            // Bloqueio funcional da troca de tela
+            window.mudarAbaPrincipal = function(aba) {
+                if (aba === 'admin') return false;
+            };
+
+            hide('tela-login'); if (!user) { await auth.signInAnonymously(); return; } let donoId = agenciaId;
+            if (linkSlug) { const docSnap = await db.collection("agencias_urls").doc(linkSlug).get(); if (docSnap.exists) donoId = docSnap.data().uid; else { mostrarTelaErro(`O link <b>${linkSlug}</b> não foi encontrado!`); return; } }
+            if (donoId) { currentAgenciaId = donoId; await carregarDadosFirebase(currentAgenciaId); appInicializado = true; }
+        }
                     if (user && !user.isAnonymous) { 
                         currentUserUid = user.uid; 
                         
