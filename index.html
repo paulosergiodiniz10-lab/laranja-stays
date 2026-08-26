@@ -5007,59 +5007,86 @@ function calcularLucroRevendaModal() {
     }
 }
 
+function calcularLucroRevendaModal() {
+    const compra = parseFloat(document.getElementById('revenda-valor-compra')?.value) || 0;
+    const venda = parseFloat(document.getElementById('revenda-valor-venda')?.value) || 0;
+    const lucro = venda - compra;
+    const elDisplay = document.getElementById('revenda-display-lucro');
+    if (elDisplay) {
+        elDisplay.innerText = "R$ " + lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        elDisplay.className = lucro >= 0 
+            ? "w-full px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-base text-center"
+            : "w-full px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 font-bold text-base text-center";
+    }
+}
+
 function abrirModalReservaParceiro(id = null) {
     acompanhantesRevendaTemp = [];
+    const modal = document.getElementById('modal-reserva-parceiro');
+    const setCampo = (campoId, val) => { 
+        const el = document.getElementById(campoId); 
+        if(el) el.value = (val !== undefined && val !== null) ? val : ''; 
+    };
+
     if (id) {
         const item = reservasParceirosDB.find(x => x.id === id);
         if (!item) return;
-        setVal('revenda-id', item.id);
-        setVal('revenda-empresa', item.empresa || '');
-        setVal('revenda-condominio', item.condominio || '');
-        setVal('revenda-apto', item.apto || '');
-        setVal('revenda-cidade', item.cidade || 'Caldas Novas - GO');
-        setVal('revenda-checkin', item.checkin || '');
-        setVal('revenda-checkout', item.checkout || '');
-        setVal('revenda-valor-compra', item.valorCompra || '');
-        setVal('revenda-valor-venda', item.valorVenda || '');
-        setVal('revenda-obs', item.obs || '');
+        setCampo('revenda-id', item.id);
+        setCampo('revenda-empresa', item.empresa || '');
+        setCampo('revenda-condominio', item.condominio || '');
+        setCampo('revenda-apto', item.apto || '');
+        setCampo('revenda-cidade', item.cidade || 'Caldas Novas - GO');
+        setCampo('revenda-checkin', item.checkin || '');
+        setCampo('revenda-checkout', item.checkout || '');
+        setCampo('revenda-valor-compra', item.valorCompra || '');
+        setCampo('revenda-valor-venda', item.valorVenda || '');
+        setCampo('revenda-obs', item.obs || '');
 
-        setVal('revenda-titular-nome', item.titular?.nome || '');
-        setVal('revenda-titular-cpf', item.titular?.cpf || '');
-        setVal('revenda-titular-nasc', item.titular?.dataNasc || '');
-        setVal('revenda-titular-zap', item.titular?.zap || '');
-        setVal('revenda-titular-email', item.titular?.email || '');
+        setCampo('revenda-titular-nome', item.titular?.nome || '');
+        setCampo('revenda-titular-cpf', item.titular?.cpf || '');
+        setCampo('revenda-titular-nasc', item.titular?.dataNasc || '');
+        setCampo('revenda-titular-zap', item.titular?.zap || '');
+        setCampo('revenda-titular-email', item.titular?.email || '');
 
         acompanhantesRevendaTemp = item.acompanhantes ? JSON.parse(JSON.stringify(item.acompanhantes)) : [];
-        if (el('titulo-modal-reserva-parceiro')) el('titulo-modal-reserva-parceiro').innerHTML = `<i class="fas fa-edit text-orange-500 mr-1.5"></i> Editar Reserva Parceiro #${item.numeroReserva || item.id}`;
-        show('btn-excluir-revenda');
+        const tit = document.getElementById('titulo-modal-reserva-parceiro');
+        if (tit) tit.innerHTML = `<i class="fas fa-edit text-orange-500 mr-1.5"></i> Editar Reserva Parceiro #${item.numeroReserva || item.id}`;
+        
+        const btnExc = document.getElementById('btn-excluir-revenda');
+        if (btnExc) btnExc.classList.remove('hidden-view');
     } else {
-        setVal('revenda-id', '');
-        setVal('revenda-empresa', '');
-        setVal('revenda-condominio', '');
-        setVal('revenda-apto', '');
-        setVal('revenda-cidade', 'Caldas Novas - GO');
-        setVal('revenda-checkin', '');
-        setVal('revenda-checkout', '');
-        setVal('revenda-valor-compra', '');
-        setVal('revenda-valor-venda', '');
-        setVal('revenda-obs', '');
+        setCampo('revenda-id', '');
+        setCampo('revenda-empresa', '');
+        setCampo('revenda-condominio', '');
+        setCampo('revenda-apto', '');
+        setCampo('revenda-cidade', 'Caldas Novas - GO');
+        setCampo('revenda-checkin', '');
+        setCampo('revenda-checkout', '');
+        setCampo('revenda-valor-compra', '');
+        setCampo('revenda-valor-venda', '');
+        setCampo('revenda-obs', '');
 
-        setVal('revenda-titular-nome', '');
-        setVal('revenda-titular-cpf', '');
-        setVal('revenda-titular-nasc', '');
-        setVal('revenda-titular-zap', '');
-        setVal('revenda-titular-email', '');
+        setCampo('revenda-titular-nome', '');
+        setCampo('revenda-titular-cpf', '');
+        setCampo('revenda-titular-nasc', '');
+        setCampo('revenda-titular-zap', '');
+        setCampo('revenda-titular-email', '');
 
-        if (el('titulo-modal-reserva-parceiro')) el('titulo-modal-reserva-parceiro').innerHTML = `<i class="fas fa-handshake text-orange-500 mr-1.5"></i> Nova Reserva Parceiro (Revenda)`;
-        hide('btn-excluir-revenda');
+        const tit = document.getElementById('titulo-modal-reserva-parceiro');
+        if (tit) tit.innerHTML = `<i class="fas fa-handshake text-orange-500 mr-1.5"></i> Nova Reserva Parceiro (Revenda)`;
+        
+        const btnExc = document.getElementById('btn-excluir-revenda');
+        if (btnExc) btnExc.classList.add('hidden-view');
     }
+
     calcularLucroRevendaModal();
     renderizarAcompanhantesRevenda();
-    show('modal-reserva-parceiro');
+    if (modal) modal.classList.remove('hidden-view');
 }
 
 function fecharModalReservaParceiro() {
-    hide('modal-reserva-parceiro');
+    const modal = document.getElementById('modal-reserva-parceiro');
+    if (modal) modal.classList.add('hidden-view');
 }
 
 function adicionarAcompanhanteRevenda() {
@@ -5079,8 +5106,8 @@ function atualizarAcompRevendaCampo(idx, campo, valor) {
 }
 
 function renderizarAcompanhantesRevenda() {
-    const cont = el('revenda-container-acompanhantes');
-    const msg = el('revenda-msg-sem-acomp');
+    const cont = document.getElementById('revenda-container-acompanhantes');
+    const msg = document.getElementById('revenda-msg-sem-acomp');
     if (!cont) return;
     cont.innerHTML = '';
     if (acompanhantesRevendaTemp.length === 0) {
@@ -5097,7 +5124,7 @@ function renderizarAcompanhantesRevenda() {
                 <input type="text" placeholder="Nome Completo" value="${ac.nome || ''}" oninput="atualizarAcompRevendaCampo(${i}, 'nome', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none">
             </div>
             <div class="md:col-span-3">
-                <input type="text" placeholder="CPF" value="${ac.cpf || ''}" oninput="mascaraCpfCnpj(this); atualizarAcompRevendaCampo(${i}, 'cpf', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none">
+                <input type="text" placeholder="CPF" value="${ac.cpf || ''}" oninput="if(typeof mascaraCpfCnpj==='function') mascaraCpfCnpj(this); atualizarAcompRevendaCampo(${i}, 'cpf', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none">
             </div>
             <div class="md:col-span-3">
                 <input type="date" value="${ac.dataNasc || ''}" oninput="atualizarAcompRevendaCampo(${i}, 'dataNasc', this.value)" class="w-full px-2 py-1.5 text-xs rounded border border-slate-300 outline-none text-slate-500">
@@ -5111,20 +5138,21 @@ function renderizarAcompanhantesRevenda() {
 }
 
 async function salvarReservaParceiroRevenda() {
-    const empresa = val('revenda-empresa').trim();
-    const condominio = val('revenda-condominio').trim();
-    const checkin = val('revenda-checkin');
-    const checkout = val('revenda-checkout');
-    const valorCompra = parseFloat(val('revenda-valor-compra')) || 0;
-    const valorVenda = parseFloat(val('revenda-valor-venda')) || 0;
-    const titularNome = val('revenda-titular-nome').trim();
+    const getVal = (id) => (document.getElementById(id)?.value || '').trim();
+    const empresa = getVal('revenda-empresa');
+    const condominio = getVal('revenda-condominio');
+    const checkin = getVal('revenda-checkin');
+    const checkout = getVal('revenda-checkout');
+    const valorCompra = parseFloat(getVal('revenda-valor-compra')) || 0;
+    const valorVenda = parseFloat(getVal('revenda-valor-venda')) || 0;
+    const titularNome = getVal('revenda-titular-nome');
 
     if (!empresa || !condominio || !checkin || !checkout || !titularNome) {
-        mostrarAlerta("Preencha os campos obrigatórios: Empresa Parceira, Condomínio, Check-in, Check-out e Nome do Hóspede Titular.");
+        alert("Preencha os campos obrigatórios: Empresa Parceira, Condomínio, Check-in, Check-out e Nome do Hóspede Titular.");
         return;
     }
 
-    const rId = val('revenda-id');
+    const rId = getVal('revenda-id');
     const idNum = rId ? parseInt(rId) : Date.now();
     let rOrig = rId ? reservasParceirosDB.find(x => x.id == rId) : null;
 
@@ -5138,23 +5166,23 @@ async function salvarReservaParceiroRevenda() {
         dataCriacao: rOrig?.dataCriacao || new Date().toISOString(),
         empresa: empresa,
         condominio: condominio,
-        apto: val('revenda-apto').trim(),
-        cidade: val('revenda-cidade').trim(),
+        apto: getVal('revenda-apto'),
+        cidade: getVal('revenda-cidade') || 'Caldas Novas - GO',
         checkin: checkin,
         checkout: checkout,
         valorCompra: valorCompra,
         valorVenda: valorVenda,
         lucroLiquido: valorVenda - valorCompra,
-        obs: val('revenda-obs').trim(),
+        obs: getVal('revenda-obs'),
         titular: {
             nome: titularNome,
-            cpf: val('revenda-titular-cpf').trim(),
-            dataNasc: val('revenda-titular-nasc'),
-            zap: val('revenda-titular-zap').trim(),
-            email: val('revenda-titular-email').trim()
+            cpf: getVal('revenda-titular-cpf'),
+            dataNasc: getVal('revenda-titular-nasc'),
+            zap: getVal('revenda-titular-zap'),
+            email: getVal('revenda-titular-email')
         },
         acompanhantes: JSON.parse(JSON.stringify(acompanhantesRevendaTemp)),
-        criadoPor: (typeof membroCadastrado !== 'undefined' && membroCadastrado?.nome) || window.nomeUsuarioLogado || auth.currentUser?.email || 'Gestor'
+        criadoPor: (typeof membroCadastrado !== 'undefined' && membroCadastrado?.nome) || window.nomeUsuarioLogado || (typeof auth !== 'undefined' && auth.currentUser?.email) || 'Gestor'
     };
 
     if (rId) {
@@ -5175,13 +5203,18 @@ async function salvarReservaParceiroRevenda() {
 
     fecharModalReservaParceiro();
     renderizarListaReservasParceiros();
-    mostrarNotificacao(`Reserva de Parceiro #${numRes} salva com sucesso!`);
+    if (typeof mostrarNotificacao === 'function') {
+        mostrarNotificacao(`Reserva de Parceiro #${numRes} salva com sucesso!`);
+    } else {
+        alert(`Reserva de Parceiro #${numRes} salva com sucesso!`);
+    }
 }
 
 function excluirReservaParceiroConfirmacao() {
-    const rId = val('revenda-id');
+    const rId = document.getElementById('revenda-id')?.value;
     if (!rId) return;
-    confirmarExclusao(async () => {
+    
+    const executarExclusao = async () => {
         reservasParceirosDB = reservasParceirosDB.filter(x => x.id != rId);
         try {
             const idEmp = (typeof currentAgenciaId !== 'undefined' && currentAgenciaId) ? currentAgenciaId : ((typeof currentUserUid !== 'undefined') ? currentUserUid : null);
@@ -5193,24 +5226,39 @@ function excluirReservaParceiroConfirmacao() {
         }
         fecharModalReservaParceiro();
         renderizarListaReservasParceiros();
-        mostrarNotificacao("Reserva de parceiro excluída com sucesso!");
-    }, "Excluir Reserva", "Deseja realmente apagar esta reserva de parceiro?");
+        if (typeof mostrarNotificacao === 'function') {
+            mostrarNotificacao("Reserva excluída com sucesso!");
+        }
+    };
+
+    if (typeof confirmarExclusao === 'function') {
+        confirmarExclusao(executarExclusao, "Excluir Reserva", "Deseja realmente apagar esta reserva de parceiro?");
+    } else if (confirm("Deseja realmente apagar esta reserva de parceiro?")) {
+        executarExclusao();
+    }
 }
 
 function renderizarListaReservasParceiros() {
-    const tbody = el('lista-reservas-parceiros-tbody');
+    const tbody = document.getElementById('lista-reservas-parceiros-tbody');
     if (!tbody) return;
 
     let totVenda = 0;
     let totCusto = 0;
     let totLucro = 0;
 
+    const formatarGrana = (v) => "R$ " + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatarData = (d) => {
+        if (!d) return '-';
+        const p = d.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d;
+    };
+
     tbody.innerHTML = '';
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Nenhuma reserva manual de parceiro cadastrada.</td></tr>`;
-        if (el('card-parceiro-total-venda')) el('card-parceiro-total-venda').innerText = "R$ 0,00";
-        if (el('card-parceiro-total-custo')) el('card-parceiro-total-custo').innerText = "R$ 0,00";
-        if (el('card-parceiro-total-lucro')) el('card-parceiro-total-lucro').innerText = "R$ 0,00";
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-medium">Nenhuma reserva manual de parceiro cadastrada.</td></tr>`;
+        if (document.getElementById('card-parceiro-total-venda')) document.getElementById('card-parceiro-total-venda').innerText = "R$ 0,00";
+        if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = "R$ 0,00";
+        if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = "R$ 0,00";
         return;
     }
 
@@ -5239,11 +5287,11 @@ function renderizarListaReservasParceiros() {
                 <span class="text-xs text-slate-500"><i class="fab fa-whatsapp text-green-600 mr-1"></i>${r.titular?.zap || '-'}</span>
             </td>
             <td class="p-3.5 text-center text-xs">
-                ${formatarDataBr(r.checkin)} <br><span class="text-slate-400 text-[10px]">até</span><br> ${formatarDataBr(r.checkout)}
+                ${formatarData(r.checkin)} <br><span class="text-slate-400 text-[10px]">até</span><br> ${formatarData(r.checkout)}
             </td>
-            <td class="p-3.5 text-right font-bold text-green-600">${formatMoney(r.valorVenda || 0)}</td>
-            <td class="p-3.5 text-right font-bold text-red-500">${formatMoney(r.valorCompra || 0)}</td>
-            <td class="p-3.5 text-right font-bold text-orange-600">${formatMoney(r.lucroLiquido || 0)}</td>
+            <td class="p-3.5 text-right font-bold text-green-600">${formatarGrana(r.valorVenda)}</td>
+            <td class="p-3.5 text-right font-bold text-red-500">${formatarGrana(r.valorCompra)}</td>
+            <td class="p-3.5 text-right font-bold text-orange-600">${formatarGrana(r.lucroLiquido)}</td>
             <td class="p-3.5 text-center">
                 <button onclick="abrirModalReservaParceiro(${r.id})" title="Editar" class="p-2 text-slate-400 hover:text-orange-500 transition-colors"><i class="fas fa-edit"></i></button>
             </td>
@@ -5251,14 +5299,14 @@ function renderizarListaReservasParceiros() {
         tbody.appendChild(tr);
     });
 
-    if (el('card-parceiro-total-venda')) el('card-parceiro-total-venda').innerText = formatMoney(totVenda);
-    if (el('card-parceiro-total-custo')) el('card-parceiro-total-custo').innerText = formatMoney(totCusto);
-    if (el('card-parceiro-total-lucro')) el('card-parceiro-total-lucro').innerText = formatMoney(totLucro);
+    if (document.getElementById('card-parceiro-total-venda')) document.getElementById('card-parceiro-total-venda').innerText = formatarGrana(totVenda);
+    if (document.getElementById('card-parceiro-total-custo')) document.getElementById('card-parceiro-total-custo').innerText = formatarGrana(totCusto);
+    if (document.getElementById('card-parceiro-total-lucro')) document.getElementById('card-parceiro-total-lucro').innerText = formatarGrana(totLucro);
 }
 
 function exportarExcelReservasParceiros() {
     if (!reservasParceirosDB || reservasParceirosDB.length === 0) {
-        mostrarAlerta("Não há reservas de parceiros para exportar.");
+        alert("Não há reservas de parceiros para exportar.");
         return;
     }
     let csv = "N_Reserva;Data_Criacao;Parceiro_Fornecedor;Condominio;Apto;Cidade;Hospede_Titular;CPF;WhatsApp;Checkin;Checkout;Valor_Venda;Custo_Compra;Lucro_Liquido;Obs\n";
@@ -5272,7 +5320,7 @@ function exportarExcelReservasParceiros() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-}
+}   
     </script>   
 
 <!-- MODAL ELEGANTE DE CONFIRMAÇÃO DE EXCLUSÃO -->
