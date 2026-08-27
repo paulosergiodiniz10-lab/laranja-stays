@@ -5102,7 +5102,7 @@ function abrirModalReservaParceiro(id = null) {
         setCampo('revenda-valor-compra', item.valorCompra || '');
         setCampo('revenda-valor-venda', item.valorVenda || '');
         setCampo('revenda-obs', item.obs || '');
-
+setCampo('revenda-obs-voucher', item.obsVoucher || '');
         setCampo('revenda-titular-nome', item.titular?.nome || '');
         setCampo('revenda-titular-cpf', item.titular?.cpf || '');
         setCampo('revenda-titular-nasc', item.titular?.dataNasc || '');
@@ -5126,7 +5126,7 @@ function abrirModalReservaParceiro(id = null) {
         setCampo('revenda-valor-compra', '');
         setCampo('revenda-valor-venda', '');
         setCampo('revenda-obs', '');
-
+setCampo('revenda-obs-voucher', '');
         setCampo('revenda-titular-nome', '');
         setCampo('revenda-titular-cpf', '');
         setCampo('revenda-titular-nasc', '');
@@ -5726,10 +5726,11 @@ function emitirDocumentoParceiro(modoDoc) {
 
                 ${boxStatusDocHTML}
 
-                ${r.obs ? `
-                <div style="margin-top: 16px; font-size: 12px; color: #475569; background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
-                    <strong>Observações / Regras:</strong> ${r.obs}
-                </div>` : ''}
+               ${r.obsVoucher ? `
+            <div style="margin-top: 16px; font-size: 12px; color: #1e293b; background: #fff7ed; border: 1.5px solid #fed7aa; padding: 14px; border-radius: 10px; line-height: 1.5;">
+                <strong style="color: #c2410c; display: block; margin-bottom: 4px;"><i class="fas fa-info-circle"></i> Informações Importantes & Regras:</strong>
+                <span style="white-space: pre-wrap;">${r.obsVoucher}</span>
+            </div>` : ''}
 
                 <div class="no-print" style="text-align: center; margin-top: 30px;">
                     <button class="btn-print" onclick="window.print()"><i class="fas fa-print"></i> Imprimir Documento</button>
