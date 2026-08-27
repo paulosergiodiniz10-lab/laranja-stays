@@ -3212,12 +3212,13 @@ parceiroEmail: ehParceiroDoc ? val('reserva-parceiro-email').trim() : ''
         btnSalvar.classList.remove('opacity-75', 'bg-orange-500');
         btnSalvar.innerHTML = textoOriginal;
       }
+      fecharModalReserva();
     }
 
-    renderizarMapaDisponibilidade();
-    renderizarListaReservasAdmin();
-    renderizarVitrine(imoveisDB);
-    fecharModalReserva();
+    try { if (typeof renderizarMapaDisponibilidade === 'function') renderizarMapaDisponibilidade(); } catch(err){}
+    try { if (typeof renderizarListaReservasAdmin === 'function') renderizarListaReservasAdmin(); } catch(err){}
+    try { if (typeof renderizarVitrine === 'function') renderizarVitrine(imoveisDB); } catch(err){}
+
     mostrarNotificacao(`Reserva #${numRes} salva com sucesso!`);
 }
 function excluirReservaConfirmacao() { 
