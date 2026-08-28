@@ -2819,7 +2819,7 @@ if(el('reserva-modo-parceiro')) {
 }
             if(res.statusPagamento==='pago') show('opt-status-pago'); if(res.statusPagamento==='cancelada') show('opt-status-cancelada');
             setVal('reserva-status', res.statusPagamento); hide('opt-status-devolucao');
-            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', inf?.precoTotal!==undefined ? inf.precoTotal : (res.valorTotal||0)); if(res.statusPagamento==='cancelada' || res.statusPagamento==='proprietario' || res.statusPagamento==='bloqueio') setVal('reserva-valor', 0);
+            let inf = calcularPrecoDinamico(im, res.checkin, res.checkout, res.id); setVal('reserva-valor', (res.valorTotal !== undefined && res.valorTotal !== null && res.valorTotal !== '') ? res.valorTotal : (inf?.precoTotal !== undefined ? inf.precoTotal : 0)); if(res.statusPagamento==='cancelada' || res.statusPagamento==='proprietario' || res.statusPagamento==='bloqueio') setVal('reserva-valor', 0);
             if(res.titular) { setVal('reserva-titular-nome', res.titular.nome||''); setVal('reserva-titular-cpf', res.titular.cpf||''); setVal('reserva-titular-nasc', res.titular.dataNasc||''); setVal('reserva-titular-zap', res.titular.zap||''); setVal('reserva-titular-email', res.titular.email||''); }
             acompanhantesTemp = res.acompanhantes ? JSON.parse(JSON.stringify(res.acompanhantes)) : []; renderizarAcompanhantes(); toggleCamposReserva(); 
             
